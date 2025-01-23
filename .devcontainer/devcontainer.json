@@ -44,6 +44,7 @@
   "postCreateCommand": "bash ./.devcontainer/postCreateCommand.sh",
   "postStartCommand": "bash ./.devcontainer/postStartCommand.sh",
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ]
 }
