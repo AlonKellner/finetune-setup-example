@@ -1,0 +1,68 @@
+default_stages: [pre-commit, manual]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-xml
+      - id: check-toml
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: requirements-txt-fixer
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+      - id: check-added-large-files
+        args: ["--maxkb=2000"]
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright
+        entry: uvx pyright
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: ruff-check
+        name: ruff-check
+        entry: uvx ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+      - id: ruff-format
+        name: ruff-format
+        entry: uvx ruff format --force-exclude
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+      - id: typos
+        name: typos
+        entry: uvx typos
+        language: system
+        args: [--write-changes, --force-exclude]
+        types: [text]
+      - id: pytest
+        name: pytest
+        entry: pytest tests
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: uv-requirements
+        name: uv-requirements
+        entry: uv pip compile pyproject.toml -o requirements.txt
+        language: system
+        files: ^pyproject\.toml$
+        pass_filenames: false
+      - id: uv-sync
+        name: uv-sync
+        entry: uv sync --all-extras --link-mode=copy
+        language: system
+        files: ^pyproject\.toml$
+        pass_filenames: false
