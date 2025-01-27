@@ -1,0 +1,250 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "docker-run-options",
+      "type": "promptString",
+      "default": "--gpus=all",
+      "description": "docker-run-options"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Run Python (venv)",
+      "type": "shell",
+      "command": "python ${file}",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Run Python (docker)  ",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Run Python (docker)", "Remove Python (docker)"],
+      "type": "shell",
+      "command": ":",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Run Python (docker build)  ",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Run Python (docker build)", "Remove Python (docker)"],
+      "type": "shell",
+      "command": ":",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Run Python (docker build file)  ",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Run Python (docker build file)", "Remove Python (docker)"],
+      "type": "shell",
+      "command": ":",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Run Python (docker)",
+      "type": "shell",
+      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' mcr.microsoft.com/devcontainers/python:3.12-bookworm ${file}",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Remove Python (docker)",
+      "type": "shell",
+      "command": "docker stop 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' && docker rm 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' || true",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Start Debugpy server (docker)",
+      "dependsOn": ["Remove Debugpy server (docker)"],
+      "type": "shell",
+      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source='${env:LOCAL_USER_HOME}/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy',destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' mcr.microsoft.com/devcontainers/python:3.12-bookworm /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Remove Debugpy server (docker)",
+      "type": "shell",
+      "command": "docker stop 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' && docker rm 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' || true",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Run Python (docker build)",
+      "type": "shell",
+      "dependsOn": ["Build Python (docker build)"],
+      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename} ${file}",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Build Python (docker build)",
+      "type": "shell",
+      "command": "docker build ${workspaceFolder} --file ${workspaceFolder}/Dockerfile --tag vsc-${workspaceFolderBasename}",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Start Debugpy server (docker build)",
+      "dependsOn": [
+        "Remove Debugpy server (docker)",
+        "Build Python (docker build)"
+      ],
+      "type": "shell",
+      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source='${env:LOCAL_USER_HOME}/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy',destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Run Python (docker build file)",
+      "type": "shell",
+      "dependsOn": ["Build Python (docker build file)"],
+      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename}-${fileBasenameNoExtension} ${file}",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Build Python (docker build file)",
+      "type": "shell",
+      "command": "docker build ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.Dockerfile --tag vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Start Debugpy server (docker build file)",
+      "dependsOn": [
+        "Remove Debugpy server (docker)",
+        "Build Python (docker build file)"
+      ],
+      "type": "shell",
+      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source='${env:LOCAL_USER_HOME}/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy',destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename}-${fileBasenameNoExtension} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    }
+  ]
+}

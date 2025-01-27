@@ -26,6 +26,7 @@
         "mhutchie.git-graph"
       ],
       "settings": {
+        "pre-commit-helper.runOnSave": "all hooks",
         "git.autofetch": true,
         "editor.tabSize": 4,
         "terminal.integrated.defaultProfile.linux": "zsh",
@@ -41,11 +42,22 @@
       }
     }
   },
+  "initializeCommand": "docker network create -d bridge vsc-${containerWorkspaceFolderBasename} || true",
   "postCreateCommand": "bash ./.devcontainer/postCreateCommand.sh",
   "postStartCommand": "bash ./.devcontainer/postStartCommand.sh",
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,target=/home/vscode/.sky,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,target=/home/vscode/.sky,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,target=/home/vscode/.vscode-server,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}"
+  },
+  "runArgs": [
+    "--name=vsc-${containerWorkspaceFolderBasename}-IDE",
+    "--hostname=vsc-${containerWorkspaceFolderBasename}-IDE",
+    "--network=vsc-${containerWorkspaceFolderBasename}"
   ]
 }

@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Python (venv)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "internalConsole"
+    },
+    {
+      "name": "Debug Python (Docker run)",
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "Start Debugpy server (docker)",
+      "postDebugTask": "Remove Debugpy server (docker)",
+      "connect": {
+        "host": "vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug",
+        "port": 5678
+      }
+    },
+    {
+      "name": "Debug Python (Docker build)",
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "Start Debugpy server (docker build)",
+      "postDebugTask": "Remove Debugpy server (docker)",
+      "connect": {
+        "host": "vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug",
+        "port": 5678
+      }
+    },
+    {
+      "name": "Debug Python (Docker build file)",
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "Start Debugpy server (docker build file)",
+      "postDebugTask": "Remove Debugpy server (docker)",
+      "connect": {
+        "host": "vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug",
+        "port": 5678
+      }
+    }
+  ]
+}
