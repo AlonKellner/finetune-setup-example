@@ -46,8 +46,8 @@
     "./.devcontainer/initializeCommand",
     "vsc-${containerWorkspaceFolderBasename}"
   ],
-  "postCreateCommand": ["bash", "./.devcontainer/postCreateCommand"],
-  "postStartCommand": ["bash", "./.devcontainer/postStartCommand"],
+  "postCreateCommand": ["./.devcontainer/postCreateCommand"],
+  "postStartCommand": ["./.devcontainer/postStartCommand"],
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
