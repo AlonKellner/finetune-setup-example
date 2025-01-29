@@ -19,7 +19,7 @@ select = [
   "ARG", "ANN", "D", "PL", "S", "RUF",
   "UP", "TC", "SIM"
 ]
-ignore = ["PLR2004", "PLR0913", "ANN401", "ANN101", "S101"]
+ignore = ["PLR2004", "PLR0913", "ANN401", "ANN101", "S101", "S311"]
 
 [tool.ruff.lint.pylint]
 max-args = 10
@@ -66,12 +66,20 @@ classifiers = [
 ]
 
 dependencies = [
-  "numpy"
+  "huggingface_hub",
+  "datasets",
+  "pandas",
+  "transformers",
+  "numpy",
+  "evaluate",
+  "torch",
+  "safetensors"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest"
+    "pytest",
+    "pyright"
 ]
 
 [project.urls]

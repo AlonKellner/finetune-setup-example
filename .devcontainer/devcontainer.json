@@ -52,12 +52,14 @@
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,target=/home/vscode/.sky,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,target=/home/vscode/.vscode-server,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,target=/home/vscode/.vscode-server,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface,target=/home/vscode/.huggingface,type=bind,consistency=cached"
   ],
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
     "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "VSCODE_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm"
+    "VSCODE_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+    "HF_HOME": "~/.huggingface"
   },
   "runArgs": [
     "--name=vsc-${containerWorkspaceFolderBasename}-IDE",

@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-echo "hello $1"
 docker network create -d bridge $1 || true

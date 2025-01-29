@@ -24,9 +24,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: pyright
-        name: pyright
-        entry: uvx pyright
+      - id: pyright-check
+        name: pyright-check
+        entry: uv run pyright
         language: system
         types_or: [python, pyi]
         require_serial: true
