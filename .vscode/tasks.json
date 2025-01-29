@@ -78,7 +78,7 @@
     {
       "label": "Run Python (docker)",
       "type": "shell",
-      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' mcr.microsoft.com/devcontainers/python:3.12-bookworm ${file}",
+      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' ${env:VSCODE_IMAGE} ${file}",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -111,7 +111,7 @@
       "label": "Start Debugpy server (docker)",
       "dependsOn": ["Remove Debugpy server (docker)"],
       "type": "shell",
-      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed 's|${userHome}|${env:LOCAL_USER_HOME}|')/bundled/libs/debugpy\",destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' mcr.microsoft.com/devcontainers/python:3.12-bookworm /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed 's|${userHome}|${env:LOCAL_USER_HOME}|')/bundled/libs/debugpy\",destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' ${env:VSCODE_IMAGE} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
       "hide": true,
       "group": "none",
       "presentation": {

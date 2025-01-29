@@ -56,7 +56,8 @@
   ],
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
-    "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}"
+    "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
+    "VSCODE_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm"
   },
   "runArgs": [
     "--name=vsc-${containerWorkspaceFolderBasename}-IDE",
