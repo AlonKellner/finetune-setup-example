@@ -80,8 +80,9 @@ import json
 import os
 import random
 import re
+import unicodedata
 from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 import torch
@@ -91,7 +92,7 @@ from safetensors.torch import save_file as safe_save_file
 from transformers import (
     EvalPrediction,
     Trainer,
-    TrainingArguments,  # type: ignore
+    TrainingArguments,
     Wav2Vec2CTCTokenizer,
     Wav2Vec2FeatureExtractor,
     Wav2Vec2ForCTC,
@@ -109,12 +110,6 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import WAV2VEC2_ADAPTER_SAFE
 """Before we start, let's install `datasets` and `transformers`. Also, we need the `torchaudio` to load audio files and `jiwer` to evaluate our fine-tuned model using the [word error rate (WER)](https://huggingface.co/metrics/wer) metric ${}^1$."""
 
 # Commented out IPython magic to ensure Python compatibility.
-# %%capture
-# !pip install datasets[audio]
-# !pip install evaluate
-# !pip install git+https://github.com/huggingface/transformers.git
-# !pip install jiwer
-# !pip install accelerate
 
 """We strongly suggest to upload your training checkpoints directly to the [🤗 Hub](https://huggingface.co/) while training. The [🤗 Hub](https://huggingface.co/) has integrated version control so you can be sure that no model checkpoint is getting lost during training.
 
@@ -148,15 +143,22 @@ Common Voice has many different splits including `invalidated`, which refers to 
 Because the Turkish dataset is so small, we will merge both the validation and training data into a training dataset and only use the test data for validation.
 """
 
-common_voice_train: Dataset = load_dataset(
-    "mozilla-foundation/common_voice_6_1",
+common_voice_train = load_dataset(
+    "mozilla-foundation/common_voice_17_0",
     "tr",
     split="train+validation",
-    use_auth_token=True,
-)  # type: ignore
-common_voice_test: Dataset = load_dataset(
-    "mozilla-foundation/common_voice_6_1", "tr", split="test", use_auth_token=True
-)  # type: ignore
+    token=True,
+    trust_remote_code=True,
+)
+assert isinstance(common_voice_train, Dataset)
+common_voice_test = load_dataset(
+    "mozilla-foundation/common_voice_17_0",
+    "tr",
+    split="test",
+    token=True,
+    trust_remote_code=True,
+)
+assert isinstance(common_voice_test, Dataset)
 
 """Many ASR datasets only provide the target text, `'sentence'` for each audio array `'audio'` and file `'path'`. Common Voice actually provides much more information about each audio file, such as the `'accent'`, etc. Keeping the notebook as general as possible, we only consider the transcribed text for fine-tuning.
 
@@ -198,14 +200,15 @@ Also in order to understand the meaning of a speech signal, it is usually not ne
 Let's simply remove all characters that don't contribute to the meaning of a word and cannot really be represented by an acoustic sound and normalize the text.
 """
 
-chars_to_remove_regex = "[\,\?\.\!\-\;\:\"\“\%\‘\”\�']"  # type: ignore # noqa: RUF001
+chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�'()…’\u0300-\u036F]"  # noqa: RUF001
 
-Batch = Dict[str, Any]
+Batch = dict[str, Any]
 
 
 def remove_special_characters(batch: Batch) -> Batch:
     """Remove special characters."""
-    batch["sentence"] = re.sub(chars_to_remove_regex, "", batch["sentence"]).lower()
+    normalized_sentence = unicodedata.normalize("NFD", batch["sentence"])
+    batch["sentence"] = re.sub(chars_to_remove_regex, "", normalized_sentence).lower()
     return batch
 
 
@@ -244,7 +247,7 @@ We write a mapping function that concatenates all transcriptions into one long t
 It is important to pass the argument `batched=True` to the `map(...)` function so that the mapping function has access to all transcriptions at once.
 """
 
-Vocab = Dict[str, Any]
+Vocab = dict[str, Any]
 
 
 def extract_all_chars(batch: Batch) -> Vocab:
@@ -258,15 +261,15 @@ vocab_train = common_voice_train.map(
     extract_all_chars,
     batched=True,
     batch_size=-1,
-    keep_in_memory=True,  # type: ignore
-    remove_columns=common_voice_train.column_names,  # type: ignore
+    keep_in_memory=True,
+    remove_columns=common_voice_train.column_names,
 )
 vocab_test = common_voice_test.map(
     extract_all_chars,
     batched=True,
     batch_size=-1,
-    keep_in_memory=True,  # type: ignore
-    remove_columns=common_voice_test.column_names,  # type: ignore
+    keep_in_memory=True,
+    remove_columns=common_voice_test.column_names,
 )
 
 """Now, we create the union of all distinct letters in the training dataset and test dataset and convert the resulting list into an enumerated dictionary."""
@@ -325,7 +328,7 @@ with open("vocab.json", "w") as vocab_file:
 
 """In a final step, we use the json file to load the vocabulary into an instance of the `Wav2Vec2CTCTokenizer` class."""
 
-tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
+tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
     "./",
     unk_token="[UNK]",  # noqa: S106
     pad_token="[PAD]",  # noqa: S106
@@ -378,9 +381,17 @@ For improved user-friendliness, the feature extractor and tokenizer are *wrapped
 """
 
 
+@runtime_checkable
+class HasTokenizer(Protocol):
+    """Just for pyright type checking."""
+
+    tokenizer: Wav2Vec2CTCTokenizer
+
+
 processor: Wav2Vec2Processor = Wav2Vec2Processor(
     feature_extractor=feature_extractor, tokenizer=tokenizer
 )
+assert isinstance(processor, HasTokenizer)
 
 """Next, we can prepare the dataset.
 
@@ -512,11 +523,11 @@ class DataCollatorCTCWithPadding:
     """
 
     processor: Wav2Vec2Processor
-    padding: Union[bool, str] = True
+    padding: bool | str = True
 
     def __call__(
-        self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
-    ) -> Dict[str, torch.Tensor]:
+        self, features: list[dict[str, list[int] | torch.Tensor]]
+    ) -> dict[str, torch.Tensor]:
         """Collates the features."""
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
@@ -555,7 +566,7 @@ predominant metric in ASR is the word error rate (WER), hence we will use it in 
 wer_metric = load("wer")
 
 
-Metrics = Dict[str, Any]
+Metrics = dict[str, Any]
 
 
 def compute_metrics(pred: EvalPrediction) -> Metrics:
@@ -563,8 +574,9 @@ def compute_metrics(pred: EvalPrediction) -> Metrics:
     pred_logits = pred.predictions
     pred_ids = np.argmax(pred_logits, axis=-1)
 
-    pred_label_ids: np.ndarray = pred.label_ids  # type: ignore
-    pred_label_ids[pred.label_ids == -100] = processor.tokenizer.pad_token_id  # type: ignore
+    assert isinstance(pred.label_ids, np.ndarray)
+    assert isinstance(processor, HasTokenizer)
+    pred.label_ids[pred.label_ids == -100] = processor.tokenizer.pad_token_id
 
     pred_str = processor.batch_decode(pred_ids)
     # we do not want to group tokens when computing the metrics
@@ -726,11 +738,12 @@ processor.tokenizer.set_target_lang("tur")  # type: ignore
 """Let's check that the model can correctly transcribe Turkish"""
 
 common_voice_test_tr: Dataset = load_dataset(
-    "mozilla-foundation/common_voice_6_1",
+    "mozilla-foundation/common_voice_17_0",
     "tr",
-    data_dir="./cv-corpus-6.1-2020-12-11",
+    data_dir="./cv-corpus-17.0-2024-03-20",
     split="test",
-    use_auth_token=True,
+    token=True,
+    trust_remote_code=True,
 )  # type: ignore
 common_voice_test_tr = common_voice_test_tr.cast_column(
     "audio", Audio(sampling_rate=16_000)
@@ -770,11 +783,12 @@ processor.tokenizer.set_target_lang("swe")  # type: ignore
 """We again load the Swedish test set from common voice"""
 
 common_voice_test_swe: Dataset = load_dataset(
-    "mozilla-foundation/common_voice_6_1",
+    "mozilla-foundation/common_voice_17_0",
     "sv-SE",
-    data_dir="./cv-corpus-6.1-2020-12-11",
+    data_dir="./cv-corpus-17.0-2024-03-20",
     split="test",
-    use_auth_token=True,
+    token=True,
+    trust_remote_code=True,
 )  # type: ignore
 common_voice_test_swe = common_voice_test_swe.cast_column(
     "audio", Audio(sampling_rate=16_000)

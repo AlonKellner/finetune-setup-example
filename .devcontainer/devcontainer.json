@@ -6,8 +6,8 @@
     "context": ".."
   },
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers-extra/features/pre-commit:2": {}
+    "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "customizations": {
     "vscode": {
@@ -49,17 +49,19 @@
   "postCreateCommand": ["./.devcontainer/postCreateCommand"],
   "postStartCommand": ["./.devcontainer/postStartCommand"],
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,target=/home/vscode/.sky,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,target=/home/vscode/.vscode-server,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface,target=/home/vscode/.huggingface,type=bind,consistency=cached"
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,dst=/home/vscode/.gitconfig,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,dst=/home/vscode/.ssh,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,dst=/home/vscode/.sky,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,dst=/home/vscode/.vscode-server,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface,dst=/home/vscode/.huggingface,type=bind"
   ],
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
     "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "VSCODE_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
-    "HF_HOME": "~/.huggingface"
+    "DOCKER_OPTIONS": "--env HF_HOME=$HF_HOME --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig',dst=/root/.gitconfig,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.ssh',dst=/root/.ssh,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.sky',dst=/root/.sky,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server',dst=/root/.vscode-server,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface',dst=/root/.huggingface,type=bind",
+    "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+    "HF_HOME": "~/.huggingface",
+    "USERNAME": "vscode"
   },
   "runArgs": [
     "--name=vsc-${containerWorkspaceFolderBasename}-IDE",

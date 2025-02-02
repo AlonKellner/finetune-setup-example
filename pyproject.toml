@@ -12,6 +12,7 @@ version-file = "src/_version.py"
 
 [tool.ruff]
 line-length = 88
+exclude = ["src/_version.py", "dev-pyproject/*"]
 
 [tool.ruff.lint]
 select = [
@@ -42,7 +43,7 @@ pythonpath="./"
 [project]
 dynamic = ["version"]
 name = "finetune-setup-example"
-requires-python = ">= 3.8"
+requires-python = ">=3.10.0"
 authors = [
   {name = "Alon Kellner", email = "me@alonkellner.com"}
 ]
@@ -65,21 +66,26 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 
-dependencies = [
-  "huggingface_hub",
-  "datasets",
-  "pandas",
-  "transformers",
-  "numpy",
-  "evaluate",
-  "torch",
-  "safetensors"
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "pyright"
+]
+mms_blog_post = [
+  "accelerate",
+  "datasets[audio]",
+  "evaluate",
+  "huggingface_hub",
+  "jiwer",
+  "llvmlite>0.36",
+  "numba>0.47",
+  "numpy",
+  "pandas",
+  "safetensors",
+  "torch",
+  "transformers",
 ]
 
 [project.urls]

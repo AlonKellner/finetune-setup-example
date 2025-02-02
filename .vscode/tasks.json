@@ -2,10 +2,16 @@
   "version": "2.0.0",
   "inputs": [
     {
-      "id": "docker-run-options",
+      "id": "docker-options",
       "type": "promptString",
       "default": "--gpus=all",
-      "description": "docker-run-options"
+      "description": "docker-options"
+    },
+    {
+      "id": "docker-image",
+      "type": "promptString",
+      "default": "${env:CONTAINER_IMAGE}",
+      "description": "docker-image"
     }
   ],
   "tasks": [
@@ -78,7 +84,7 @@
     {
       "label": "Run Python (docker)",
       "type": "shell",
-      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' ${env:VSCODE_IMAGE} ${file}",
+      "command": "docker stop 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' && docker rm 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' || true && docker run ${input:docker-options} ${env:DOCKER_OPTIONS} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all --mount src='${env:LOCAL_WORKSPACE_FOLDER}',dst=${workspaceFolder},type=bind --entrypoint 'python3' ${input:docker-image} ${file}",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -111,7 +117,7 @@
       "label": "Start Debugpy server (docker)",
       "dependsOn": ["Remove Debugpy server (docker)"],
       "type": "shell",
-      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed 's|${userHome}|${env:LOCAL_USER_HOME}|')/bundled/libs/debugpy\",destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' ${env:VSCODE_IMAGE} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "command": "docker run ${input:docker-options} ${env:DOCKER_OPTIONS} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,src=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\",dst=/debugpy,readonly --mount src=\"${env:LOCAL_WORKSPACE_FOLDER}\",dst=${workspaceFolder},type=bind --entrypoint 'python3' ${input:docker-image} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -144,7 +150,7 @@
       "label": "Run Python (docker build)",
       "type": "shell",
       "dependsOn": ["Build Python (docker build)"],
-      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename} ${file}",
+      "command": "docker stop 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' && docker rm 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' || true && docker run ${input:docker-options} ${env:DOCKER_OPTIONS} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all --mount src=\"${env:LOCAL_WORKSPACE_FOLDER}\",dst=${workspaceFolder},type=bind vsc-${workspaceFolderBasename} ${file}",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -180,7 +186,7 @@
         "Build Python (docker build)"
       ],
       "type": "shell",
-      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed 's|${userHome}|${env:LOCAL_USER_HOME}|')/bundled/libs/debugpy\",destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "command": "docker run ${input:docker-options} ${env:DOCKER_OPTIONS} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,src=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\",dst=/debugpy,readonly --mount src=\"${env:LOCAL_WORKSPACE_FOLDER}\",dst=${workspaceFolder},type=bind vsc-${workspaceFolderBasename} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -197,7 +203,7 @@
       "label": "Run Python (docker build file)",
       "type": "shell",
       "dependsOn": ["Build Python (docker build file)"],
-      "command": "docker run ${input:docker-run-options} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename}-${fileBasenameNoExtension} ${file}",
+      "command": "docker stop 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' && docker rm 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' || true && docker run ${input:docker-options} ${env:DOCKER_OPTIONS} -it --tty --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-run' --publish-all --mount src=\"${env:LOCAL_WORKSPACE_FOLDER}\",dst=${workspaceFolder},type=bind vsc-${workspaceFolderBasename}-${fileBasenameNoExtension} ${file}",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -233,7 +239,7 @@
         "Build Python (docker build file)"
       ],
       "type": "shell",
-      "command": "docker run ${input:docker-run-options} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,source=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed 's|${userHome}|${env:LOCAL_USER_HOME}|')/bundled/libs/debugpy\",destination=/debugpy,readonly -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' vsc-${workspaceFolderBasename}-${fileBasenameNoExtension} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
+      "command": "docker run ${input:docker-options} ${env:DOCKER_OPTIONS} --detach --tty --network 'vsc-${workspaceFolderBasename}' --name 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --hostname 'vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug' --publish-all --mount type=bind,src=\"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\",dst=/debugpy,readonly --mount src=\"${env:LOCAL_WORKSPACE_FOLDER}\",dst=${workspaceFolder},type=bind vsc-${workspaceFolderBasename}-${fileBasenameNoExtension} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${file} && sleep 3s",
       "hide": true,
       "group": "none",
       "presentation": {

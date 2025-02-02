@@ -10,7 +10,7 @@
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
-      "name": "Debug Python (Docker run)",
+      "name": "Debug Python (docker)",
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker)",
@@ -22,7 +22,7 @@
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
-      "name": "Debug Python (Docker build)",
+      "name": "Debug Python (docker build)",
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker build)",
@@ -34,7 +34,7 @@
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
-      "name": "Debug Python (Docker build file)",
+      "name": "Debug Python (docker build file)",
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker build file)",

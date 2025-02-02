@@ -1,7 +1,11 @@
 FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY pyproject.toml README.md ./
-COPY src/_version.py src/
-RUN --mount=type=cache,target=/root/.cache/ \
+WORKDIR /app
+
+COPY pyproject.toml dev-pyproject/ ./
+RUN --mount=type=cache,dst=/root/.cache/ \
+    uv pip compile --all-extras pyproject.toml -o requirements.txt && \
     uv sync --all-extras
+
+ENTRYPOINT [ "/app/.venv/bin/python3" ]
