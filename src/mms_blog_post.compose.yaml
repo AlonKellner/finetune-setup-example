@@ -1,0 +1,18 @@
+services:
+  mms_blog_post:
+    build:
+      context: .
+      dockerfile: ./src/mms_blog_post.Dockerfile
+    networks:
+      - finetune-setup-example
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+networks:
+  finetune-setup-example:
+    external: true

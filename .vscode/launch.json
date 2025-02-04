@@ -16,7 +16,7 @@
       "preLaunchTask": "Start Debugpy server (docker)",
       "postDebugTask": "Remove Debugpy server (docker)",
       "connect": {
-        "host": "vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug",
+        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
         "port": 5678
       },
       "internalConsoleOptions": "openOnSessionStart"
@@ -28,7 +28,7 @@
       "preLaunchTask": "Start Debugpy server (docker build)",
       "postDebugTask": "Remove Debugpy server (docker)",
       "connect": {
-        "host": "vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug",
+        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
         "port": 5678
       },
       "internalConsoleOptions": "openOnSessionStart"
@@ -40,7 +40,19 @@
       "preLaunchTask": "Start Debugpy server (docker build file)",
       "postDebugTask": "Remove Debugpy server (docker)",
       "connect": {
-        "host": "vsc-${workspaceFolderBasename}-${fileBasenameNoExtension}-debug",
+        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
+        "port": 5678
+      },
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "name": "Debug Python (docker compose)",
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "Start Debugpy server (docker compose)",
+      "postDebugTask": "Remove Debugpy server (docker)",
+      "connect": {
+        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
         "port": 5678
       },
       "internalConsoleOptions": "openOnSessionStart"

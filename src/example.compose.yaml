@@ -1,0 +1,11 @@
+services:
+  example:
+    build:
+      context: .
+      dockerfile: ./src/example.Dockerfile
+    networks:
+      - finetune-setup-example
+
+networks:
+  finetune-setup-example:
+    external: true

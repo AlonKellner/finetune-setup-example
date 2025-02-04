@@ -44,7 +44,7 @@
   },
   "initializeCommand": [
     "./.devcontainer/initializeCommand",
-    "vsc-${containerWorkspaceFolderBasename}"
+    "${containerWorkspaceFolderBasename}"
   ],
   "postCreateCommand": ["./.devcontainer/postCreateCommand"],
   "postStartCommand": ["./.devcontainer/postStartCommand"],
@@ -58,14 +58,14 @@
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
     "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "DOCKER_OPTIONS": "--env HF_HOME=$HF_HOME --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig',dst=/root/.gitconfig,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.ssh',dst=/root/.ssh,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.sky',dst=/root/.sky,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server',dst=/root/.vscode-server,type=bind --mount src='${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface',dst=/root/.huggingface,type=bind",
+    "DOCKER_OPTIONS": "-e HF_HOME=$HF_HOME -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface':/root/.huggingface",
     "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
     "HF_HOME": "~/.huggingface",
     "USERNAME": "vscode"
   },
   "runArgs": [
-    "--name=vsc-${containerWorkspaceFolderBasename}-IDE",
-    "--hostname=vsc-${containerWorkspaceFolderBasename}-IDE",
-    "--network=vsc-${containerWorkspaceFolderBasename}"
+    "--name=${containerWorkspaceFolderBasename}_vsc",
+    "--hostname=${containerWorkspaceFolderBasename}_vsc",
+    "--network=${containerWorkspaceFolderBasename}"
   ]
 }

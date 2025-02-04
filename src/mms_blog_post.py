@@ -644,7 +644,7 @@ During training, a checkpoint will be uploaded asynchronously to the hub every 2
 training_args = TrainingArguments(
     output_dir=repo_name,
     group_by_length=True,
-    per_device_train_batch_size=32,
+    per_device_train_batch_size=4,
     evaluation_strategy="steps",
     num_train_epochs=4,
     gradient_checkpointing=True,
