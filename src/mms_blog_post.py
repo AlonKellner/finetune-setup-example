@@ -382,16 +382,19 @@ For improved user-friendliness, the feature extractor and tokenizer are *wrapped
 
 
 @runtime_checkable
-class HasTokenizer(Protocol):
+class HasCustomFields(Protocol):
     """Just for pyright type checking."""
 
     tokenizer: Wav2Vec2CTCTokenizer
+    feature_extractor: Wav2Vec2FeatureExtractor
 
 
 processor: Wav2Vec2Processor = Wav2Vec2Processor(
     feature_extractor=feature_extractor, tokenizer=tokenizer
 )
-assert isinstance(processor, HasTokenizer)
+assert isinstance(processor, HasCustomFields) and isinstance(
+    processor, Wav2Vec2Processor
+)
 
 """Next, we can prepare the dataset.
 
@@ -575,7 +578,7 @@ def compute_metrics(pred: EvalPrediction) -> Metrics:
     pred_ids = np.argmax(pred_logits, axis=-1)
 
     assert isinstance(pred.label_ids, np.ndarray)
-    assert isinstance(processor, HasTokenizer)
+    assert isinstance(processor, HasCustomFields)
     pred.label_ids[pred.label_ids == -100] = processor.tokenizer.pad_token_id
 
     pred_str = processor.batch_decode(pred_ids)
@@ -602,8 +605,8 @@ model = Wav2Vec2ForCTC.from_pretrained(
     feat_proj_dropout=0.0,
     layerdrop=0.0,
     ctc_loss_reduction="mean",
-    pad_token_id=processor.tokenizer.pad_token_id,  # type: ignore
-    vocab_size=len(processor.tokenizer),  # type: ignore
+    pad_token_id=processor.tokenizer.pad_token_id,
+    vocab_size=len(processor.tokenizer),
     ignore_mismatched_sizes=True,
 )
 
@@ -645,7 +648,7 @@ training_args = TrainingArguments(
     output_dir=repo_name,
     group_by_length=True,
     per_device_train_batch_size=4,
-    evaluation_strategy="steps",
+    eval_strategy="steps",
     num_train_epochs=4,
     gradient_checkpointing=True,
     fp16=True,
@@ -667,7 +670,7 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
     train_dataset=common_voice_train,
     eval_dataset=common_voice_test,
-    tokenizer=processor.feature_extractor,  # type: ignore
+    processing_class=processor.feature_extractor,
 )
 
 """---
@@ -731,7 +734,11 @@ Let's see how we can load the Turkish checkpoint first.
 model_id = "patrickvonplaten/wav2vec2-large-mms-1b-turkish-colab"
 
 model = Wav2Vec2ForCTC.from_pretrained(model_id, target_lang="tur").to("cuda")  # type: ignore
-processor: Wav2Vec2Processor = Wav2Vec2Processor.from_pretrained(model_id)  # type: ignore
+_processor = Wav2Vec2Processor.from_pretrained(model_id)
+assert isinstance(_processor, HasCustomFields) and isinstance(
+    _processor, Wav2Vec2Processor
+)
+processor = _processor
 
 processor.tokenizer.set_target_lang("tur")  # type: ignore
 

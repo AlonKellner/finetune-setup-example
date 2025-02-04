@@ -36,12 +36,6 @@ repos:
         language: system
         files: ^pyproject\.toml$
         pass_filenames: false
-      - id: pyright-check
-        name: pyright-check
-        entry: uv run pyright
-        language: system
-        types_or: [python, pyi]
-        require_serial: true
       - id: ruff-check
         name: ruff-check
         entry: uvx ruff check --fix --force-exclude
@@ -53,6 +47,12 @@ repos:
         entry: uvx ruff format --force-exclude
         language: system
         types_or: [python, pyi, jupyter]
+        require_serial: true
+      - id: pyright-check
+        name: pyright-check
+        entry: uv run pyright
+        language: system
+        types_or: [python, pyi]
         require_serial: true
       - id: typos
         name: typos
