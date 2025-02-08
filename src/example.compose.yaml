@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: ./src/example.Dockerfile
+      args:
+        WORKDIR: ${WORKDIR}
     networks:
       - finetune-setup-example
 

@@ -3,14 +3,19 @@
   "configurations": [
     {
       "name": "Debug Python (venv)",
+      "justMyCode": false,
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
       "console": "internalConsole",
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "presentation": {
+        "hidden": true
+      }
     },
     {
       "name": "Debug Python (docker)",
+      "justMyCode": false,
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker)",
@@ -19,10 +24,14 @@
         "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
         "port": 5678
       },
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "presentation": {
+        "hidden": true
+      }
     },
     {
       "name": "Debug Python (docker build)",
+      "justMyCode": false,
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker build)",
@@ -31,10 +40,14 @@
         "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
         "port": 5678
       },
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "presentation": {
+        "hidden": true
+      }
     },
     {
       "name": "Debug Python (docker build file)",
+      "justMyCode": false,
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker build file)",
@@ -43,10 +56,14 @@
         "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
         "port": 5678
       },
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "presentation": {
+        "hidden": true
+      }
     },
     {
       "name": "Debug Python (docker compose)",
+      "justMyCode": false,
       "type": "debugpy",
       "request": "attach",
       "preLaunchTask": "Start Debugpy server (docker compose)",

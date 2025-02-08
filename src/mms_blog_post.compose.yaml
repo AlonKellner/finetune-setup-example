@@ -3,8 +3,13 @@ services:
     build:
       context: .
       dockerfile: ./src/mms_blog_post.Dockerfile
+      args:
+        WORKDIR: ${WORKDIR}
     networks:
       - finetune-setup-example
+    environment:
+      HF_REPO: facebook/mms-300m
+      # PYTORCH_CUDA_ALLOC_CONF: "garbage_collection_threshold:0.8"
     deploy:
       resources:
         reservations:

@@ -8,4 +8,6 @@ RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile --extra mms_blog_post pyproject.toml -o requirements.txt && \
     uv sync --extra mms_blog_post
 
+ARG WORKDIR=/app
+WORKDIR ${WORKDIR}
 ENTRYPOINT [ "/app/.venv/bin/python3" ]

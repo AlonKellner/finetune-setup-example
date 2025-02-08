@@ -23,7 +23,8 @@
         "tamasfe.even-better-toml",
         "tekumara.typos-vscode",
         "elagil.pre-commit-helper",
-        "mhutchie.git-graph"
+        "mhutchie.git-graph",
+        "rafaelha.vscode-flamegraph"
       ],
       "settings": {
         "pre-commit-helper.runOnSave": "all hooks",
@@ -49,18 +50,19 @@
   "postCreateCommand": ["./.devcontainer/postCreateCommand"],
   "postStartCommand": ["./.devcontainer/postStartCommand"],
   "mounts": [
+    "src=${localWorkspaceFolder},dst=/app,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,dst=/home/vscode/.gitconfig,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,dst=/home/vscode/.ssh,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,dst=/home/vscode/.sky,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,dst=/home/vscode/.vscode-server,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface,dst=/home/vscode/.huggingface,type=bind"
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface,dst=/home/vscode/.cache/huggingface,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.uv,dst=/home/vscode/.cache/uv,type=bind"
   ],
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
     "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "DOCKER_OPTIONS": "-e HF_HOME=$HF_HOME -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface':/root/.huggingface",
+    "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.huggingface':/root/.cache/huggingface -v '${localEnv:HOME}${localEnv:USERPROFILE}/.uv':/root/.cache/uv",
     "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
-    "HF_HOME": "~/.huggingface",
     "USERNAME": "vscode"
   },
   "runArgs": [

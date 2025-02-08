@@ -71,7 +71,7 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pyright"
+    "pyright",
 ]
 mms_blog_post = [
   "accelerate",

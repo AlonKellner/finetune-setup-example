@@ -100,6 +100,8 @@ from transformers import (
 )
 from transformers.models.wav2vec2.modeling_wav2vec2 import WAV2VEC2_ADAPTER_SAFE_FILE
 
+# torch.cuda.memory._record_memory_history()
+
 # gpu_info = !nvidia-smi
 # gpu_info = '\n'.join(gpu_info)
 # if gpu_info.find('failed') >= 0:
@@ -146,9 +148,11 @@ Because the Turkish dataset is so small, we will merge both the validation and t
 common_voice_train = load_dataset(
     "mozilla-foundation/common_voice_17_0",
     "tr",
-    split="train+validation",
+    # split="train+validation",
+    split="train",
     token=True,
     trust_remote_code=True,
+    # streaming=True,
 )
 assert isinstance(common_voice_train, Dataset)
 common_voice_test = load_dataset(
@@ -157,6 +161,7 @@ common_voice_test = load_dataset(
     split="test",
     token=True,
     trust_remote_code=True,
+    # streaming=True,
 )
 assert isinstance(common_voice_test, Dataset)
 
@@ -323,13 +328,13 @@ new_vocab_dict = {target_lang: vocab_dict}
 
 """Let's now save the vocabulary as a json file."""
 
-with open("vocab.json", "w") as vocab_file:
+with open(".output/vocab.json", "w") as vocab_file:
     json.dump(new_vocab_dict, vocab_file)
 
 """In a final step, we use the json file to load the vocabulary into an instance of the `Wav2Vec2CTCTokenizer` class."""
 
 tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
-    "./",
+    ".output/",
     unk_token="[UNK]",  # noqa: S106
     pad_token="[PAD]",  # noqa: S106
     word_delimiter_token="|",  # noqa: S106
@@ -340,7 +345,7 @@ tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
 `"wav2vec2-large-xlsr-turkish-demo-colab"`:
 """
 
-repo_name = "wav2vec2-large-mms-1b-turkish-colab"
+repo_name = "mms-300m-turkish"
 
 """and upload the tokenizer to the [🤗 Hub](https://huggingface.co/)."""
 
@@ -597,9 +602,11 @@ Since, we're only training a small subset of weights, the model is not prone to 
 **Note**: When using this notebook to train MMS on another language of Common Voice those hyper-parameter settings might not work very well. Feel free to adapt those depending on your use case.
 """
 
+hf_repo = os.getenv("HF_REPO", "facebook/mms-all-1b")
+print(f"hf_repo: {hf_repo}")
 
 model = Wav2Vec2ForCTC.from_pretrained(
-    "facebook/mms-1b-all",
+    hf_repo,
     attention_dropout=0.0,
     hidden_dropout=0.0,
     feat_proj_dropout=0.0,
@@ -609,6 +616,7 @@ model = Wav2Vec2ForCTC.from_pretrained(
     vocab_size=len(processor.tokenizer),
     ignore_mismatched_sizes=True,
 )
+model.config.adapter_attn_dim = len(processor.tokenizer)  # type: ignore
 
 """**Note**: It is expected that some weights are newly initialized. Those weights correspond to the newly initilaized vocabulary output layer.
 
@@ -645,20 +653,22 @@ During training, a checkpoint will be uploaded asynchronously to the hub every 2
 
 
 training_args = TrainingArguments(
-    output_dir=repo_name,
+    output_dir=f".output/{repo_name}",
     group_by_length=True,
-    per_device_train_batch_size=4,
+    per_device_train_batch_size=2,
     eval_strategy="steps",
-    num_train_epochs=4,
+    # num_train_epochs=1,
+    max_steps=5,
     gradient_checkpointing=True,
     fp16=True,
-    save_steps=200,
-    eval_steps=100,
-    logging_steps=100,
+    save_steps=20000,
+    eval_steps=10000,
+    logging_steps=10000,
     learning_rate=1e-3,
-    warmup_steps=100,
+    warmup_steps=5,
     save_total_limit=2,
     push_to_hub=True,
+    length_column_name="input_length",
 )
 
 """Now, all instances can be passed to Trainer and we are ready to start training!"""
@@ -696,7 +706,11 @@ setInterval(ConnectButton,60000);
 Cool, let's start training!
 """
 
-trainer.train()
+try:
+    trainer.train()
+finally:
+    pass
+    # torch.cuda.memory._dump_snapshot("mms_blog_post.pickle")
 
 """The training loss and validation WER go down nicely.
 
@@ -731,7 +745,7 @@ You can load the fine-tuned checkpoint as usual by using `from_pretrained(...)`,
 Let's see how we can load the Turkish checkpoint first.
 """
 
-model_id = "patrickvonplaten/wav2vec2-large-mms-1b-turkish-colab"
+model_id = f"Kellner/{repo_name}"
 
 model = Wav2Vec2ForCTC.from_pretrained(model_id, target_lang="tur").to("cuda")  # type: ignore
 _processor = Wav2Vec2Processor.from_pretrained(model_id)
@@ -751,6 +765,7 @@ common_voice_test_tr: Dataset = load_dataset(
     split="test",
     token=True,
     trust_remote_code=True,
+    # streaming=True,
 )  # type: ignore
 common_voice_test_tr = common_voice_test_tr.cast_column(
     "audio", Audio(sampling_rate=16_000)
@@ -796,6 +811,7 @@ common_voice_test_swe: Dataset = load_dataset(
     split="test",
     token=True,
     trust_remote_code=True,
+    # streaming=True,
 )  # type: ignore
 common_voice_test_swe = common_voice_test_swe.cast_column(
     "audio", Audio(sampling_rate=16_000)
