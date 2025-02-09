@@ -80,27 +80,171 @@ import json
 import os
 import random
 import re
-import unicodedata
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 import torch
+import uroman
 from datasets import Audio, Dataset, load_dataset
 from evaluate import load
 from safetensors.torch import save_file as safe_save_file
+from torch import nn
 from transformers import (
     EvalPrediction,
     Trainer,
     TrainingArguments,
+    Wav2Vec2Config,
     Wav2Vec2CTCTokenizer,
     Wav2Vec2FeatureExtractor,
     Wav2Vec2ForCTC,
+    Wav2Vec2Model,
     Wav2Vec2Processor,
 )
-from transformers.models.wav2vec2.modeling_wav2vec2 import WAV2VEC2_ADAPTER_SAFE_FILE
+from transformers.models.wav2vec2.modeling_wav2vec2 import (
+    _HIDDEN_STATES_START_POSITION,
+    WAV2VEC2_ADAPTER_SAFE_FILE,
+    CausalLMOutput,
+)
 
-# torch.cuda.memory._record_memory_history()
+
+class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
+    """Custom faster wav2vec2 implementation."""
+
+    def __init__(self, config: Wav2Vec2Config, target_lang: str | None = None) -> None:
+        super().__init__(config)
+
+        self.wav2vec2 = CustomWav2Vec2Model(config)
+        self.dropout = nn.Dropout(config.final_dropout)
+
+        self.target_lang = target_lang
+
+        if config.vocab_size is None:
+            raise ValueError(
+                f"You are trying to instantiate {self.__class__} with a configuration that "
+                "does not define the vocabulary size of the language model head. Please "
+                "instantiate the model as follows: `Wav2Vec2ForCTC.from_pretrained(..., vocab_size=vocab_size)`. "
+                "or define `vocab_size` of your model's configuration."
+            )
+        output_hidden_size = (
+            config.output_hidden_size
+            if hasattr(config, "add_adapter") and config.add_adapter
+            else config.hidden_size
+        )
+        self.lm_head = nn.Linear(output_hidden_size, config.vocab_size)
+
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    def forward(
+        self,
+        input_values: torch.Tensor | None,
+        attention_mask: torch.Tensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        labels: torch.Tensor | None = None,
+        flat_labels: torch.Tensor | None = None,
+    ) -> tuple | CausalLMOutput:
+        """Forward."""
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
+
+        if labels is not None and labels.max() >= self.config.vocab_size:
+            raise ValueError(
+                f"Label values must be <= vocab_size: {self.config.vocab_size}"
+            )
+
+        outputs = self.wav2vec2(
+            input_values,
+            attention_mask=attention_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        hidden_states = outputs[0]
+        hidden_states = self.dropout(hidden_states)
+
+        logits = self.lm_head(hidden_states)
+
+        loss = None
+        if labels is not None and flat_labels is not None:
+            # retrieve loss input_lengths from attention_mask
+            attention_mask = (
+                attention_mask
+                if attention_mask is not None
+                else torch.ones_like(input_values, dtype=torch.long)  # type: ignore
+            )  # type: ignore
+            input_lengths = self._get_feat_extract_output_lengths(
+                attention_mask.sum(-1)  # type: ignore
+            ).to(torch.long)  # type: ignore
+
+            # assuming that padded tokens are filled with -100
+            # when not being attended to
+            target_lengths, flattened_targets = self.labels_for_ctc(labels, flat_labels)
+
+            # ctc_loss doesn't support fp16
+            log_probs = nn.functional.log_softmax(
+                logits, dim=-1, dtype=torch.float32
+            ).transpose(0, 1)
+
+            with torch.backends.cudnn.flags(enabled=False):
+                loss = nn.functional.ctc_loss(
+                    log_probs,
+                    flattened_targets,
+                    input_lengths,
+                    target_lengths,
+                    blank=self.config.pad_token_id,
+                    reduction=self.config.ctc_loss_reduction,
+                    zero_infinity=self.config.ctc_zero_infinity,
+                )
+
+        if not return_dict:
+            output = (logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
+            return (loss, *output) if loss is not None else output
+
+        return CausalLMOutput(
+            loss=loss,  # type: ignore
+            logits=logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+    def labels_for_ctc(
+        self, labels: torch.Tensor, flat_labels: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return labels formatting for CTC loss."""
+        labels_mask = labels >= 0
+        target_lengths = labels_mask.sum(-1)
+        return target_lengths, flat_labels
+
+
+class CustomWav2Vec2Model(Wav2Vec2Model):
+    """Custom model."""
+
+    def _get_feature_vector_attention_mask(
+        self,
+        feature_vector_length: int,
+        attention_mask: torch.LongTensor,
+        add_adapter: bool | None = None,
+    ) -> torch.LongTensor:
+        # Effectively attention_mask.sum(-1), but not inplace to be able to run
+        # on inference mode.
+        non_padded_lengths = attention_mask.cumsum(dim=-1)[:, -1]
+
+        output_lengths = self._get_feat_extract_output_lengths(
+            non_padded_lengths,  # type: ignore
+            add_adapter=add_adapter,  # type: ignore
+        )
+        output_lengths = output_lengths.to(torch.long)  # type: ignore
+        attention_mask = torch.arange(
+            feature_vector_length,
+            device=attention_mask.device,  # type: ignore
+        ).unsqueeze(0) < output_lengths.unsqueeze(1)
+        return attention_mask
+
 
 # gpu_info = !nvidia-smi
 # gpu_info = '\n'.join(gpu_info)
@@ -205,20 +349,21 @@ Also in order to understand the meaning of a speech signal, it is usually not ne
 Let's simply remove all characters that don't contribute to the meaning of a word and cannot really be represented by an acoustic sound and normalize the text.
 """
 
-chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�'()…’\u0300-\u036F]"  # noqa: RUF001
-
+chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
 Batch = dict[str, Any]
+ur = uroman.Uroman()
+target_lang = "tur"
 
 
-def remove_special_characters(batch: Batch) -> Batch:
-    """Remove special characters."""
-    normalized_sentence = unicodedata.normalize("NFD", batch["sentence"])
-    batch["sentence"] = re.sub(chars_to_remove_regex, "", normalized_sentence).lower()
+def uromanize(batch: Batch) -> Batch:
+    """Uromanize text."""
+    clean_string = re.sub(chars_to_remove_regex, "", batch["sentence"]).lower()
+    batch["sentence"] = ur.romanize_string(clean_string, lcode=target_lang)
     return batch
 
 
-common_voice_train = common_voice_train.map(remove_special_characters)
-common_voice_test = common_voice_test.map(remove_special_characters)
+common_voice_train = common_voice_train.map(uromanize)
+common_voice_test = common_voice_test.map(uromanize)
 
 """Let's look at the processed text labels again."""
 
@@ -232,18 +377,6 @@ Let's write another short mapping function to further simplify the text labels. 
 
 """
 
-
-def replace_hatted_characters(batch: Batch) -> Batch:
-    """Replace hatted characters."""
-    batch["sentence"] = re.sub("[â]", "a", batch["sentence"])
-    batch["sentence"] = re.sub("[î]", "i", batch["sentence"])
-    batch["sentence"] = re.sub("[ô]", "o", batch["sentence"])
-    batch["sentence"] = re.sub("[û]", "u", batch["sentence"])
-    return batch
-
-
-common_voice_train = common_voice_train.map(replace_hatted_characters)
-common_voice_test = common_voice_test.map(replace_hatted_characters)
 
 """In CTC, it is common to classify speech chunks into letters, so we will do the same here.
 Let's extract all distinct letters of the training and test data and build our vocabulary from this set of letters.
@@ -262,27 +395,27 @@ def extract_all_chars(batch: Batch) -> Vocab:
     return {"vocab": [vocab], "all_text": [all_text]}
 
 
-vocab_train = common_voice_train.map(
-    extract_all_chars,
-    batched=True,
-    batch_size=-1,
-    keep_in_memory=True,
-    remove_columns=common_voice_train.column_names,
-)
-vocab_test = common_voice_test.map(
-    extract_all_chars,
-    batched=True,
-    batch_size=-1,
-    keep_in_memory=True,
-    remove_columns=common_voice_test.column_names,
-)
+# vocab_train = common_voice_train.map(
+#     extract_all_chars,
+#     batched=True,
+#     batch_size=-1,
+#     keep_in_memory=True,
+#     remove_columns=common_voice_train.column_names,
+# )
+# vocab_test = common_voice_test.map(
+#     extract_all_chars,
+#     batched=True,
+#     batch_size=-1,
+#     keep_in_memory=True,
+#     remove_columns=common_voice_test.column_names,
+# )
 
 """Now, we create the union of all distinct letters in the training dataset and test dataset and convert the resulting list into an enumerated dictionary."""
 
-vocab_list = list(set(vocab_train["vocab"][0]) | set(vocab_test["vocab"][0]))
+# vocab_list = list(set(vocab_train["vocab"][0]) | set(vocab_test["vocab"][0]))
 
-vocab_dict = {v: k for k, v in enumerate(sorted(vocab_list))}
-print(vocab_dict)
+# vocab_dict = {v: k for k, v in enumerate(sorted(vocab_list))}
+# print(vocab_dict)
 
 """Cool, we see that all letters of the alphabet occur in the dataset (which is not really surprising) and we also extracted the special characters `""` and `'`. Note that we did not exclude those special characters because:
 
@@ -293,14 +426,14 @@ One should always keep in mind that pre-processing is a very important step befo
 To make it clearer that `" "` has its own token class, we give it a more visible character `|`. In addition, we also add an "unknown" token so that the model can later deal with characters not encountered in Common Voice's training set.
 """
 
-vocab_dict["|"] = vocab_dict[" "]
-del vocab_dict[" "]
+# vocab_dict["|"] = vocab_dict[" "]
+# del vocab_dict[" "]
 
 """Finally, we also add a padding token that corresponds to CTC's "*blank token*". The "blank token" is a core component of the CTC algorithm. For more information, please take a look at the "Alignment" section [here](https://distill.pub/2017/ctc/)."""
 
-vocab_dict["[UNK]"] = len(vocab_dict)
-vocab_dict["[PAD]"] = len(vocab_dict)
-len(vocab_dict)
+# vocab_dict["[UNK]"] = len(vocab_dict)
+# vocab_dict["[PAD]"] = len(vocab_dict)
+# len(vocab_dict)
 
 """Cool, now our vocabulary is complete and consists of 37 tokens, which means that the linear layer that we will add on top of the pretrained MMS checkpoint as part of the adapter weights will have an output dimension of 37.
 
@@ -309,11 +442,9 @@ Since a single MMS checkpoint can provide customized weights for multiple langua
 Let's use the ISO-639-3 language codes as is used for the original [**`mms-1b-all`**](https://huggingface.co/facebook/mms-1b-all) checkpoint.
 """
 
-target_lang = "tur"
-
 """Let's define an empty dictionary to which we can append the just created vocabulary"""
 
-new_vocab_dict = {target_lang: vocab_dict}
+# new_vocab_dict = {target_lang: vocab_dict}
 
 """**Note**: In case you want to use this notebook to add a new adapter layer to *an existing model repo* use make sure to **not** create an empty, new vocab dict, but instead re-use one that already exists. To do so you should uncomment the following cells and replace `mms_adapter_repo` with a model repo id to which you want to add your adapter weights."""
 
@@ -321,10 +452,13 @@ new_vocab_dict = {target_lang: vocab_dict}
 
 # mms_adapter_repo = "patrickvonplaten/wav2vec2-large-mms-1b-turkish-colab"  # make sure to replace this path with a repo to which you want to add your new adapter weights
 
-# tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(mms_adapter_repo)
-# new_vocab = tokenizer.vocab
+hf_repo = "mms-meta/mms-zeroshot-300m"
+print(f"hf_repo: {hf_repo}")
+tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(hf_repo)
+vocab_dict = tokenizer.vocab
 
 # new_vocab[target_lang] = vocab_dict
+new_vocab_dict = {target_lang: vocab_dict}
 
 """Let's now save the vocabulary as a json file."""
 
@@ -335,9 +469,11 @@ with open(".output/vocab.json", "w") as vocab_file:
 
 tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
     ".output/",
-    unk_token="[UNK]",  # noqa: S106
-    pad_token="[PAD]",  # noqa: S106
-    word_delimiter_token="|",  # noqa: S106
+    unk_token=tokenizer.unk_token,
+    pad_token=tokenizer.pad_token,
+    word_delimiter_token=tokenizer.word_delimiter_token,
+    bos_token=tokenizer.bos_token,
+    eos_token=tokenizer.eos_token,
     target_lang=target_lang,
 )
 
@@ -561,6 +697,9 @@ class DataCollatorCTCWithPadding:
         )
 
         batch["labels"] = labels
+        batch["flat_labels"] = torch.cat(
+            [torch.tensor(feature["labels"]) for feature in features]
+        )  # type: ignore
 
         return batch
 
@@ -601,22 +740,18 @@ Since, we're only training a small subset of weights, the model is not prone to 
 
 **Note**: When using this notebook to train MMS on another language of Common Voice those hyper-parameter settings might not work very well. Feel free to adapt those depending on your use case.
 """
-
-hf_repo = os.getenv("HF_REPO", "facebook/mms-all-1b")
-print(f"hf_repo: {hf_repo}")
-
-model = Wav2Vec2ForCTC.from_pretrained(
+model = CustomWav2Vec2ForCTC.from_pretrained(
     hf_repo,
     attention_dropout=0.0,
     hidden_dropout=0.0,
     feat_proj_dropout=0.0,
     layerdrop=0.0,
     ctc_loss_reduction="mean",
-    pad_token_id=processor.tokenizer.pad_token_id,
+    # pad_token_id=processor.tokenizer.pad_token_id,
     vocab_size=len(processor.tokenizer),
+    adapter_attn_dim=len(processor.tokenizer),
     ignore_mismatched_sizes=True,
 )
-model.config.adapter_attn_dim = len(processor.tokenizer)  # type: ignore
 
 """**Note**: It is expected that some weights are newly initialized. Those weights correspond to the newly initilaized vocabulary output layer.
 
@@ -642,9 +777,9 @@ To give more explanation on some of the parameters:
 
 For more explanations on other parameters, one can take a look at the [docs](https://huggingface.co/transformers/master/main_classes/trainer.html?highlight=trainer#trainingarguments).
 
- To save GPU memory, we enable PyTorch's [gradient checkpointing](https://pytorch.org/docs/stable/checkpoint.html) and also set the loss reduction to "*mean*".
+To save GPU memory, we enable PyTorch's [gradient checkpointing](https://pytorch.org/docs/stable/checkpoint.html) and also set the loss reduction to "*mean*".
 
- MMS adapter fine-tuning converges extremely fast to very good performance, so even for a dataset as small as 4h we will only train for 4 epochs.
+MMS adapter fine-tuning converges extremely fast to very good performance, so even for a dataset as small as 4h we will only train for 4 epochs.
 
 During training, a checkpoint will be uploaded asynchronously to the hub every 200 training steps. It allows you to also play around with the demo widget even while your model is still training.
 
@@ -658,7 +793,7 @@ training_args = TrainingArguments(
     per_device_train_batch_size=2,
     eval_strategy="steps",
     # num_train_epochs=1,
-    max_steps=5,
+    max_steps=100,
     gradient_checkpointing=True,
     fp16=True,
     save_steps=20000,
@@ -667,8 +802,10 @@ training_args = TrainingArguments(
     learning_rate=1e-3,
     warmup_steps=5,
     save_total_limit=2,
-    push_to_hub=True,
+    # push_to_hub=True,
+    push_to_hub=False,
     length_column_name="input_length",
+    logging_nan_inf_filter=False,
 )
 
 """Now, all instances can be passed to Trainer and we are ready to start training!"""
@@ -706,11 +843,12 @@ setInterval(ConnectButton,60000);
 Cool, let's start training!
 """
 
+torch.cuda.memory._record_memory_history(max_entries=1000000)
+
 try:
     trainer.train()
 finally:
-    pass
-    # torch.cuda.memory._dump_snapshot("mms_blog_post.pickle")
+    torch.cuda.memory._dump_snapshot("src/mms_blog_post.memdump.pickle")
 
 """The training loss and validation WER go down nicely.
 
@@ -747,14 +885,16 @@ Let's see how we can load the Turkish checkpoint first.
 
 model_id = f"Kellner/{repo_name}"
 
-model = Wav2Vec2ForCTC.from_pretrained(model_id, target_lang="tur").to("cuda")  # type: ignore
+model = CustomWav2Vec2ForCTC.from_pretrained(model_id, target_lang=target_lang).to(
+    "cuda"  # type: ignore
+)
 _processor = Wav2Vec2Processor.from_pretrained(model_id)
 assert isinstance(_processor, HasCustomFields) and isinstance(
     _processor, Wav2Vec2Processor
 )
 processor = _processor
 
-processor.tokenizer.set_target_lang("tur")  # type: ignore
+processor.tokenizer.set_target_lang(target_lang)  # type: ignore
 
 """Let's check that the model can correctly transcribe Turkish"""
 
@@ -798,43 +938,43 @@ print(common_voice_test_tr[0]["sentence"].lower())
 Now it is very simple to change the adapter to Swedish by calling [`model.load_adapter(...)`](mozilla-foundation/common_voice_6_1) and by changing the tokenizer to Swedish as well.
 """
 
-model.load_adapter("swe")
+# model.load_adapter("swe")
 
-processor.tokenizer.set_target_lang("swe")  # type: ignore
+# processor.tokenizer.set_target_lang("swe")  # type: ignore
 
-"""We again load the Swedish test set from common voice"""
+# """We again load the Swedish test set from common voice"""
 
-common_voice_test_swe: Dataset = load_dataset(
-    "mozilla-foundation/common_voice_17_0",
-    "sv-SE",
-    data_dir="./cv-corpus-17.0-2024-03-20",
-    split="test",
-    token=True,
-    trust_remote_code=True,
-    # streaming=True,
-)  # type: ignore
-common_voice_test_swe = common_voice_test_swe.cast_column(
-    "audio", Audio(sampling_rate=16_000)
-)
+# common_voice_test_swe: Dataset = load_dataset(
+#     "mozilla-foundation/common_voice_17_0",
+#     "sv-SE",
+#     data_dir="./cv-corpus-17.0-2024-03-20",
+#     split="test",
+#     token=True,
+#     trust_remote_code=True,
+#     # streaming=True,
+# )  # type: ignore
+# common_voice_test_swe = common_voice_test_swe.cast_column(
+#     "audio", Audio(sampling_rate=16_000)
+# )
 
-""" and transcribe a sample:"""
+# """ and transcribe a sample:"""
 
-input_dict = processor(
-    common_voice_test_swe[0]["audio"]["array"],
-    sampling_rate=16_000,
-    return_tensors="pt",
-    padding=True,
-)
+# input_dict = processor(
+#     common_voice_test_swe[0]["audio"]["array"],
+#     sampling_rate=16_000,
+#     return_tensors="pt",
+#     padding=True,
+# )
 
-logits = model(input_dict.input_values.to("cuda")).logits
+# logits = model(input_dict.input_values.to("cuda")).logits
 
-pred_ids = torch.argmax(logits, dim=-1)[0]
+# pred_ids = torch.argmax(logits, dim=-1)[0]
 
-print("Prediction:")
-print(processor.decode(pred_ids))
+# print("Prediction:")
+# print(processor.decode(pred_ids))
 
-print("\nReference:")
-print(common_voice_test_swe[0]["sentence"].lower())
+# print("\nReference:")
+# print(common_voice_test_swe[0]["sentence"].lower())
 
 """Great, this looks like a perfect transcription!
 

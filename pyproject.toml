@@ -86,6 +86,7 @@ mms_blog_post = [
   "safetensors",
   "torch",
   "transformers",
+  "uroman",
 ]
 
 [project.urls]

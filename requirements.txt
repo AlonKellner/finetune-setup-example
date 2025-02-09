@@ -199,7 +199,9 @@ pyyaml==6.0.2
 rapidfuzz==3.12.1
     # via jiwer
 regex==2024.11.6
-    # via transformers
+    # via
+    #   transformers
+    #   uroman
 requests==2.32.3
     # via
     #   datasets
@@ -260,6 +262,8 @@ tzdata==2025.1
     # via pandas
 urllib3==2.3.0
     # via requests
+uroman==1.3.1.1
+    # via finetune-setup-example (pyproject.toml)
 xxhash==3.5.0
     # via
     #   datasets
