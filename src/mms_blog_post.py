@@ -790,7 +790,8 @@ During training, a checkpoint will be uploaded asynchronously to the hub every 2
 training_args = TrainingArguments(
     output_dir=f".output/{repo_name}",
     group_by_length=True,
-    per_device_train_batch_size=2,
+    per_device_train_batch_size=128,
+    auto_find_batch_size=True,
     eval_strategy="steps",
     # num_train_epochs=1,
     max_steps=100,
@@ -843,12 +844,13 @@ setInterval(ConnectButton,60000);
 Cool, let's start training!
 """
 
-torch.cuda.memory._record_memory_history(max_entries=1000000)
+trainer.train()
 
-try:
-    trainer.train()
-finally:
-    torch.cuda.memory._dump_snapshot("src/mms_blog_post.memdump.pickle")
+# torch.cuda.memory._record_memory_history(max_entries=1000000)
+# try:
+#     trainer.train()
+# finally:
+#     torch.cuda.memory._dump_snapshot("src/mms_blog_post.memdump.pickle")
 
 """The training loss and validation WER go down nicely.
 
