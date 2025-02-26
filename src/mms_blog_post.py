@@ -80,17 +80,20 @@ import json
 import os
 import random
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
 import comet_ml
+import datasets
 import numpy as np
 import torch
 import uroman
 from datasets import Audio, Dataset, load_dataset
 from evaluate import load
 from safetensors.torch import save_file as safe_save_file
-from torch import nn
+from torch import Generator, nn
+from torch.utils.data import RandomSampler
 from transformers import (
     EvalPrediction,
     Trainer,
@@ -107,6 +110,9 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import (
     WAV2VEC2_ADAPTER_SAFE_FILE,
     CausalLMOutput,
 )
+from transformers.trainer_pt_utils import LengthGroupedSampler
+from transformers.trainer_utils import has_length
+from transformers.utils import is_datasets_available
 
 import wandb
 
@@ -353,6 +359,115 @@ class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
         labels_mask = labels >= 0
         target_lengths = labels_mask.sum(-1)
         return target_lengths, flat_labels
+
+
+def get_length_grouped_indices_shuffled(
+    lengths: list[int],
+    batch_size: int,
+    mega_batch_mult: int | None = None,
+    generator: Generator | None = None,
+) -> list[int]:
+    """Get shuffled megabatches, A custom version. First is still largest.
+
+    Return a list of indices so that each slice of `batch_size` consecutive indices correspond to elements of similar
+    lengths. To do this, the indices are:
+
+    - randomly permuted
+    - grouped in mega-batches of size `mega_batch_mult * batch_size`
+    - sorted by length in each mega-batch
+
+    The result is the concatenation of all mega-batches, with the batch of `batch_size` containing the element of
+    maximum length placed first, so that an OOM happens sooner rather than later.
+    """
+    # Default for mega_batch_mult: 50 or the number to get 4 megabatches, whichever is smaller.
+    if mega_batch_mult is None:
+        mega_batch_mult = min(len(lengths) // (batch_size * 4), 50)
+        # Just in case, for tiny datasets
+        if mega_batch_mult == 0:
+            mega_batch_mult = 1
+
+    # We need to use torch for the random part as a distributed sampler will set the random seed for torch.
+    indices = torch.randperm(len(lengths), generator=generator)
+    megabatch_size = mega_batch_mult * batch_size
+    megabatches = [
+        indices[i : i + megabatch_size].tolist()
+        for i in range(0, len(lengths), megabatch_size)
+    ]
+    megabatches = [
+        sorted(megabatch, key=lambda i: lengths[i], reverse=True)
+        for megabatch in megabatches
+    ]
+
+    # The rest is to get the biggest batch first.
+    # Since each megabatch is sorted by descending length, the longest element is the first
+    megabatch_maximums = [lengths[megabatch[0]] for megabatch in megabatches]
+    max_idx = torch.argmax(torch.tensor(megabatch_maximums)).item()
+    assert isinstance(max_idx, int)
+    # Switch to put the longest element in first position
+    megabatches[0][0], megabatches[max_idx][0] = (
+        megabatches[max_idx][0],
+        megabatches[0][0],
+    )
+
+    return [
+        *[
+            megabatches[0][0],
+            *megabatches[0][1:][
+                torch.randperm(len(megabatches[0]) - 1, generator=generator)
+            ],
+        ],
+        *[
+            i
+            for megabatch in megabatches[1:]
+            for i in megabatch[torch.randperm(len(megabatch), generator=generator)]
+        ],
+    ]
+
+
+class CustomLengthGroupedSampler(LengthGroupedSampler):
+    """Custom sampler for random order."""
+
+    def __iter__(self) -> Iterator[int]:
+        """Get iterator with shuffled indices."""
+        indices = get_length_grouped_indices_shuffled(
+            self.lengths, self.batch_size, generator=self.generator
+        )
+        return iter(indices)
+
+
+class CustomTrainer(Trainer):
+    """A custom version of the trainer to make sure length sampling is mixed."""
+
+    def _get_train_sampler(self) -> torch.utils.data.Sampler | None:
+        if self.train_dataset is None or not has_length(self.train_dataset):
+            return None
+
+        # Build the sampler.
+        if self.args.group_by_length:
+            if is_datasets_available() and isinstance(
+                self.train_dataset, datasets.Dataset
+            ):
+                lengths = (
+                    self.train_dataset[self.args.length_column_name]
+                    if self.args.length_column_name in self.train_dataset.column_names
+                    else None
+                )
+            else:
+                lengths = None
+            model_input_name = (
+                self.processing_class.model_input_names[0]  # type: ignore
+                if self.processing_class is not None
+                else None
+            )
+            return LengthGroupedSampler(
+                self.args.train_batch_size * self.args.gradient_accumulation_steps,
+                dataset=self.train_dataset,  # type: ignore
+                lengths=lengths,
+                model_input_name=model_input_name,
+            )
+
+        else:
+            return RandomSampler(self.train_dataset)  # type: ignore
 
 
 # class CustomWav2Vec2Model(Wav2Vec2Model):
@@ -1069,13 +1184,13 @@ training_args = TrainingArguments(
     # auto_find_batch_size=True,
     gradient_accumulation_steps=accumulation_steps,
     eval_strategy="steps",
-    num_train_epochs=1,
+    num_train_epochs=5,
     # max_steps=100,
     # num_train_epochs=max_train_epochs,
     gradient_checkpointing=True,
     fp16=True,
-    save_steps=1000,
-    eval_steps=1000,
+    save_steps=100,
+    eval_steps=100,
     logging_steps=10,
     eval_on_start=True,
     logging_first_step=True,
@@ -1090,7 +1205,7 @@ training_args = TrainingArguments(
 
 """Now, all instances can be passed to Trainer and we are ready to start training!"""
 eval_size = 320
-trainer = Trainer(
+trainer = CustomTrainer(
     model=model,
     data_collator=data_collator,
     args=training_args,
