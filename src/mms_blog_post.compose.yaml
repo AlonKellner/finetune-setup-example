@@ -1,5 +1,11 @@
 services:
   mms_blog_post:
+    environment:
+      WANDB_PROJECT: finetune-setup-example-mms-blog-post
+      WANDB_LOG_MODEL: end
+      WANDB_WATCH: false
+    env_file:
+      - ./src/mms_blog_post.env
     build:
       context: .
       dockerfile: ./src/mms_blog_post.Dockerfile

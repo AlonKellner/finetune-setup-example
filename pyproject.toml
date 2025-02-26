@@ -40,6 +40,9 @@ extraPaths=[]
 [tool.pytest.ini_options]
 pythonpath="./"
 
+[tool.typos.files]
+extend-exclude = ["**/.env"]
+
 [project]
 dynamic = ["version"]
 name = "finetune-setup-example"
@@ -50,7 +53,7 @@ authors = [
 maintainers = [
   {name = "Alon Kellner", email = "me@alonkellner.com"}
 ]
-description = "An experimental fintuning setup example"
+description = "An experimental finetuning setup example"
 readme = "README.md"
 
 keywords = []
@@ -75,6 +78,7 @@ dev = [
 ]
 mms_blog_post = [
   "accelerate",
+  "comet-ml",
   "datasets[audio]",
   "evaluate",
   "huggingface_hub",
@@ -87,6 +91,7 @@ mms_blog_post = [
   "torch",
   "transformers",
   "uroman",
+  "wandb"
 ]
 
 [project.urls]

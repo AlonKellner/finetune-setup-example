@@ -5,3 +5,6 @@ __pycache__/
 .output/
 *.pyspy
 *.pickle
+.env/
+*.env
+wandb/
