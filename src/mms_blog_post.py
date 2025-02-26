@@ -81,7 +81,7 @@ import os
 import random
 import re
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
 import comet_ml
@@ -105,10 +105,12 @@ from transformers import (
     Wav2Vec2Model,
     Wav2Vec2Processor,
 )
+from transformers.modeling_utils import PreTrainedModel
 from transformers.models.wav2vec2.modeling_wav2vec2 import (
     _HIDDEN_STATES_START_POSITION,
     WAV2VEC2_ADAPTER_SAFE_FILE,
     CausalLMOutput,
+    Wav2Vec2BaseModelOutput,
 )
 from transformers.trainer_pt_utils import LengthGroupedSampler
 from transformers.trainer_utils import has_length
@@ -116,135 +118,133 @@ from transformers.utils import is_datasets_available
 
 import wandb
 
-# from transformers.models.wav2vec2.modeling_wav2vec2 import Wav2Vec2BaseModelOutput
 
+def _compute_mask_indices_with_lengths(
+    shape: tuple[int, int],
+    mask_prob: float,
+    mask_length: int,
+    output_lengths: torch.LongTensor | None = None,
+    min_masks: int = 0,
+) -> np.ndarray:
+    """Spec augment indices.
 
-# def _compute_mask_indices_with_lengths(
-#     shape: tuple[int, int],
-#     mask_prob: float,
-#     mask_length: int,
-#     output_lengths: torch.LongTensor | None = None,
-#     min_masks: int = 0,
-# ) -> np.ndarray:
-#     """Spec augment indices.
+    Computes random mask spans for a given shape. Used to implement [SpecAugment: A Simple Data Augmentation Method for
+    ASR](https://arxiv.org/abs/1904.08779). Note that this method is not optimized to run on TPU and should be run on
+    CPU as part of the preprocessing during training.
 
-#     Computes random mask spans for a given shape. Used to implement [SpecAugment: A Simple Data Augmentation Method for
-#     ASR](https://arxiv.org/abs/1904.08779). Note that this method is not optimized to run on TPU and should be run on
-#     CPU as part of the preprocessing during training.
+    Args:
+        shape: The shape for which to compute masks. This should be of a tuple of size 2 where
+               the first element is the batch size and the second element is the length of the axis to span.
+        mask_prob:  The percentage of the whole axis (between 0 and 1) which will be masked. The number of
+                    independently generated mask spans of length `mask_length` is computed by
+                    `mask_prob*shape[1]/mask_length`. Note that due to overlaps, `mask_prob` is an upper bound and the
+                    actual percentage will be smaller.
+        mask_length: size of the mask
+        min_masks: minimum number of masked spans
+        attention_mask: A (right-padded) attention mask which independently shortens the feature axis of
+                        each batch dimension.
+    """
+    batch_size, sequence_length = shape
 
-#     Args:
-#         shape: The shape for which to compute masks. This should be of a tuple of size 2 where
-#                the first element is the batch size and the second element is the length of the axis to span.
-#         mask_prob:  The percentage of the whole axis (between 0 and 1) which will be masked. The number of
-#                     independently generated mask spans of length `mask_length` is computed by
-#                     `mask_prob*shape[1]/mask_length`. Note that due to overlaps, `mask_prob` is an upper bound and the
-#                     actual percentage will be smaller.
-#         mask_length: size of the mask
-#         min_masks: minimum number of masked spans
-#         attention_mask: A (right-padded) attention mask which independently shortens the feature axis of
-#                         each batch dimension.
-#     """
-#     batch_size, sequence_length = shape
+    if mask_length < 1:
+        raise ValueError("`mask_length` has to be bigger than 0.")
 
-#     if mask_length < 1:
-#         raise ValueError("`mask_length` has to be bigger than 0.")
+    if mask_length > sequence_length:
+        raise ValueError(
+            f"`mask_length` has to be smaller than `sequence_length`, but got `mask_length`: {mask_length}"
+            f" and `sequence_length`: {sequence_length}`"
+        )
 
-#     if mask_length > sequence_length:
-#         raise ValueError(
-#             f"`mask_length` has to be smaller than `sequence_length`, but got `mask_length`: {mask_length}"
-#             f" and `sequence_length`: {sequence_length}`"
-#         )
+    # epsilon is used for probabilistic rounding
+    epsilon = np.random.rand(1).item()
 
-#     # epsilon is used for probabilistic rounding
-#     epsilon = np.random.rand(1).item()
+    def compute_num_masked_span(input_length: int) -> int:
+        """Given input length, compute how many spans should be masked."""
+        num_masked_span = int(mask_prob * input_length / mask_length + epsilon)
+        num_masked_span = max(num_masked_span, min_masks)
 
-#     def compute_num_masked_span(input_length: int) -> int:
-#         """Given input length, compute how many spans should be masked."""
-#         num_masked_span = int(mask_prob * input_length / mask_length + epsilon)
-#         num_masked_span = max(num_masked_span, min_masks)
+        # make sure num masked span <= sequence_length
+        if num_masked_span * mask_length > sequence_length:
+            num_masked_span = sequence_length // mask_length
 
-#         # make sure num masked span <= sequence_length
-#         if num_masked_span * mask_length > sequence_length:
-#             num_masked_span = sequence_length // mask_length
+        # make sure num_masked span is also <= input_length - (mask_length - 1)
+        if input_length - (mask_length - 1) < num_masked_span:
+            num_masked_span = max(input_length - (mask_length - 1), 0)
 
-#         # make sure num_masked span is also <= input_length - (mask_length - 1)
-#         if input_length - (mask_length - 1) < num_masked_span:
-#             num_masked_span = max(input_length - (mask_length - 1), 0)
+        return num_masked_span
 
-#         return num_masked_span
+    # compute number of masked spans in batch
+    input_lengths = (
+        output_lengths.detach().tolist()
+        if output_lengths is not None
+        else [sequence_length for _ in range(batch_size)]
+    )
 
-#     # compute number of masked spans in batch
-#     input_lengths = (
-#         output_lengths.detach().tolist()
-#         if output_lengths is not None
-#         else [sequence_length for _ in range(batch_size)]
-#     )
+    # SpecAugment mask to fill
+    spec_aug_mask = np.zeros((batch_size, sequence_length), dtype=bool)
+    spec_aug_mask_idxs = []
 
-#     # SpecAugment mask to fill
-#     spec_aug_mask = np.zeros((batch_size, sequence_length), dtype=bool)
-#     spec_aug_mask_idxs = []
+    max_num_masked_span = compute_num_masked_span(sequence_length)
 
-#     max_num_masked_span = compute_num_masked_span(sequence_length)
+    if max_num_masked_span == 0:
+        return spec_aug_mask
 
-#     if max_num_masked_span == 0:
-#         return spec_aug_mask
+    for input_length in input_lengths:
+        # compute num of masked spans for this input
+        num_masked_span = compute_num_masked_span(input_length)
 
-#     for input_length in input_lengths:
-#         # compute num of masked spans for this input
-#         num_masked_span = compute_num_masked_span(input_length)
+        # get random indices to mask
+        spec_aug_mask_idx = np.random.choice(
+            np.arange(input_length - (mask_length - 1)), num_masked_span, replace=False
+        )
 
-#         # get random indices to mask
-#         spec_aug_mask_idx = np.random.choice(
-#             np.arange(input_length - (mask_length - 1)), num_masked_span, replace=False
-#         )
+        # pick first sampled index that will serve as a dummy index to pad vector
+        # to ensure same dimension for all batches due to probabilistic rounding
+        # Picking first sample just pads those vectors twice.
+        if len(spec_aug_mask_idx) == 0:
+            # this case can only happen if `input_length` is strictly smaller then
+            # `sequence_length` in which case the last token has to be a padding
+            # token which we can use as a dummy mask id
+            dummy_mask_idx = sequence_length - 1
+        else:
+            dummy_mask_idx = spec_aug_mask_idx[0]
 
-#         # pick first sampled index that will serve as a dummy index to pad vector
-#         # to ensure same dimension for all batches due to probabilistic rounding
-#         # Picking first sample just pads those vectors twice.
-#         if len(spec_aug_mask_idx) == 0:
-#             # this case can only happen if `input_length` is strictly smaller then
-#             # `sequence_length` in which case the last token has to be a padding
-#             # token which we can use as a dummy mask id
-#             dummy_mask_idx = sequence_length - 1
-#         else:
-#             dummy_mask_idx = spec_aug_mask_idx[0]
+        spec_aug_mask_idx = np.concatenate(
+            [
+                spec_aug_mask_idx,
+                np.ones(max_num_masked_span - num_masked_span, dtype=np.int32)
+                * dummy_mask_idx,
+            ]
+        )
+        spec_aug_mask_idxs.append(spec_aug_mask_idx)
 
-#         spec_aug_mask_idx = np.concatenate(
-#             [
-#                 spec_aug_mask_idx,
-#                 np.ones(max_num_masked_span - num_masked_span, dtype=np.int32)
-#                 * dummy_mask_idx,
-#             ]
-#         )
-#         spec_aug_mask_idxs.append(spec_aug_mask_idx)
+    spec_aug_mask_idxs = np.array(spec_aug_mask_idxs)
 
-#     spec_aug_mask_idxs = np.array(spec_aug_mask_idxs)
+    # expand masked indices to masked spans
+    spec_aug_mask_idxs = np.broadcast_to(
+        spec_aug_mask_idxs[:, :, None], (batch_size, max_num_masked_span, mask_length)
+    )
+    spec_aug_mask_idxs = spec_aug_mask_idxs.reshape(
+        batch_size, max_num_masked_span * mask_length
+    )
 
-#     # expand masked indices to masked spans
-#     spec_aug_mask_idxs = np.broadcast_to(
-#         spec_aug_mask_idxs[:, :, None], (batch_size, max_num_masked_span, mask_length)
-#     )
-#     spec_aug_mask_idxs = spec_aug_mask_idxs.reshape(
-#         batch_size, max_num_masked_span * mask_length
-#     )
+    # add offset to the starting indexes so that indexes now create a span
+    offsets = np.arange(mask_length)[None, None, :]
+    offsets = np.broadcast_to(
+        offsets, (batch_size, max_num_masked_span, mask_length)
+    ).reshape(batch_size, max_num_masked_span * mask_length)
+    spec_aug_mask_idxs = spec_aug_mask_idxs + offsets
 
-#     # add offset to the starting indexes so that indexes now create a span
-#     offsets = np.arange(mask_length)[None, None, :]
-#     offsets = np.broadcast_to(
-#         offsets, (batch_size, max_num_masked_span, mask_length)
-#     ).reshape(batch_size, max_num_masked_span * mask_length)
-#     spec_aug_mask_idxs = spec_aug_mask_idxs + offsets
+    # ensure that we cannot have indices larger than sequence_length
+    if spec_aug_mask_idxs.max() > sequence_length - 1:
+        spec_aug_mask_idxs[spec_aug_mask_idxs > sequence_length - 1] = (
+            sequence_length - 1
+        )
 
-#     # ensure that we cannot have indices larger than sequence_length
-#     if spec_aug_mask_idxs.max() > sequence_length - 1:
-#         spec_aug_mask_idxs[spec_aug_mask_idxs > sequence_length - 1] = (
-#             sequence_length - 1
-#         )
+    # scatter indices to mask
+    np.put_along_axis(spec_aug_mask, spec_aug_mask_idxs, 1, -1)
 
-#     # scatter indices to mask
-#     np.put_along_axis(spec_aug_mask, spec_aug_mask_idxs, 1, -1)
-
-#     return spec_aug_mask
+    return spec_aug_mask
 
 
 class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
@@ -253,8 +253,8 @@ class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
     def __init__(self, config: Wav2Vec2Config, target_lang: str | None = None) -> None:
         super().__init__(config)
 
-        # self.wav2vec2 = CustomWav2Vec2Model(config)
-        self.wav2vec2 = Wav2Vec2Model(config)
+        self.wav2vec2 = CustomWav2Vec2Model(config)
+        # self.wav2vec2 = Wav2Vec2Model(config)
         self.dropout = nn.Dropout(config.final_dropout)
 
         self.target_lang = target_lang
@@ -330,7 +330,7 @@ class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
                 logits, dim=-1, dtype=torch.float32
             ).transpose(0, 1)
 
-            with torch.backends.cudnn.flags(enabled=False):
+            with torch.backends.cudnn.flags(enabled=True, benchmark=True):
                 loss = nn.functional.ctc_loss(
                     log_probs,
                     flattened_targets,
@@ -409,34 +409,74 @@ def get_length_grouped_indices_shuffled(
         megabatches[0][0],
     )
 
-    return [
-        *[
-            megabatches[0][0],
-            *megabatches[0][1:][
-                torch.randperm(len(megabatches[0]) - 1, generator=generator)
-            ],
-        ],
-        *[
-            i
-            for megabatch in megabatches[1:]
-            for i in megabatch[torch.randperm(len(megabatch), generator=generator)]
-        ],
+    batches = [
+        [
+            megabatch[i * batch_size : (i + 1) * batch_size]
+            for i in range(mega_batch_mult)
+            if (i * batch_size < len(megabatch))
+        ]
+        for megabatch in megabatches
     ]
+
+    first_batch = batches[0][0]
+    batches = [batches[0][1:], *batches[1:]]
+
+    batches = [
+        [
+            megabatch[i]
+            for i in torch.randperm(len(megabatch), generator=generator).tolist()
+        ]
+        for megabatch in batches
+    ]
+    batches = [[first_batch, *batches[0]], *batches[1:]]
+
+    indices = [i for megabatch in batches for batch in megabatch for i in batch]
+    assert len(indices) == len(lengths)
+    return indices
 
 
 class CustomLengthGroupedSampler(LengthGroupedSampler):
     """Custom sampler for random order."""
 
+    def __init__(
+        self, *args: Any, mega_batch_mult: int | None = None, **kwargs: Any
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.mega_batch_mult = mega_batch_mult
+
     def __iter__(self) -> Iterator[int]:
         """Get iterator with shuffled indices."""
         indices = get_length_grouped_indices_shuffled(
-            self.lengths, self.batch_size, generator=self.generator
+            self.lengths,
+            self.batch_size,
+            generator=self.generator,
+            mega_batch_mult=self.mega_batch_mult,
         )
         return iter(indices)
 
 
+@dataclass
+class CustomTrainingArguments(TrainingArguments):
+    """Custom training args."""
+
+    mega_batch_mult: int = field(
+        default=50, metadata={"help": "The mega batch multiple."}
+    )
+
+
 class CustomTrainer(Trainer):
     """A custom version of the trainer to make sure length sampling is mixed."""
+
+    def __init__(
+        self,
+        model: PreTrainedModel | nn.Module | None = None,
+        args: CustomTrainingArguments | None = None,
+        *arguments: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(model, args, *arguments, **kwargs)  # type: ignore
+        assert args is not None
+        self.args = args
 
     def _get_train_sampler(self) -> torch.utils.data.Sampler | None:
         if self.train_dataset is None or not has_length(self.train_dataset):
@@ -459,164 +499,165 @@ class CustomTrainer(Trainer):
                 if self.processing_class is not None
                 else None
             )
-            return LengthGroupedSampler(
+            return CustomLengthGroupedSampler(
                 self.args.train_batch_size * self.args.gradient_accumulation_steps,
                 dataset=self.train_dataset,  # type: ignore
                 lengths=lengths,
                 model_input_name=model_input_name,
+                mega_batch_mult=self.args.mega_batch_mult,
             )
 
         else:
             return RandomSampler(self.train_dataset)  # type: ignore
 
 
-# class CustomWav2Vec2Model(Wav2Vec2Model):
-#     """Custom model."""
+class CustomWav2Vec2Model(Wav2Vec2Model):
+    """Custom model."""
 
-#     def forward(
-#         self,
-#         input_values: torch.Tensor | None,
-#         attention_mask: torch.Tensor | None = None,
-#         mask_time_indices: torch.FloatTensor | None = None,
-#         output_attentions: bool | None = None,
-#         output_hidden_states: bool | None = None,
-#         return_dict: bool | None = None,
-#     ) -> tuple | Wav2Vec2BaseModelOutput:
-#         """Forward."""
-#         output_attentions = (
-#             output_attentions
-#             if output_attentions is not None
-#             else self.config.output_attentions
-#         )
-#         output_hidden_states = (
-#             output_hidden_states
-#             if output_hidden_states is not None
-#             else self.config.output_hidden_states
-#         )
-#         return_dict = (
-#             return_dict if return_dict is not None else self.config.use_return_dict
-#         )
+    def forward(
+        self,
+        input_values: torch.Tensor | None,
+        attention_mask: torch.Tensor | None = None,
+        mask_time_indices: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | Wav2Vec2BaseModelOutput:
+        """Forward."""
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
+        )
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
-#         extract_features = self.feature_extractor(input_values)
-#         extract_features = extract_features.transpose(1, 2)
+        extract_features = self.feature_extractor(input_values)
+        extract_features = extract_features.transpose(1, 2)
 
-#         output_lengths = None
-#         if attention_mask is not None:
-#             # compute reduced attention_mask corresponding to feature vectors
-#             attention_mask, output_lengths = (
-#                 self._get_feature_vector_attention_mask_and_lengths(
-#                     extract_features.shape[1],
-#                     attention_mask,  # type: ignore
-#                     add_adapter=False,  # type: ignore
-#                 )
-#             )
+        output_lengths = None
+        if attention_mask is not None:
+            # compute reduced attention_mask corresponding to feature vectors
+            attention_mask, output_lengths = (
+                self._get_feature_vector_attention_mask_and_lengths(
+                    extract_features.shape[1],
+                    attention_mask,  # type: ignore
+                    add_adapter=False,  # type: ignore
+                )
+            )
 
-#         hidden_states, extract_features = self.feature_projection(extract_features)
-#         hidden_states = self._mask_hidden_states_with_lengths(
-#             hidden_states,
-#             mask_time_indices=mask_time_indices,
-#             output_lengths=output_lengths,
-#         )
+        hidden_states, extract_features = self.feature_projection(extract_features)
+        hidden_states = self._mask_hidden_states_with_lengths(
+            hidden_states,
+            mask_time_indices=mask_time_indices,
+            output_lengths=output_lengths,
+        )
 
-#         encoder_outputs = self.encoder(
-#             hidden_states,
-#             attention_mask=attention_mask,
-#             output_attentions=output_attentions,
-#             output_hidden_states=output_hidden_states,
-#             return_dict=return_dict,
-#         )
+        encoder_outputs = self.encoder(
+            hidden_states,
+            attention_mask=attention_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
 
-#         hidden_states = encoder_outputs[0]
+        hidden_states = encoder_outputs[0]
 
-#         if self.adapter is not None:
-#             hidden_states = self.adapter(hidden_states)
+        if self.adapter is not None:
+            hidden_states = self.adapter(hidden_states)
 
-#         if not return_dict:
-#             return (hidden_states, extract_features) + encoder_outputs[1:]
+        if not return_dict:
+            return (hidden_states, extract_features) + encoder_outputs[1:]
 
-#         return Wav2Vec2BaseModelOutput(
-#             last_hidden_state=hidden_states,
-#             extract_features=extract_features,
-#             hidden_states=encoder_outputs.hidden_states,
-#             attentions=encoder_outputs.attentions,
-#         )
+        return Wav2Vec2BaseModelOutput(
+            last_hidden_state=hidden_states,
+            extract_features=extract_features,
+            hidden_states=encoder_outputs.hidden_states,
+            attentions=encoder_outputs.attentions,
+        )
 
-#     def _mask_hidden_states_with_lengths(
-#         self,
-#         hidden_states: torch.FloatTensor,
-#         mask_time_indices: torch.FloatTensor | None = None,
-#         output_lengths: torch.LongTensor | None = None,
-#     ) -> torch.Tensor:
-#         """Spec augment.
+    def _mask_hidden_states_with_lengths(
+        self,
+        hidden_states: torch.FloatTensor,
+        mask_time_indices: torch.FloatTensor | None = None,
+        output_lengths: torch.LongTensor | None = None,
+    ) -> torch.Tensor:
+        """Spec augment.
 
-#         Masks extracted features along time axis and/or along feature axis according to [SpecAugment](https://arxiv.org/abs/1904.08779).
-#         """
-#         # `config.apply_spec_augment` can set masking to False
-#         if not getattr(self.config, "apply_spec_augment", True):
-#             return hidden_states
+        Masks extracted features along time axis and/or along feature axis according to [SpecAugment](https://arxiv.org/abs/1904.08779).
+        """
+        # `config.apply_spec_augment` can set masking to False
+        if not getattr(self.config, "apply_spec_augment", True):
+            return hidden_states
 
-#         # generate indices & apply SpecAugment along time axis
-#         batch_size, sequence_length, hidden_size = hidden_states.size()
+        # generate indices & apply SpecAugment along time axis
+        batch_size, sequence_length, hidden_size = hidden_states.size()
 
-#         if mask_time_indices is not None:
-#             # apply SpecAugment along time axis with given mask_time_indices
-#             hidden_states[mask_time_indices] = self.masked_spec_embed.to(
-#                 hidden_states.dtype
-#             )
-#         elif self.config.mask_time_prob > 0 and self.training:
-#             mask_time_indices = _compute_mask_indices_with_lengths(  # type: ignore
-#                 (batch_size, sequence_length),
-#                 mask_prob=self.config.mask_time_prob,
-#                 mask_length=self.config.mask_time_length,
-#                 min_masks=self.config.mask_time_min_masks,
-#                 output_lengths=output_lengths,
-#             )
-#             mask_time_indices = torch.tensor(
-#                 mask_time_indices, device=hidden_states.device, dtype=torch.bool
-#             )  # type: ignore
-#             hidden_states[mask_time_indices] = self.masked_spec_embed.to(
-#                 hidden_states.dtype
-#             )
+        if mask_time_indices is not None:
+            # apply SpecAugment along time axis with given mask_time_indices
+            hidden_states[mask_time_indices] = self.masked_spec_embed.to(
+                hidden_states.dtype
+            )
+        elif self.config.mask_time_prob > 0 and self.training:
+            mask_time_indices = _compute_mask_indices_with_lengths(  # type: ignore
+                (batch_size, sequence_length),
+                mask_prob=self.config.mask_time_prob,
+                mask_length=self.config.mask_time_length,
+                min_masks=self.config.mask_time_min_masks,
+                output_lengths=output_lengths,
+            )
+            mask_time_indices = torch.tensor(
+                mask_time_indices, device=hidden_states.device, dtype=torch.bool
+            )  # type: ignore
+            hidden_states[mask_time_indices] = self.masked_spec_embed.to(
+                hidden_states.dtype
+            )
 
-#         if self.config.mask_feature_prob > 0 and self.training:
-#             # generate indices & apply SpecAugment along feature axis
-#             mask_feature_indices = _compute_mask_indices_with_lengths(
-#                 (batch_size, hidden_size),
-#                 mask_prob=self.config.mask_feature_prob,
-#                 mask_length=self.config.mask_feature_length,
-#                 min_masks=self.config.mask_feature_min_masks,
-#                 output_lengths=output_lengths,
-#             )
-#             mask_feature_indices = torch.tensor(
-#                 mask_feature_indices, device=hidden_states.device, dtype=torch.bool
-#             )
-#             mask_feature_indices = mask_feature_indices[:, None].expand(
-#                 -1, sequence_length, -1
-#             )
-#             hidden_states[mask_feature_indices] = 0
+        if self.config.mask_feature_prob > 0 and self.training:
+            # generate indices & apply SpecAugment along feature axis
+            mask_feature_indices = _compute_mask_indices_with_lengths(
+                (batch_size, hidden_size),
+                mask_prob=self.config.mask_feature_prob,
+                mask_length=self.config.mask_feature_length,
+                min_masks=self.config.mask_feature_min_masks,
+                output_lengths=output_lengths,
+            )
+            mask_feature_indices = torch.tensor(
+                mask_feature_indices, device=hidden_states.device, dtype=torch.bool
+            )
+            mask_feature_indices = mask_feature_indices[:, None].expand(
+                -1, sequence_length, -1
+            )
+            hidden_states[mask_feature_indices] = 0
 
-#         return hidden_states
+        return hidden_states
 
-#     def _get_feature_vector_attention_mask_and_lengths(
-#         self,
-#         feature_vector_length: int,
-#         attention_mask: torch.LongTensor,
-#         add_adapter: bool | None = None,
-#     ) -> tuple[torch.LongTensor, torch.LongTensor]:
-#         # Effectively attention_mask.sum(-1), but not inplace to be able to run
-#         # on inference mode.
-#         non_padded_lengths = attention_mask.cumsum(dim=-1)[:, -1]
-#         output_lengths: torch.LongTensor
-#         output_lengths = self._get_feat_extract_output_lengths(
-#             non_padded_lengths,  # type: ignore
-#             add_adapter=add_adapter,  # type: ignore
-#         )
-#         output_lengths = output_lengths.to(torch.long)  # type: ignore
-#         attention_mask = torch.arange(
-#             feature_vector_length,
-#             device=attention_mask.device,  # type: ignore
-#         ).unsqueeze(0) < output_lengths.unsqueeze(1)
-#         return attention_mask, output_lengths
+    def _get_feature_vector_attention_mask_and_lengths(
+        self,
+        feature_vector_length: int,
+        attention_mask: torch.LongTensor,
+        add_adapter: bool | None = None,
+    ) -> tuple[torch.LongTensor, torch.LongTensor]:
+        # Effectively attention_mask.sum(-1), but not inplace to be able to run
+        # on inference mode.
+        non_padded_lengths = attention_mask.cumsum(dim=-1)[:, -1]
+        output_lengths: torch.LongTensor
+        output_lengths = self._get_feat_extract_output_lengths(
+            non_padded_lengths,  # type: ignore
+            add_adapter=add_adapter,  # type: ignore
+        )
+        output_lengths = output_lengths.to(torch.long)  # type: ignore
+        attention_mask = torch.arange(
+            feature_vector_length,
+            device=attention_mask.device,  # type: ignore
+        ).unsqueeze(0) < output_lengths.unsqueeze(1)
+        return attention_mask, output_lengths
 
 
 # gpu_info = !nvidia-smi
@@ -1174,7 +1215,7 @@ num_devices = 1
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
 
-training_args = TrainingArguments(
+training_args = CustomTrainingArguments(
     report_to=["comet_ml", "wandb"],
     output_dir=f".output/{repo_name}",
     run_name=repo_name,
@@ -1185,6 +1226,7 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=accumulation_steps,
     eval_strategy="steps",
     num_train_epochs=5,
+    mega_batch_mult=100,
     # max_steps=100,
     # num_train_epochs=max_train_epochs,
     gradient_checkpointing=True,
@@ -1192,7 +1234,7 @@ training_args = TrainingArguments(
     save_steps=100,
     eval_steps=100,
     logging_steps=10,
-    eval_on_start=True,
+    # eval_on_start=True,
     logging_first_step=True,
     learning_rate=1e-3,
     warmup_steps=5,
@@ -1243,6 +1285,7 @@ trainer.train()
 trainer.evaluate()
 
 wandb.finish()
+comet_ml.end()
 # print("Auto-selected batch size:", trainer.args.per_device_train_batch_size)
 
 # torch.cuda.memory._record_memory_history(max_entries=1000000)
