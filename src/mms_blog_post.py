@@ -104,6 +104,7 @@ from transformers import (
     Wav2Vec2ForCTC,
     Wav2Vec2Model,
     Wav2Vec2Processor,
+    set_seed,
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers.models.wav2vec2.modeling_wav2vec2 import (
@@ -253,8 +254,8 @@ class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
     def __init__(self, config: Wav2Vec2Config, target_lang: str | None = None) -> None:
         super().__init__(config)
 
-        self.wav2vec2 = CustomWav2Vec2Model(config)
-        # self.wav2vec2 = Wav2Vec2Model(config)
+        # self.wav2vec2 = CustomWav2Vec2Model(config)
+        self.wav2vec2 = Wav2Vec2Model(config)
         self.dropout = nn.Dropout(config.final_dropout)
 
         self.target_lang = target_lang
@@ -432,6 +433,9 @@ def get_length_grouped_indices_shuffled(
 
     indices = [i for megabatch in batches for batch in megabatch for i in batch]
     assert len(indices) == len(lengths)
+    assert len(set(indices)) == len(lengths)
+    assert max(indices) == len(lengths) - 1
+    assert min(indices) == 0
     return indices
 
 
@@ -702,6 +706,8 @@ Common Voice has many different splits including `invalidated`, which refers to 
 
 Because the Turkish dataset is so small, we will merge both the validation and training data into a training dataset and only use the test data for validation.
 """
+seed = 42
+set_seed(seed)
 
 common_voice_train = load_dataset(
     "mozilla-foundation/common_voice_17_0",
@@ -899,7 +905,7 @@ repo_name = "mms-300m-turkish"
 
 """and upload the tokenizer to the [🤗 Hub](https://huggingface.co/)."""
 
-tokenizer.push_to_hub(repo_name)
+tokenizer.push_to_hub(repo_name)  # type: ignore
 
 """Great, you can see the just created repository under `https://huggingface.co/<your-username>/wav2vec2-large-mms-1b-tr-colab`
 
@@ -1021,7 +1027,7 @@ def prepare_dataset(batch: Batch) -> Batch:
     ).input_values[0]
     batch["length"] = len(batch["input_values"])
 
-    batch["labels"] = processor(text=batch["sentence"]).input_ids
+    batch["labels"] = processor(text=batch["sentence"]).input_ids  # type: ignore
     return batch
 
 
@@ -1125,6 +1131,7 @@ predominant metric in ASR is the word error rate (WER), hence we will use it in 
 """
 
 wer_metric = load("wer")
+cer_metric = load("cer")
 
 
 Metrics = dict[str, Any]
@@ -1145,8 +1152,11 @@ def compute_metrics(pred: EvalPrediction) -> Metrics:
     label_str = processor.batch_decode(pred.label_ids, group_tokens=False)
 
     wer = wer_metric.compute(predictions=pred_str, references=label_str)
-
-    return {"wer": wer}
+    cer = cer_metric.compute(predictions=pred_str, references=label_str)
+    for i in range(100):
+        print(f'({i}) pred: "{pred_str[i]}"')
+        print(f'({i}) targ: "{label_str[i]}"')
+    return {"wer": wer, "cer": cer}
 
 
 """Now, we can load the pretrained checkpoint of [**`mms-all-1b`**](https://huggingface.co/facebook/mms-1b-all). The tokenizer's `pad_token_id` must be to define the model's `pad_token_id` or in the case of `Wav2Vec2ForCTC` also CTC's *blank token* ${}^2$.
@@ -1158,9 +1168,12 @@ Since, we're only training a small subset of weights, the model is not prone to 
 
 model = CustomWav2Vec2ForCTC.from_pretrained(
     hf_repo,
-    attention_dropout=0.0,
     hidden_dropout=0.0,
+    activation_dropout=0.0,
+    attention_dropout=0.0,
     feat_proj_dropout=0.0,
+    feat_quantizer_dropout=0.0,
+    final_dropout=0.0,
     layerdrop=0.0,
     ctc_loss_reduction="mean",
     # pad_token_id=processor.tokenizer.pad_token_id,
@@ -1181,6 +1194,7 @@ model.init_adapter_layers()
 """Next, we freeze all weights, **but** the adapter layers."""
 
 model.freeze_base_model()
+model.freeze_feature_encoder()
 
 adapter_weights = model._get_adapters()
 for param in adapter_weights.values():
@@ -1207,53 +1221,56 @@ comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
 # max_items = 400
 # max_train_epochs = max_items/len(common_voice_train)
 # print("max_train_epochs=", max_train_epochs)
-effective_batch_size = 32
+effective_batch_size = 16
 per_device_train_batch_size = 4
+per_device_eval_batch_size = 8
 # effective_batch_size = 2
 # per_device_train_batch_size = 2
 num_devices = 1
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
 
-training_args = CustomTrainingArguments(
+training_args = CustomTrainingArguments(  # type: ignore
+    seed=seed,
     report_to=["comet_ml", "wandb"],
     output_dir=f".output/{repo_name}",
     run_name=repo_name,
     group_by_length=True,
     per_device_train_batch_size=per_device_train_batch_size,
-    per_device_eval_batch_size=per_device_train_batch_size,
-    # auto_find_batch_size=True,
+    per_device_eval_batch_size=per_device_eval_batch_size,
     gradient_accumulation_steps=accumulation_steps,
     eval_strategy="steps",
-    num_train_epochs=5,
+    num_train_epochs=10,
     mega_batch_mult=100,
-    # max_steps=100,
-    # num_train_epochs=max_train_epochs,
+    dataloader_num_workers=4,
     gradient_checkpointing=True,
-    fp16=True,
-    save_steps=100,
-    eval_steps=100,
-    logging_steps=10,
-    # eval_on_start=True,
+    fp16=False,
+    save_steps=1000,
+    eval_steps=1000,
+    logging_steps=100,
+    eval_on_start=True,
     logging_first_step=True,
     learning_rate=1e-3,
-    warmup_steps=5,
+    warmup_ratio=0.1,
+    weight_decay=0.01,
     save_total_limit=2,
     push_to_hub=True,
-    # push_to_hub=False,
     logging_nan_inf_filter=True,
+    load_best_model_at_end=True,
+    metric_for_best_model="wer",
+    greater_is_better=False,
     log_level="info",
 )
 
 """Now, all instances can be passed to Trainer and we are ready to start training!"""
-eval_size = 320
+eval_size = 3200
 trainer = CustomTrainer(
     model=model,
     data_collator=data_collator,
     args=training_args,
     compute_metrics=compute_metrics,
-    train_dataset=common_voice_train.shuffle(seed=42),
-    eval_dataset=common_voice_test.shuffle(seed=42).select(range(eval_size)),
+    train_dataset=common_voice_train.shuffle(seed=seed),
+    eval_dataset=common_voice_test.shuffle(seed=seed).select(range(eval_size)),
     processing_class=processor.feature_extractor,
 )
 

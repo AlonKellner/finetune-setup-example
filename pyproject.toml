@@ -12,7 +12,8 @@ version-file = "src/_version.py"
 
 [tool.ruff]
 line-length = 88
-exclude = ["src/_version.py", "dev-pyproject/*"]
+extend-exclude = ["src/_version.py", "dev-pyproject/*"]
+respect-gitignore = true
 
 [tool.ruff.lint]
 select = [
