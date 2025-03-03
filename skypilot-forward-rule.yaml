@@ -1,0 +1,13 @@
+IPAddress: 34.173.29.230
+IPProtocol: TCP
+creationTimestamp: "2025-01-07T11:59:58.221-08:00"
+description: '{"kubernetes.io/service-name":"skypilot/skypilot-api-service-2-service"}'
+kind: compute#forwardingRule
+labelFingerprint: 42WmSpB8rSM=
+loadBalancingScheme: EXTERNAL
+name: a7ffc75a4f58548fdb0633ef00aef1a8
+networkTier: PREMIUM
+portRange: 80-80
+region: https://www.googleapis.com/compute/v1/projects/triple-nectar-447116-d3/regions/us-central1
+selfLink: https://www.googleapis.com/compute/v1/projects/triple-nectar-447116-d3/regions/us-central1/forwardingRules/a7ffc75a4f58548fdb0633ef00aef1a8
+target: https://www.googleapis.com/compute/v1/projects/triple-nectar-447116-d3/regions/us-central1/targetPools/a7ffc75a4f58548fdb0633ef00aef1a8
