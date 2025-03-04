@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
 pre-commit run --all-files
+uv sync --extra all_cpu --link-mode=copy --upgrade

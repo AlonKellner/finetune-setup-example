@@ -82,17 +82,22 @@ import random
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 import comet_ml
-import datasets
 import numpy as np
+import polars as pl
 import torch
+import torch.profiler as tprof
+import torchaudio as ta
 import uroman
-from datasets import Audio, Dataset, load_dataset
+from datasets import Audio, load_dataset
+from datasets import Dataset as HFDataset
 from evaluate import load
 from safetensors.torch import save_file as safe_save_file
 from torch import Generator, nn
+from torch.utils.data import Dataset as TorchDataset
 from torch.utils.data import RandomSampler
 from transformers import (
     EvalPrediction,
@@ -115,7 +120,7 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import (
 )
 from transformers.trainer_pt_utils import LengthGroupedSampler
 from transformers.trainer_utils import has_length
-from transformers.utils import is_datasets_available
+from transformers.utils import is_flash_attn_2_available
 
 import wandb
 
@@ -466,6 +471,12 @@ class CustomTrainingArguments(TrainingArguments):
     mega_batch_mult: int = field(
         default=50, metadata={"help": "The mega batch multiple."}
     )
+    has_length_column: bool = field(
+        default=True,
+        metadata={
+            "help": "Sets whether the dataset has a length column for length sampling."
+        },
+    )
 
 
 class CustomTrainer(Trainer):
@@ -488,12 +499,10 @@ class CustomTrainer(Trainer):
 
         # Build the sampler.
         if self.args.group_by_length:
-            if is_datasets_available() and isinstance(
-                self.train_dataset, datasets.Dataset
-            ):
+            if self.args.has_length_column:
                 lengths = (
-                    self.train_dataset[self.args.length_column_name]
-                    if self.args.length_column_name in self.train_dataset.column_names
+                    self.train_dataset[self.args.length_column_name]  # type: ignore
+                    if self.args.length_column_name in self.train_dataset.column_names  # type: ignore
                     else None
                 )
             else:
@@ -664,6 +673,80 @@ class CustomWav2Vec2Model(Wav2Vec2Model):
         return attention_mask, output_lengths
 
 
+class FlacDataset(TorchDataset):
+    """A wrapping dataset for caching audio as local flac files."""
+
+    def __init__(
+        self, inner_dataset: HFDataset | TorchDataset, cache_path: str, sample_rate: int
+    ) -> None:
+        self._inner_dataset = inner_dataset
+        self.cache_path = Path(cache_path)
+        self.metadata_path = self.cache_path / "metadata.parquet"
+        self.metadata = self._init_metadata()
+        self.sample_rate = sample_rate
+
+    def __del__(self) -> None:
+        """Save the metadata as a parquet."""
+        if pl is not None:
+            pl.DataFrame(self.metadata).write_parquet(self.metadata_path)
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate to the inner if it has the attribute."""
+        return getattr(self._inner_dataset, name)
+
+    def _init_metadata(self) -> dict[int, dict[str, Any]]:
+        if self.metadata_path.exists():
+            df = pl.read_parquet(self.metadata_path)
+            return {i: row for i, row in enumerate(df.to_dicts())}
+        else:
+            return dict()
+
+    def __len__(self) -> int:
+        """Propegates the length of the inner dataset."""
+        return len(self._inner_dataset)  # type: ignore
+
+    def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
+        """Return the item corresponding to the index while caching both metadata and audio to files."""
+        if isinstance(index, str):
+            return self._inner_dataset[index]
+
+        item = None
+
+        index = index % len(self)
+
+        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
+        flac_path = Path(self.cache_path) / f"{padded_index}.flac"
+        if flac_path.exists():
+            samples = self._load_flac(flac_path)
+        else:
+            if item is None:
+                item = self._inner_dataset[index]
+            samples = item["input_values"]
+            self._save_flac(flac_path, samples)
+
+        if index in self.metadata:
+            item_metadata = self.metadata[index]
+        else:
+            if item is None:
+                item = self._inner_dataset[index]
+            item_metadata = {k: v for k, v in item.items() if k != "input_values"}
+            self.metadata[index] = item_metadata
+
+        item = dict(input_values=samples, **item_metadata)
+        return item
+
+    def _save_flac(self, flac_path: Path, samples: list[int]) -> None:
+        ta.save(
+            str(flac_path.absolute()), torch.tensor(samples)[None, :], self.sample_rate
+        )
+
+    def _load_flac(self, flac_path: Path) -> list[int]:
+        samples, sr = ta.load(flac_path.absolute())
+        assert sr == self.sample_rate
+        assert samples.shape[0] == 1
+        return samples[0, :].tolist()
+
+
 # gpu_info = !nvidia-smi
 # gpu_info = '\n'.join(gpu_info)
 # if gpu_info.find('failed') >= 0:
@@ -706,6 +789,13 @@ Common Voice has many different splits including `invalidated`, which refers to 
 
 Because the Turkish dataset is so small, we will merge both the validation and training data into a training dataset and only use the test data for validation.
 """
+if is_flash_attn_2_available():
+    print("Flash-attn 2 Available.")
+else:
+    print("WARNING: Can't access flash-attn 2!")
+
+print(f"torchaudio backends: {ta.list_audio_backends()}")
+
 seed = 42
 set_seed(seed)
 
@@ -718,7 +808,7 @@ common_voice_train = load_dataset(
     trust_remote_code=True,
     # streaming=True,
 )
-assert isinstance(common_voice_train, Dataset)
+assert isinstance(common_voice_train, HFDataset)
 common_voice_test = load_dataset(
     "mozilla-foundation/common_voice_17_0",
     "tr",
@@ -727,7 +817,7 @@ common_voice_test = load_dataset(
     trust_remote_code=True,
     # streaming=True,
 )
-assert isinstance(common_voice_test, Dataset)
+assert isinstance(common_voice_test, HFDataset)
 
 """Many ASR datasets only provide the target text, `'sentence'` for each audio array `'audio'` and file `'path'`. Common Voice actually provides much more information about each audio file, such as the `'accent'`, etc. Keeping the notebook as general as possible, we only consider the transcribed text for fine-tuning.
 
@@ -927,10 +1017,11 @@ A `Wav2Vec2FeatureExtractor` object requires the following parameters to be inst
 - `return_attention_mask`: Whether the model should make use of an `attention_mask` for batched inference. In general, XLS-R models checkpoints should **always** use the `attention_mask`.
 """
 
+sample_rate = 16_000
 
 feature_extractor = Wav2Vec2FeatureExtractor(
     feature_size=1,
-    sampling_rate=16000,
+    sampling_rate=sample_rate,
     padding_value=0.0,
     do_normalize=True,
     return_attention_mask=True,
@@ -976,9 +1067,11 @@ common_voice_train[0]["audio"]
 """In the example above we can see that the audio data is loaded with a sampling rate of 48kHz whereas 16kHz are expected by the model. We can set the audio feature to the correct sampling rate by making use of [`cast_column`](https://huggingface.co/docs/datasets/package_reference/main_classes.html?highlight=cast_column#datasets.DatasetDict.cast_column):"""
 
 common_voice_train = common_voice_train.cast_column(
-    "audio", Audio(sampling_rate=16_000)
+    "audio", Audio(sampling_rate=sample_rate)
 )
-common_voice_test = common_voice_test.cast_column("audio", Audio(sampling_rate=16_000))
+common_voice_test = common_voice_test.cast_column(
+    "audio", Audio(sampling_rate=sample_rate)
+)
 
 """Let's take a look at `"audio"` again."""
 
@@ -1039,6 +1132,22 @@ common_voice_train = common_voice_train.map(
 common_voice_test = common_voice_test.map(
     prepare_dataset, remove_columns=common_voice_test.column_names
 )
+
+common_voice_train = FlacDataset(
+    common_voice_train.shuffle(seed=seed), "./.data/train_cache/", sample_rate
+)
+common_voice_train[0]
+common_voice_train[-1]
+
+eval_size = 3200
+
+common_voice_test = FlacDataset(
+    common_voice_test.shuffle(seed=seed).select(range(eval_size)),
+    "./.data/test_cache/",
+    sample_rate,
+)
+common_voice_test[0]
+common_voice_test[-1]
 
 """**Note**: `datasets` automatically takes care of audio loading and resampling. If you wish to implement your own customized data loading/sampling, feel free to just make use of the `"path"` column instead and disregard the `"audio"` column.
 
@@ -1180,6 +1289,7 @@ model = CustomWav2Vec2ForCTC.from_pretrained(
     vocab_size=len(processor.tokenizer),
     adapter_attn_dim=len(processor.tokenizer),
     ignore_mismatched_sizes=True,
+    attn_implementation="flash_attention_2",
 )
 
 """**Note**: It is expected that some weights are newly initialized. Those weights correspond to the newly initilaized vocabulary output layer.
@@ -1218,17 +1328,23 @@ During training, a checkpoint will be uploaded asynchronously to the hub every 2
 
 comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
 
-# max_items = 400
-# max_train_epochs = max_items/len(common_voice_train)
-# print("max_train_epochs=", max_train_epochs)
+# num_train_epochs = 10
+num_train_epochs = 1
 effective_batch_size = 16
 per_device_train_batch_size = 4
 per_device_eval_batch_size = 8
-# effective_batch_size = 2
-# per_device_train_batch_size = 2
 num_devices = 1
+warmup_ratio = 0.1
+decay_ratio = 0.6
+
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
+
+num_training_steps = (
+    len(common_voice_train) // effective_batch_size
+) * num_train_epochs
+
+lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
 
 training_args = CustomTrainingArguments(  # type: ignore
     seed=seed,
@@ -1240,9 +1356,10 @@ training_args = CustomTrainingArguments(  # type: ignore
     per_device_eval_batch_size=per_device_eval_batch_size,
     gradient_accumulation_steps=accumulation_steps,
     eval_strategy="steps",
-    num_train_epochs=10,
+    num_train_epochs=num_train_epochs,
     mega_batch_mult=100,
     dataloader_num_workers=4,
+    dataloader_drop_last=True,
     gradient_checkpointing=True,
     fp16=False,
     save_steps=1000,
@@ -1251,7 +1368,9 @@ training_args = CustomTrainingArguments(  # type: ignore
     eval_on_start=True,
     logging_first_step=True,
     learning_rate=1e-3,
-    warmup_ratio=0.1,
+    lr_scheduler_type="warmup_stable_decay",
+    warmup_steps=int(warmup_ratio * num_training_steps),
+    lr_scheduler_kwargs=lr_scheduler_kwargs,
     weight_decay=0.01,
     save_total_limit=2,
     push_to_hub=True,
@@ -1263,14 +1382,14 @@ training_args = CustomTrainingArguments(  # type: ignore
 )
 
 """Now, all instances can be passed to Trainer and we are ready to start training!"""
-eval_size = 3200
+_model = torch.compile(model)
 trainer = CustomTrainer(
-    model=model,
+    model=_model,  # type: ignore
     data_collator=data_collator,
     args=training_args,
     compute_metrics=compute_metrics,
-    train_dataset=common_voice_train.shuffle(seed=seed),
-    eval_dataset=common_voice_test.shuffle(seed=seed).select(range(eval_size)),
+    train_dataset=common_voice_train,
+    eval_dataset=common_voice_test,
     processing_class=processor.feature_extractor,
 )
 
@@ -1297,12 +1416,33 @@ setInterval(ConnectButton,60000);
 Cool, let's start training!
 """
 
+# trainer.train()
+# trainer.evaluate()
+
 # Start training
-trainer.train()
-trainer.evaluate()
+with tprof.profile(
+    activities=[tprof.ProfilerActivity.CPU, tprof.ProfilerActivity.CUDA],
+    record_shapes=True,
+    profile_memory=True,
+) as prof:
+    with tprof.record_function("train"):
+        trainer.train()
+    with tprof.record_function("final evaluate"):
+        trainer.evaluate()
+
+table_kwargs = dict(sort_by="self_cuda_time_total", row_limit=10)
+print(prof.key_averages().table(**table_kwargs))  # type: ignore
+print(
+    prof.key_averages(group_by_input_shape=True).table(**table_kwargs)  # type: ignore
+)
+print(
+    prof.key_averages(group_by_stack_n=5).table(**table_kwargs)  # type: ignore
+)
 
 wandb.finish()
 comet_ml.end()
+del common_voice_train
+del common_voice_test
 # print("Auto-selected batch size:", trainer.args.per_device_train_batch_size)
 
 # torch.cuda.memory._record_memory_history(max_entries=1000000)
@@ -1360,7 +1500,7 @@ processor.tokenizer.set_target_lang(target_lang)  # type: ignore
 
 """Let's check that the model can correctly transcribe Turkish"""
 
-common_voice_test_tr: Dataset = load_dataset(
+common_voice_test_tr: HFDataset = load_dataset(
     "mozilla-foundation/common_voice_17_0",
     "tr",
     data_dir="./cv-corpus-17.0-2024-03-20",
@@ -1370,14 +1510,14 @@ common_voice_test_tr: Dataset = load_dataset(
     # streaming=True,
 )  # type: ignore
 common_voice_test_tr = common_voice_test_tr.cast_column(
-    "audio", Audio(sampling_rate=16_000)
+    "audio", Audio(sampling_rate=sample_rate)
 )
 
 """Let's process the audio, run a forward pass and predict the ids"""
 
 input_dict = processor(
     common_voice_test_tr[0]["audio"]["array"],
-    sampling_rate=16_000,
+    sampling_rate=sample_rate,
     return_tensors="pt",
     padding=True,
 )
@@ -1399,44 +1539,6 @@ print(common_voice_test_tr[0]["sentence"].lower())
 
 Now it is very simple to change the adapter to Swedish by calling [`model.load_adapter(...)`](mozilla-foundation/common_voice_6_1) and by changing the tokenizer to Swedish as well.
 """
-
-# model.load_adapter("swe")
-
-# processor.tokenizer.set_target_lang("swe")  # type: ignore
-
-# """We again load the Swedish test set from common voice"""
-
-# common_voice_test_swe: Dataset = load_dataset(
-#     "mozilla-foundation/common_voice_17_0",
-#     "sv-SE",
-#     data_dir="./cv-corpus-17.0-2024-03-20",
-#     split="test",
-#     token=True,
-#     trust_remote_code=True,
-#     # streaming=True,
-# )  # type: ignore
-# common_voice_test_swe = common_voice_test_swe.cast_column(
-#     "audio", Audio(sampling_rate=16_000)
-# )
-
-# """ and transcribe a sample:"""
-
-# input_dict = processor(
-#     common_voice_test_swe[0]["audio"]["array"],
-#     sampling_rate=16_000,
-#     return_tensors="pt",
-#     padding=True,
-# )
-
-# logits = model(input_dict.input_values.to("cuda")).logits
-
-# pred_ids = torch.argmax(logits, dim=-1)[0]
-
-# print("Prediction:")
-# print(processor.decode(pred_ids))
-
-# print("\nReference:")
-# print(common_voice_test_swe[0]["sentence"].lower())
 
 """Great, this looks like a perfect transcription!
 

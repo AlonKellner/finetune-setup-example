@@ -6,7 +6,7 @@ WORKDIR /app
 COPY pyproject.toml dev-pyproject/ ./
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml -o requirements.txt && \
-    uv sync --upgrade
+    uv sync --upgrade --link-mode=copy
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}

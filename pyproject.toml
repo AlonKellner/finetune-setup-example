@@ -2,6 +2,9 @@
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
+[tool.hatch.envs.default]
+installer = "uv"
+
 [tool.hatch.version]
 source = "vcs"
 fallback-version = "0.0.0.dev0"
@@ -88,12 +91,17 @@ mms_blog_post = [
   "numba>0.47",
   "numpy",
   "pandas",
+  "polars",
   "safetensors",
   "torch",
+  "torchaudio",
   "transformers",
   "uroman",
   "wandb"
 ]
+gpu = ["flash-attn"]
+all_cpu = ["finetune-setup-example[dev]", "finetune-setup-example[mms_blog_post]"]
+all_gpu = ["finetune-setup-example[all_cpu]", "finetune-setup-example[gpu]"]
 
 [project.urls]
 Homepage = "https://alonkellner.com"
