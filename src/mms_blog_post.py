@@ -80,6 +80,8 @@ import json
 import os
 import random
 import re
+import tarfile
+import tempfile
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -89,7 +91,6 @@ import comet_ml
 import numpy as np
 import polars as pl
 import torch
-import torch.profiler as tprof
 import torchaudio as ta
 import uroman
 from datasets import Audio, load_dataset
@@ -98,7 +99,8 @@ from evaluate import load
 from safetensors.torch import save_file as safe_save_file
 from torch import Generator, nn
 from torch.utils.data import Dataset as TorchDataset
-from torch.utils.data import RandomSampler
+from torch.utils.data import RandomSampler, SequentialSampler
+from tqdm.auto import tqdm
 from transformers import (
     EvalPrediction,
     Trainer,
@@ -523,6 +525,39 @@ class CustomTrainer(Trainer):
         else:
             return RandomSampler(self.train_dataset)  # type: ignore
 
+    def _get_eval_sampler(  # type: ignore
+        self, eval_dataset: HFDataset
+    ) -> torch.utils.data.Sampler | None:
+        if eval_dataset is None or not has_length(eval_dataset):
+            return None
+
+        # Build the sampler.
+        if self.args.group_by_length:
+            if self.args.has_length_column:
+                lengths = (
+                    eval_dataset[self.args.length_column_name]
+                    if self.args.length_column_name in eval_dataset.column_names
+                    else None
+                )
+            else:
+                lengths = None
+            model_input_name = (
+                self.tokenizer.model_input_names[0]
+                if self.tokenizer is not None
+                else None
+            )
+            return CustomLengthGroupedSampler(
+                self.args.eval_batch_size,
+                dataset=eval_dataset,
+                lengths=lengths,
+                model_input_name=model_input_name,
+            )
+
+        if self.args.world_size <= 1:
+            return SequentialSampler(eval_dataset)
+        else:
+            return None
+
 
 class CustomWav2Vec2Model(Wav2Vec2Model):
     """Custom model."""
@@ -677,33 +712,64 @@ class FlacDataset(TorchDataset):
     """A wrapping dataset for caching audio as local flac files."""
 
     def __init__(
-        self, inner_dataset: HFDataset | TorchDataset, cache_path: str, sample_rate: int
+        self,
+        inner_dataset: HFDataset | TorchDataset,
+        cache_path: str | Path,
+        sample_rate: int,
+        metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = Path(cache_path)
         self.metadata_path = self.cache_path / "metadata.parquet"
-        self.metadata = self._init_metadata()
+        if metadata is None:
+            metadata = self._init_metadata()
+        self.metadata = metadata
         self.sample_rate = sample_rate
 
     def __del__(self) -> None:
         """Save the metadata as a parquet."""
-        if pl is not None:
-            pl.DataFrame(self.metadata).write_parquet(self.metadata_path)
+        self.save_metadata()
+
+    def save_metadata(self) -> None:
+        """Save the metadata as a parquet."""
+        import polars as pl
+
+        pl.from_dicts(
+            [
+                dict(i=i, **self.metadata[i])
+                for i in range(len(self))
+                if i in self.metadata
+            ]
+        ).sort(by="i").write_parquet(self.metadata_path)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
-        return getattr(self._inner_dataset, name)
+        result = getattr(self._inner_dataset, name)
+        if issubclass(type(result), HFDataset) or issubclass(
+            type(result), TorchDataset
+        ):
+            result = FlacDataset(
+                result, self.cache_path, self.sample_rate, self.metadata
+            )
+        return result
 
     def _init_metadata(self) -> dict[int, dict[str, Any]]:
         if self.metadata_path.exists():
-            df = pl.read_parquet(self.metadata_path)
-            return {i: row for i, row in enumerate(df.to_dicts())}
+            df = pl.read_parquet(self.metadata_path).sort(by="i")
+            return {
+                row["i"]: {k: v for k, v in row.items() if k != "i"}
+                for row in df.to_dicts()
+            }
         else:
             return dict()
 
     def __len__(self) -> int:
         """Propegates the length of the inner dataset."""
         return len(self._inner_dataset)  # type: ignore
+
+    def __getitems__(self, keys: list) -> list:
+        """Can be used to get a batch using a list of integers indices."""
+        return [self[k] for k in keys]
 
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
@@ -732,7 +798,141 @@ class FlacDataset(TorchDataset):
             item_metadata = {k: v for k, v in item.items() if k != "input_values"}
             self.metadata[index] = item_metadata
 
-        item = dict(input_values=samples, **item_metadata)
+        item = dict(
+            input_values=samples,
+            **item_metadata,
+            indices=index,
+            file_paths=str(flac_path),
+            file_sizes=flac_path.stat().st_size,
+        )
+        return item
+
+    def _save_flac(self, flac_path: Path, samples: list[int]) -> None:
+        ta.save(
+            str(flac_path.absolute()), torch.tensor(samples)[None, :], self.sample_rate
+        )
+
+    def _load_flac(self, flac_path: Path) -> list[int]:
+        samples, sr = ta.load(flac_path.absolute())
+        assert sr == self.sample_rate
+        assert samples.shape[0] == 1
+        return samples[0, :].tolist()
+
+
+class TarS3Dataset(TorchDataset):
+    """A wrapping dataset for caching files to s3."""
+
+    def __init__(
+        self,
+        inner_dataset: HFDataset | TorchDataset,
+        cache_path: str | Path,
+        s3_client: Any,
+        cache_bucket: str,
+        indices_order: list[int],
+    ) -> None:
+        self._inner_dataset = inner_dataset
+        self.cache_path = Path(cache_path)
+        self.metadata_path = self.cache_path / "metadata.parquet"
+        self.s3_client = s3_client
+        self.cache_bucket = cache_bucket
+        self.indices_order = indices_order
+        self._upload(["metadata.parquet"], "metadata")
+
+    def __del__(self) -> None:
+        """Save the metadata as a parquet."""
+        self._upload(["metadata.parquet"], "metadata")
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate to the inner if it has the attribute."""
+        result = getattr(self._inner_dataset, name)
+        if issubclass(type(result), HFDataset) or issubclass(
+            type(result), TorchDataset
+        ):
+            result = TarS3Dataset(
+                result,
+                self.cache_path,
+                self.s3_client,
+                self.cache_bucket,
+                self.indices_order,
+            )
+        return result
+
+    def _exists(self, name: str) -> bool:
+        acl_metadata = self.s3_client.get_object_acl(
+            Bucket=self.cache_bucket, Key=name
+        )["ResponseMetadata"]
+        return (
+            ("HTTPStatusCode" in acl_metadata)
+            and (acl_metadata["HTTPStatusCode"] == 200)
+            and ("HTTPHeaders" in acl_metadata)
+            and ("content-length" in acl_metadata["HTTPHeaders"])
+            and (int(acl_metadata["HTTPHeaders"]["content-length"]) > 0)
+        )
+
+    def _upload(self, files: list[str], name: str) -> None:
+        if self._exists(name):
+            return
+        with tempfile.NamedTemporaryFile() as f:
+            with tarfile.open(f.name, "w:gz") as tar:
+                for file_name in files:
+                    file_path = str(self.cache_path / file_name)
+                    if os.path.exists(file_path):
+                        tar.add(file_path, arcname=os.path.basename(file_path))
+                    else:
+                        print(
+                            f"Warning: {file_path} does not exist and will be skipped."
+                        )
+
+            self.s3_client.upload_file(
+                Filename=f.name, Bucket=self.cache_bucket, Key=f"{name}.tar.gz"
+            )
+
+    def _download(self, name: str) -> None:
+        with tempfile.NamedTemporaryFile() as f:
+            self.s3_client.download_file(
+                Bucket=self.cache_bucket, Key=f"{name}.tar.gz", Filename=f.name
+            )
+            with tarfile.open(f.name, "r:gz") as tar:
+                tar.extractall(path=self.cache_path, filter="data")
+
+    def __len__(self) -> int:
+        """Propegates the length of the inner dataset."""
+        return len(self._inner_dataset)  # type: ignore
+
+    def __getitems__(self, keys: list) -> list:
+        """Can be used to get a batch using a list of integers indices."""
+        return [self[k] for k in keys]
+
+    def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
+        """Return the item corresponding to the index while caching both metadata and audio to files."""
+        if isinstance(index, str):
+            return self._inner_dataset[index]
+
+        item = None
+
+        index = index % len(self)
+
+        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
+        flac_path = Path(self.cache_path) / f"{padded_index}.flac"
+        if flac_path.exists():
+            samples = self._load_flac(flac_path)
+        else:
+            if item is None:
+                item = self._inner_dataset[index]
+            samples = item["input_values"]
+            self._save_flac(flac_path, samples)
+
+        if index in self.metadata:
+            item_metadata = self.metadata[index]
+        else:
+            if item is None:
+                item = self._inner_dataset[index]
+            item_metadata = {k: v for k, v in item.items() if k != "input_values"}
+            self.metadata[index] = item_metadata
+
+        item = dict(
+            input_values=samples, **item_metadata, indices=index, paths=str(flac_path)
+        )
         return item
 
     def _save_flac(self, flac_path: Path, samples: list[int]) -> None:
@@ -1134,20 +1334,28 @@ common_voice_test = common_voice_test.map(
 )
 
 common_voice_train = FlacDataset(
-    common_voice_train.shuffle(seed=seed), "./.data/train_cache/", sample_rate
+    common_voice_train.shuffle(seed=seed), "./.app_cache/train_set/", sample_rate
 )
-common_voice_train[0]
-common_voice_train[-1]
+print(list(common_voice_train[0].keys()))
+print(list(common_voice_train[-1].keys()))
 
 eval_size = 3200
 
 common_voice_test = FlacDataset(
     common_voice_test.shuffle(seed=seed).select(range(eval_size)),
-    "./.data/test_cache/",
+    "./.app_cache/test_set/",
     sample_rate,
 )
-common_voice_test[0]
-common_voice_test[-1]
+print(list(common_voice_test[0].keys()))
+print(list(common_voice_test[-1].keys()))
+
+for i in tqdm(list(range(len(common_voice_test)))):
+    item = common_voice_test[i]
+common_voice_test.save_metadata()
+
+for i in tqdm(list(range(len(common_voice_train)))):
+    item = common_voice_train[i]
+common_voice_train.save_metadata()
 
 """**Note**: `datasets` automatically takes care of audio loading and resampling. If you wish to implement your own customized data loading/sampling, feel free to just make use of the `"path"` column instead and disregard the `"audio"` column.
 
@@ -1289,7 +1497,8 @@ model = CustomWav2Vec2ForCTC.from_pretrained(
     vocab_size=len(processor.tokenizer),
     adapter_attn_dim=len(processor.tokenizer),
     ignore_mismatched_sizes=True,
-    attn_implementation="flash_attention_2",
+    # attn_implementation="flash_attention_2",
+    attn_implementation="sdpa",
 )
 
 """**Note**: It is expected that some weights are newly initialized. Those weights correspond to the newly initilaized vocabulary output layer.
@@ -1328,14 +1537,14 @@ During training, a checkpoint will be uploaded asynchronously to the hub every 2
 
 comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
 
-# num_train_epochs = 10
-num_train_epochs = 1
+num_train_epochs = 5
+# num_train_epochs = 1
 effective_batch_size = 16
 per_device_train_batch_size = 4
 per_device_eval_batch_size = 8
 num_devices = 1
 warmup_ratio = 0.1
-decay_ratio = 0.6
+decay_ratio = 0.7
 
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
@@ -1359,6 +1568,7 @@ training_args = CustomTrainingArguments(  # type: ignore
     num_train_epochs=num_train_epochs,
     mega_batch_mult=100,
     dataloader_num_workers=4,
+    # dataloader_num_workers=0,
     dataloader_drop_last=True,
     gradient_checkpointing=True,
     fp16=False,
@@ -1373,18 +1583,20 @@ training_args = CustomTrainingArguments(  # type: ignore
     lr_scheduler_kwargs=lr_scheduler_kwargs,
     weight_decay=0.01,
     save_total_limit=2,
-    push_to_hub=True,
+    # push_to_hub=True,
+    push_to_hub=False,
     logging_nan_inf_filter=True,
     load_best_model_at_end=True,
     metric_for_best_model="wer",
     greater_is_better=False,
     log_level="info",
+    # torch_compile=True,
+    torch_compile=False,
 )
 
 """Now, all instances can be passed to Trainer and we are ready to start training!"""
-_model = torch.compile(model)
 trainer = CustomTrainer(
-    model=_model,  # type: ignore
+    model=model,  # type: ignore
     data_collator=data_collator,
     args=training_args,
     compute_metrics=compute_metrics,
@@ -1416,33 +1628,13 @@ setInterval(ConnectButton,60000);
 Cool, let's start training!
 """
 
-# trainer.train()
-# trainer.evaluate()
+trainer.train()
+trainer.evaluate()
 
-# Start training
-with tprof.profile(
-    activities=[tprof.ProfilerActivity.CPU, tprof.ProfilerActivity.CUDA],
-    record_shapes=True,
-    profile_memory=True,
-) as prof:
-    with tprof.record_function("train"):
-        trainer.train()
-    with tprof.record_function("final evaluate"):
-        trainer.evaluate()
-
-table_kwargs = dict(sort_by="self_cuda_time_total", row_limit=10)
-print(prof.key_averages().table(**table_kwargs))  # type: ignore
-print(
-    prof.key_averages(group_by_input_shape=True).table(**table_kwargs)  # type: ignore
-)
-print(
-    prof.key_averages(group_by_stack_n=5).table(**table_kwargs)  # type: ignore
-)
-
-wandb.finish()
-comet_ml.end()
 del common_voice_train
 del common_voice_test
+wandb.finish()
+comet_ml.end()
 # print("Auto-selected batch size:", trainer.args.per_device_train_batch_size)
 
 # torch.cuda.memory._record_memory_history(max_entries=1000000)
