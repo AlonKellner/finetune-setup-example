@@ -168,6 +168,46 @@ wheels = [
 ]
 
 [[package]]
+name = "boto3"
+version = "1.37.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+    { name = "jmespath" },
+    { name = "s3transfer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6b/e6/40f8c1fb52c02adad1c104c4c4ac0488bf8f2b1397f24db07779322e420b/boto3-1.37.7.tar.gz", hash = "sha256:ac2e022edcd6a94a2adbb21f0ad373a16557ec14a8910366bee0bbc7138fc72a", size = 111337 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/34/ebc43cd00fc72dc50489acaf8db58f4747c6f4a3f9ab3ff955ccf74dfbcb/boto3-1.37.7-py3-none-any.whl", hash = "sha256:9758429ebc11ed391249a16406af7175c94140fe99956e319a191805a625b383", size = 139543 },
+]
+
+[[package]]
+name = "botocore"
+version = "1.37.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jmespath" },
+    { name = "python-dateutil" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/53/4b/096b2fac3ba92ace94f69f238eea9948af568b487c3898e9a8881bfe506b/botocore-1.37.7.tar.gz", hash = "sha256:2faeac11766db912bc444669b04359080b7b83b2f57a3906c77c8105b70ce1e8", size = 13627744 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/ae/a4eb9cfc8aa8fdea71660b0bc73b3447131419e0e27224c7485ee1733ae1/botocore-1.37.7-py3-none-any.whl", hash = "sha256:047b8a27035832607fd368464dcce58026005d3d7630fcd1d703051370abcb26", size = 13398109 },
+]
+
+[[package]]
+name = "botocore-stubs"
+version = "1.37.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-awscrt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/e3/dce03f1e053fd49ce587a95eee3a610e460d0de0da051606817e3162d028/botocore_stubs-1.37.7.tar.gz", hash = "sha256:c91971468a7e795707883676bc5de9f06efae639b18f9add95dc2bd174d74b9e", size = 42092 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/36/49fc90919f75c4e10e22aa3976aaa4829ec02ae64566e39ae48a727092f7/botocore_stubs-1.37.7-py3-none-any.whl", hash = "sha256:ad1b83e6a4497f8c20b4ba7f230e437588998c3e1e508c9440da6b3600a37089", size = 65372 },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.1.31"
 source = { registry = "https://pypi.org/simple" }
@@ -528,6 +568,7 @@ source = { editable = "." }
 [package.optional-dependencies]
 all-cpu = [
     { name = "accelerate" },
+    { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extra = ["audio"] },
     { name = "evaluate" },
@@ -544,11 +585,13 @@ all-cpu = [
     { name = "torch" },
     { name = "torchaudio" },
     { name = "transformers" },
+    { name = "types-boto3-lite", extra = ["s3"] },
     { name = "uroman" },
     { name = "wandb" },
 ]
 all-gpu = [
     { name = "accelerate" },
+    { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extra = ["audio"] },
     { name = "evaluate" },
@@ -566,6 +609,7 @@ all-gpu = [
     { name = "torch" },
     { name = "torchaudio" },
     { name = "transformers" },
+    { name = "types-boto3-lite", extra = ["s3"] },
     { name = "uroman" },
     { name = "wandb" },
 ]
@@ -578,6 +622,7 @@ gpu = [
 ]
 mms-blog-post = [
     { name = "accelerate" },
+    { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extra = ["audio"] },
     { name = "evaluate" },
@@ -592,6 +637,7 @@ mms-blog-post = [
     { name = "torch" },
     { name = "torchaudio" },
     { name = "transformers" },
+    { name = "types-boto3-lite", extra = ["s3"] },
     { name = "uroman" },
     { name = "wandb" },
 ]
@@ -601,6 +647,9 @@ requires-dist = [
     { name = "accelerate", marker = "extra == 'all-cpu'" },
     { name = "accelerate", marker = "extra == 'all-gpu'" },
     { name = "accelerate", marker = "extra == 'mms-blog-post'" },
+    { name = "boto3", marker = "extra == 'all-cpu'" },
+    { name = "boto3", marker = "extra == 'all-gpu'" },
+    { name = "boto3", marker = "extra == 'mms-blog-post'" },
     { name = "comet-ml", marker = "extra == 'all-cpu'" },
     { name = "comet-ml", marker = "extra == 'all-gpu'" },
     { name = "comet-ml", marker = "extra == 'mms-blog-post'" },
@@ -651,6 +700,9 @@ requires-dist = [
     { name = "transformers", marker = "extra == 'all-cpu'" },
     { name = "transformers", marker = "extra == 'all-gpu'" },
     { name = "transformers", marker = "extra == 'mms-blog-post'" },
+    { name = "types-boto3-lite", extras = ["s3"], marker = "extra == 'all-cpu'" },
+    { name = "types-boto3-lite", extras = ["s3"], marker = "extra == 'all-gpu'" },
+    { name = "types-boto3-lite", extras = ["s3"], marker = "extra == 'mms-blog-post'" },
     { name = "uroman", marker = "extra == 'all-cpu'" },
     { name = "uroman", marker = "extra == 'all-gpu'" },
     { name = "uroman", marker = "extra == 'mms-blog-post'" },
@@ -836,6 +888,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/85/3e/71b95cf0e2179fb5de8744a79fd36c8bd4e02e1803129a16d423884b6654/jiwer-3.1.0.tar.gz", hash = "sha256:dc492d09e570f1baba98c76aba09baf8e09c06e6808a4ba412dd4bde67fb79ac", size = 103187 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/f4/35634d9eeff3b0bab51f5b9474ee569b1186bf29cf0d9d67b84acc80c53d/jiwer-3.1.0-py3-none-any.whl", hash = "sha256:5a14b5bba4692e1946ca3c6946435f7d90b1b526076ccb6c12be763e2146237d", size = 22303 },
+]
+
+[[package]]
+name = "jmespath"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/2a/e867e8531cf3e36b41201936b7fa7ba7b5702dbef42922193f05c8976cd6/jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe", size = 25843 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/b4/b9b800c45527aadd64d5b442f9b932b00648617eb5d63d2c7a6587b7cafc/jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980", size = 20256 },
 ]
 
 [[package]]
@@ -1317,7 +1378,7 @@ name = "nvidia-cudnn-cu12"
 version = "9.1.0.70"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12" },
+    { name = "nvidia-cublas-cu12", marker = "sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9f/fd/713452cd72343f682b1c7b9321e23829f00b842ceaedcda96e742ea0b0b3/nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl", hash = "sha256:165764f44ef8c61fcdfdfdbe769d687e06374059fbb388b6c89ecb0e28793a6f", size = 664752741 },
@@ -1328,7 +1389,7 @@ name = "nvidia-cufft-cu12"
 version = "11.2.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12" },
+    { name = "nvidia-nvjitlink-cu12", marker = "sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/94/3266821f65b92b3138631e9c8e7fe1fb513804ac934485a8d05776e1dd43/nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl", hash = "sha256:f083fc24912aa410be21fa16d157fed2055dab1cc4b6934a0e03cba69eb242b9", size = 211459117 },
@@ -1347,9 +1408,9 @@ name = "nvidia-cusolver-cu12"
 version = "11.6.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12" },
-    { name = "nvidia-cusparse-cu12" },
-    { name = "nvidia-nvjitlink-cu12" },
+    { name = "nvidia-cublas-cu12", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cusparse-cu12", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-nvjitlink-cu12", marker = "sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3a/e1/5b9089a4b2a4790dfdea8b3a006052cfecff58139d5a4e34cb1a51df8d6f/nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl", hash = "sha256:19e33fa442bcfd085b3086c4ebf7e8debc07cfe01e11513cc6d332fd918ac260", size = 127936057 },
@@ -1360,7 +1421,7 @@ name = "nvidia-cusparse-cu12"
 version = "12.3.1.170"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12" },
+    { name = "nvidia-nvjitlink-cu12", marker = "sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/db/f7/97a9ea26ed4bbbfc2d470994b8b4f338ef663be97b8f677519ac195e113d/nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl", hash = "sha256:ea4f11a2904e2a8dc4b1833cc1b5181cde564edd0d5cd33e3c168eff2d1863f1", size = 207454763 },
@@ -2168,6 +2229,18 @@ wheels = [
 ]
 
 [[package]]
+name = "s3transfer"
+version = "0.11.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/ec/aa1a215e5c126fe5decbee2e107468f51d9ce190b9763cb649f76bb45938/s3transfer-0.11.4.tar.gz", hash = "sha256:559f161658e1cf0a911f45940552c696735f5c74e64362e515f333ebed87d679", size = 148419 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/86/62/8d3fc3ec6640161a5649b2cddbbf2b9fa39c92541225b33f117c37c5a2eb/s3transfer-0.11.4-py3-none-any.whl", hash = "sha256:ac265fa68318763a03bf2dc4f39d5cbd6a9e178d81cc9483ad27da33637e320d", size = 84412 },
+]
+
+[[package]]
 name = "safetensors"
 version = "0.5.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2697,6 +2770,55 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/2e/757d2280d4fefe7d33af7615124e7e298ae7b8e3bc4446cdb8e88b0f9bab/triton-3.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8009a1fb093ee8546495e96731336a33fb8856a38e45bb4ab6affd6dbc3ba220", size = 253157636 },
     { url = "https://files.pythonhosted.org/packages/06/00/59500052cb1cf8cf5316be93598946bc451f14072c6ff256904428eaf03c/triton-3.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8d9b215efc1c26fa7eefb9a157915c92d52e000d2bf83e5f69704047e63f125c", size = 253159365 },
     { url = "https://files.pythonhosted.org/packages/c7/30/37a3384d1e2e9320331baca41e835e90a3767303642c7a80d4510152cbcf/triton-3.2.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e5dfa23ba84541d7c0a531dfce76d8bcd19159d50a4a8b14ad01e91734a5c1b0", size = 253154278 },
+]
+
+[[package]]
+name = "types-awscrt"
+version = "0.23.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/53/7c69677327794fe91cc89a1362400b78f00b1a20364384da1e004c259d42/types_awscrt-0.23.10.tar.gz", hash = "sha256:965659260599b421564204b895467684104a2c0311bbacfd3c2423b8b0d3f3e9", size = 15455 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/89/ad/3d7c9a8b972048f3987355e3e48da56eb9f3ed8e151113c3c973b43ad91e/types_awscrt-0.23.10-py3-none-any.whl", hash = "sha256:7391bf502f6093221e68da8fb6a2af7ec67a98d376c58d5b76cc3938f449d121", size = 19426 },
+]
+
+[[package]]
+name = "types-boto3-lite"
+version = "1.37.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore-stubs" },
+    { name = "types-s3transfer" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/eb/4c/c48507df4ff98661c57fedf564c7c8eb66094c0b551325e6ceebf98b0bb0/types_boto3_lite-1.37.7.tar.gz", hash = "sha256:11ef7c3c8123eabda26e8094ca0ffad935c0d62eace14b5bcce866be99c7fb63", size = 71869 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/06/9554be5b4a01e852b32123910f3e3786c7aee40886c97fef7fae5fd80ec0/types_boto3_lite-1.37.7-py3-none-any.whl", hash = "sha256:8fda71891a804f16b2a3cdf87f872c9f12edc359d35769326b43506e7146053c", size = 42147 },
+]
+
+[package.optional-dependencies]
+s3 = [
+    { name = "types-boto3-s3" },
+]
+
+[[package]]
+name = "types-boto3-s3"
+version = "1.37.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/92/786a3639600379d80380fdb13d5dc58677515e589930c3dd8e79732edbd4/types_boto3_s3-1.37.0.tar.gz", hash = "sha256:aee8437330c0c0cb33b9bd268a69cdf0f5c3b1ace21d133bc1e5797eb0c2b2f7", size = 73317 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/81/f4/da45c1bd40e253ecb29a64437087040764b43997dbf8f14e4b232631e4d5/types_boto3_s3-1.37.0-py3-none-any.whl", hash = "sha256:1a70f9f0784a799fa3d465bd4afb1c874d1574dff11e2aa152a6c1c3d7a91420", size = 80062 },
+]
+
+[[package]]
+name = "types-s3transfer"
+version = "0.11.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/a9/440d8ba72a81bcf2cc5a56ef63f23b58ce93e7b9b62409697553bdcdd181/types_s3transfer-0.11.4.tar.gz", hash = "sha256:05fde593c84270f19fd053f0b1e08f5a057d7c5f036b9884e68fb8cd3041ac30", size = 14074 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/69/0b5ae42c3c33d31a32f7dcb9f35a3e327365360a6e4a2a7b491904bd38aa/types_s3transfer-0.11.4-py3-none-any.whl", hash = "sha256:2a76d92c07d4a3cb469e5343b2e7560e0b8078b2e03696a65407b8c44c861b61", size = 19516 },
 ]
 
 [[package]]

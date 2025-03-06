@@ -87,6 +87,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+import boto3
 import comet_ml
 import numpy as np
 import polars as pl
@@ -123,6 +124,7 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import (
 from transformers.trainer_pt_utils import LengthGroupedSampler
 from transformers.trainer_utils import has_length
 from transformers.utils import is_flash_attn_2_available
+from types_boto3_s3.client import S3Client
 
 import wandb
 
@@ -374,6 +376,8 @@ def get_length_grouped_indices_shuffled(
     batch_size: int,
     mega_batch_mult: int | None = None,
     generator: Generator | None = None,
+    indices_order: list[int] | None = None,
+    grouped_indices: list[list[int]] | None = None,
 ) -> list[int]:
     """Get shuffled megabatches, A custom version. First is still largest.
 
@@ -395,6 +399,8 @@ def get_length_grouped_indices_shuffled(
             mega_batch_mult = 1
 
     # We need to use torch for the random part as a distributed sampler will set the random seed for torch.
+    print(indices_order)  # TODO: Use to implement in group permuting behaviour.
+    print(grouped_indices)  # TODO: Use to implement in group permuting behaviour.
     indices = torch.randperm(len(lengths), generator=generator)
     megabatch_size = mega_batch_mult * batch_size
     megabatches = [
@@ -450,10 +456,17 @@ class CustomLengthGroupedSampler(LengthGroupedSampler):
     """Custom sampler for random order."""
 
     def __init__(
-        self, *args: Any, mega_batch_mult: int | None = None, **kwargs: Any
+        self,
+        *args: Any,
+        mega_batch_mult: int | None = None,
+        indices_order: list[int] | None = None,
+        grouped_indices: list[list[int]] | None = None,
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.mega_batch_mult = mega_batch_mult
+        self.indices_order = indices_order
+        self.grouped_indices = grouped_indices
 
     def __iter__(self) -> Iterator[int]:
         """Get iterator with shuffled indices."""
@@ -462,6 +475,8 @@ class CustomLengthGroupedSampler(LengthGroupedSampler):
             self.batch_size,
             generator=self.generator,
             mega_batch_mult=self.mega_batch_mult,
+            indices_order=self.indices_order,
+            grouped_indices=self.grouped_indices,
         )
         return iter(indices)
 
@@ -775,7 +790,7 @@ class FlacDataset(TorchDataset):
         index = index % len(self)
 
         padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
-        flac_path = Path(self.cache_path) / f"{padded_index}.flac"
+        flac_path = self.cache_path / f"{padded_index}.flac"
         if flac_path.exists():
             samples = self._load_flac(flac_path)
         else:
@@ -820,21 +835,41 @@ class TarS3Dataset(TorchDataset):
         self,
         inner_dataset: HFDataset | TorchDataset,
         cache_path: str | Path,
-        s3_client: Any,
+        s3_client: S3Client,
         cache_bucket: str,
         indices_order: list[int],
+        file_sizes: dict[int, int],
+        max_tar_bytes: int,
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = Path(cache_path)
-        self.metadata_path = self.cache_path / "metadata.parquet"
         self.s3_client = s3_client
         self.cache_bucket = cache_bucket
-        self.indices_order = indices_order
-        self._upload(["metadata.parquet"], "metadata")
+        self._indices_order = indices_order
+        self._file_sizes = file_sizes
+        self.max_tar_bytes = max_tar_bytes
+
+        cum_sizes = np.array(
+            [x[1] for x in sorted(file_sizes.items(), key=lambda x: x[0])]
+        ).cumsum()
+        i = 0
+        prev_i = 0
+        self.grouped_indices = []
+        while i < len(indices_order):
+            prev_i = i
+            i = np.diff(cum_sizes > self.max_tar_bytes).argmax().item()
+            self.grouped_indices.append(indices_order[prev_i:i])
+            cum_sizes = cum_sizes - self.max_tar_bytes
+
+        self._indices_groups = {
+            v: i for i, vals in enumerate(self.grouped_indices) for v in vals
+        }
+        self._indices_flac_paths = {i: self._get_flac_path(i) for i in indices_order}
+        self._upload([self.cache_path / "metadata.parquet"], "metadata")
 
     def __del__(self) -> None:
         """Save the metadata as a parquet."""
-        self._upload(["metadata.parquet"], "metadata")
+        self._upload([self.cache_path / "metadata.parquet"], "metadata")
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
@@ -848,6 +883,8 @@ class TarS3Dataset(TorchDataset):
                 self.s3_client,
                 self.cache_bucket,
                 self.indices_order,
+                self.file_sizes,
+                self.max_tar_bytes,
             )
         return result
 
@@ -863,19 +900,16 @@ class TarS3Dataset(TorchDataset):
             and (int(acl_metadata["HTTPHeaders"]["content-length"]) > 0)
         )
 
-    def _upload(self, files: list[str], name: str) -> None:
+    def _upload(self, files: list[Path], name: str) -> None:
         if self._exists(name):
             return
         with tempfile.NamedTemporaryFile() as f:
             with tarfile.open(f.name, "w:gz") as tar:
-                for file_name in files:
-                    file_path = str(self.cache_path / file_name)
-                    if os.path.exists(file_path):
-                        tar.add(file_path, arcname=os.path.basename(file_path))
+                for file in files:
+                    if file.exists():
+                        tar.add(str(file.absolute()), arcname=file.stem)
                     else:
-                        print(
-                            f"Warning: {file_path} does not exist and will be skipped."
-                        )
+                        print(f"Warning: {file} does not exist and will be skipped.")
 
             self.s3_client.upload_file(
                 Filename=f.name, Bucket=self.cache_bucket, Key=f"{name}.tar.gz"
@@ -897,48 +931,35 @@ class TarS3Dataset(TorchDataset):
         """Can be used to get a batch using a list of integers indices."""
         return [self[k] for k in keys]
 
+    def _get_flac_path(self, index: int) -> Path:
+        """Get the flac path of an index."""
+        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
+        flac_path = self.cache_path / f"{padded_index}.flac"
+        return flac_path
+
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if isinstance(index, str):
             return self._inner_dataset[index]
 
-        item = None
+        current_group = self._indices_groups[index]
 
-        index = index % len(self)
+        self.sync_group(current_group)
+        next_group = (current_group + 1) % len(self.grouped_indices)
+        self.sync_group(next_group)
 
-        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
-        flac_path = Path(self.cache_path) / f"{padded_index}.flac"
-        if flac_path.exists():
-            samples = self._load_flac(flac_path)
-        else:
-            if item is None:
-                item = self._inner_dataset[index]
-            samples = item["input_values"]
-            self._save_flac(flac_path, samples)
+        return self._inner_dataset[index]
 
-        if index in self.metadata:
-            item_metadata = self.metadata[index]
-        else:
-            if item is None:
-                item = self._inner_dataset[index]
-            item_metadata = {k: v for k, v in item.items() if k != "input_values"}
-            self.metadata[index] = item_metadata
-
-        item = dict(
-            input_values=samples, **item_metadata, indices=index, paths=str(flac_path)
-        )
-        return item
-
-    def _save_flac(self, flac_path: Path, samples: list[int]) -> None:
-        ta.save(
-            str(flac_path.absolute()), torch.tensor(samples)[None, :], self.sample_rate
-        )
-
-    def _load_flac(self, flac_path: Path) -> list[int]:
-        samples, sr = ta.load(flac_path.absolute())
-        assert sr == self.sample_rate
-        assert samples.shape[0] == 1
-        return samples[0, :].tolist()
+    def sync_group(self, group: int) -> None:
+        """Sync the group of local files with s3 tar."""
+        padded_group = str(group).zfill(len(str(len(self.grouped_indices))))  # type: ignore
+        group_flac_paths = [
+            self._indices_flac_paths[i] for i in self.grouped_indices[group]
+        ]
+        if all(p.exists() for p in group_flac_paths):
+            self._upload(group_flac_paths, padded_group)
+        elif self._exists(padded_group):
+            self._download(padded_group)
 
 
 # gpu_info = !nvidia-smi
@@ -1327,8 +1348,43 @@ common_voice_test = common_voice_test.map(
     prepare_dataset, remove_columns=common_voice_test.column_names
 )
 
-common_voice_train = FlacDataset(
-    common_voice_train.shuffle(seed=seed), "./.app_cache/train_set/", sample_rate
+access_key = os.getenv("HETZNER_ACCESS_KEY")
+secret_key = os.getenv("HETZNER_SECRET_KEY")
+endpoint = os.getenv("HETZNER_ENDPOINT")
+region = os.getenv("HETZNER_REGION")
+
+s3_client_config = boto3.session.Config(  # type: ignore
+    retries={"max_attempts": 1, "mode": "standard"},
+    signature_version="s3v4",
+    region_name=region,
+    s3=dict(addressing_style="virtual"),
+)
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=access_key,
+    aws_secret_access_key=secret_key,
+    endpoint_url=endpoint,
+    aws_session_token=None,
+    verify=False,
+    config=s3_client_config,
+)
+
+train_cache_path = "./.app_cache/train_set/"
+
+indices_order = torch.randperm(len(common_voice_train)).tolist()
+
+common_voice_train = FlacDataset(common_voice_train, train_cache_path, sample_rate)
+
+GB = 1_000_000_000
+common_voice_train = TarS3Dataset(
+    common_voice_train,
+    train_cache_path,
+    s3_client,
+    f"{repo_name}-train-set-cache",
+    indices_order,
+    {i: v["file_sizes"] for i, v in common_voice_train.metadata.items()},
+    max_tar_bytes=1 * GB,
 )
 print(list(common_voice_train[0].keys()))
 print(list(common_voice_train[-1].keys()))
