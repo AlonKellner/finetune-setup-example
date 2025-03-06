@@ -726,14 +726,8 @@ class FlacDataset(TorchDataset):
         self.metadata = metadata
         self.sample_rate = sample_rate
 
-    def __del__(self) -> None:
-        """Save the metadata as a parquet."""
-        self.save_metadata()
-
     def save_metadata(self) -> None:
         """Save the metadata as a parquet."""
-        import polars as pl
-
         pl.from_dicts(
             [
                 dict(i=i, **self.metadata[i])
