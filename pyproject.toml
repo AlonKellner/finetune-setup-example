@@ -45,7 +45,7 @@ extraPaths=[]
 pythonpath="./"
 
 [tool.typos.files]
-extend-exclude = ["**/.env"]
+extend-exclude = ["**/*.env"]
 
 [project]
 dynamic = ["version"]
