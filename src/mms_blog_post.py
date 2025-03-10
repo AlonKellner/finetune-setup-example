@@ -76,6 +76,7 @@ I highly recommend reading the well-written blog post [*Sequence Modeling with C
 First, let's try to get a good GPU in our colab! With Google Colab's free version it's sadly becoming much harder to get access to a good GPU. With Google Colab Pro, however, one should easily get either a V100 or P100 GPU.
 """
 
+import concurrent.futures
 import json
 import os
 import random
@@ -916,7 +917,8 @@ class TarS3Dataset(TorchDataset):
 
         if not self._bucket_exists(self.cache_bucket):
             self._create_bucket(self.cache_bucket)
-        self.sync_file(self.cache_path / "metadata.parquet")
+        self.sync_metadata()
+        self.sync_group(0)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
@@ -939,15 +941,15 @@ class TarS3Dataset(TorchDataset):
 
     def _bucket_exists(self, bucket: str) -> bool:
         try:
-            acl_metadata = self.s3_client.get_bucket_acl(Bucket=bucket)[
+            head_metadata = self.s3_client.head_bucket(Bucket=bucket)[
                 "ResponseMetadata"
             ]
             return (
-                ("HTTPStatusCode" in acl_metadata)
-                and (acl_metadata["HTTPStatusCode"] == 200)
-                and ("HTTPHeaders" in acl_metadata)
-                and ("content-length" in acl_metadata["HTTPHeaders"])
-                and (int(acl_metadata["HTTPHeaders"]["content-length"]) > 0)
+                ("HTTPStatusCode" in head_metadata)
+                and (head_metadata["HTTPStatusCode"] == 200)
+                and ("HTTPHeaders" in head_metadata)
+                and ("content-length" in head_metadata["HTTPHeaders"])
+                and (int(head_metadata["HTTPHeaders"]["content-length"]) == 0)
             )
         except ClientError:
             return False
@@ -957,18 +959,25 @@ class TarS3Dataset(TorchDataset):
 
     def _exists(self, name: str) -> bool:
         try:
-            acl_metadata = self.s3_client.get_object_acl(
+            head_metadata = self.s3_client.head_object(
                 Bucket=self.cache_bucket, Key=f"{name}.tar.gz"
             )["ResponseMetadata"]
             return (
-                ("HTTPStatusCode" in acl_metadata)
-                and (acl_metadata["HTTPStatusCode"] == 200)
-                and ("HTTPHeaders" in acl_metadata)
-                and ("content-length" in acl_metadata["HTTPHeaders"])
-                and (int(acl_metadata["HTTPHeaders"]["content-length"]) > 0)
+                ("HTTPStatusCode" in head_metadata)
+                and (head_metadata["HTTPStatusCode"] == 200)
+                and ("HTTPHeaders" in head_metadata)
+                and ("content-length" in head_metadata["HTTPHeaders"])
+                and (int(head_metadata["HTTPHeaders"]["content-length"]) == 0)
             )
         except ClientError:
             return False
+
+    def group_exists(self, group: int) -> bool:
+        """Check whether a group exists in s3 cache or not."""
+        padded_group = str(group % len(self.grouped_indices)).zfill(
+            len(str(len(self.grouped_indices)))
+        )  # type: ignore
+        return self._exists(padded_group)
 
     def _upload(self, files: list[Path], name: str) -> None:
         if self._exists(name):
@@ -1047,12 +1056,49 @@ class TarS3Dataset(TorchDataset):
         elif self._exists(padded_group):
             self._download(padded_group)
 
+    def sync_metadata(self) -> None:
+        """Sync the metadata file with s3."""
+        self.sync_file(self.cache_path / "metadata.parquet")
+
     def sync_file(self, file: Path) -> None:
         """Sync a single file."""
         if file.exists():
             self._upload([file], file.stem)
         elif self._exists(file.stem):
             self._download(file.stem)
+
+
+class ResizedDataset(TorchDataset):
+    """A wrapping dataset for caching files to s3."""
+
+    def __init__(self, inner_dataset: HFDataset | TorchDataset, size: int) -> None:
+        self._inner_dataset = inner_dataset
+        self._size = size
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate to the inner if it has the attribute."""
+        result = getattr(self._inner_dataset, name)
+        if issubclass(type(result), HFDataset) or issubclass(
+            type(result), TorchDataset
+        ):
+            result = ResizedDataset(result, self._size)
+        return result
+
+    def __len__(self) -> int:
+        """Return the size as specified."""
+        return self._size
+
+    def __getitems__(self, keys: list) -> list:
+        """Can be used to get a batch using a list of integers indices."""
+        return [self[k] for k in keys]
+
+    def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
+        """Return the item corresponding to the index while caching both metadata and audio to files."""
+        if isinstance(index, str):
+            return self._inner_dataset[index]
+
+        inner_index = (index % len(self._inner_dataset)) % self._size  # type: ignore
+        return self._inner_dataset[inner_index]
 
 
 # gpu_info = !nvidia-smi
@@ -1474,14 +1520,15 @@ test_cache_bucket = f"{repo_name}-cache-{data_seed}-test-set"
 train_cache_bucket = f"{repo_name}-cache-{data_seed}-train-set"
 
 eval_size = 3200
+train_size = 100_000
 
 common_voice_test = common_voice_test.shuffle(seed=data_seed)
 common_voice_train = common_voice_train.shuffle(seed=data_seed)
 
-common_voice_test = common_voice_test.select(range(eval_size))
-
 test_indices_order = list(range(len(common_voice_test)))
 train_indices_order = list(range(len(common_voice_train)))
+
+common_voice_train = ResizedDataset(common_voice_train, train_size)
 
 common_voice_test = FlacDataset(common_voice_test, test_cache_path, sample_rate)
 common_voice_train = FlacDataset(common_voice_train, train_cache_path, sample_rate)
@@ -1510,17 +1557,54 @@ common_voice_train = TarS3Dataset(
     syncs_per_group=3,
 )
 
-common_voice_test.set_metadata(common_voice_test.load_metadata())
-if len(common_voice_test.metadata) < len(common_voice_test):
-    for i in tqdm(list(range(len(common_voice_test)))):
-        item = common_voice_test[i]
-    common_voice_test.save_metadata()
+with concurrent.futures.ThreadPoolExecutor(
+    max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+) as executor:
+    common_voice_test.sync_metadata()
+    common_voice_test.set_metadata(common_voice_test.load_metadata())
+    if len(common_voice_test.metadata) < len(common_voice_test):
+        for _ in tqdm(
+            executor.map(common_voice_test.__getitem__, range(len(common_voice_test))),
+            total=len(common_voice_test),
+        ):
+            pass
+        common_voice_test.save_metadata()
+        common_voice_test.sync_metadata()
 
-common_voice_train.set_metadata(common_voice_train.load_metadata())
-if len(common_voice_train.metadata) < len(common_voice_train):
-    for i in tqdm(list(range(len(common_voice_train)))):
-        item = common_voice_train[i]
-    common_voice_train.save_metadata()
+    common_voice_train.sync_metadata()
+    common_voice_train.set_metadata(common_voice_train.load_metadata())
+    if len(common_voice_train.metadata) < len(common_voice_train):
+        for _ in tqdm(
+            executor.map(
+                common_voice_train.__getitem__, range(len(common_voice_train))
+            ),
+            total=len(common_voice_train),
+        ):
+            pass
+        common_voice_train.save_metadata()
+        common_voice_train.sync_metadata()
+
+    if not common_voice_test.group_exists(-1):
+        for _ in tqdm(
+            executor.map(
+                common_voice_test.sync_group,
+                range(len(common_voice_test.grouped_indices)),
+            ),
+            total=len(common_voice_test.grouped_indices),
+        ):
+            pass
+
+    if not common_voice_train.group_exists(-1):
+        for _ in tqdm(
+            executor.map(
+                common_voice_train.sync_group,
+                range(len(common_voice_train.grouped_indices)),
+            ),
+            total=len(common_voice_train.grouped_indices),
+        ):
+            pass
+
+common_voice_test = ResizedDataset(common_voice_test, eval_size)
 
 """**Note**: `datasets` automatically takes care of audio loading and resampling. If you wish to implement your own customized data loading/sampling, feel free to just make use of the `"path"` column instead and disregard the `"audio"` column.
 
@@ -1702,14 +1786,15 @@ During training, a checkpoint will be uploaded asynchronously to the hub every 2
 
 comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
 
-num_train_epochs = 5
+num_train_epochs = 1
 # num_train_epochs = 1
 effective_batch_size = 16
 per_device_train_batch_size = 4
 per_device_eval_batch_size = 8
 num_devices = 1
-warmup_ratio = 0.1
-decay_ratio = 0.7
+warmup_ratio = 0.00
+# decay_ratio = 0.7
+learning_rate = 1e-3
 
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
@@ -1718,7 +1803,8 @@ num_training_steps = (
     len(common_voice_train) // effective_batch_size
 ) * num_train_epochs
 
-lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
+# lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
+lr_scheduler_kwargs = dict()
 
 training_args = CustomTrainingArguments(  # type: ignore
     seed=seed,
@@ -1743,8 +1829,8 @@ training_args = CustomTrainingArguments(  # type: ignore
     logging_steps=100,
     eval_on_start=True,
     logging_first_step=True,
-    learning_rate=1e-3,
-    lr_scheduler_type="warmup_stable_decay",
+    learning_rate=learning_rate,
+    # lr_scheduler_type="warmup_stable_decay",
     warmup_steps=int(warmup_ratio * num_training_steps),
     lr_scheduler_kwargs=lr_scheduler_kwargs,
     weight_decay=0.01,
