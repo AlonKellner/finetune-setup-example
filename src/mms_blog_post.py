@@ -379,6 +379,7 @@ def get_length_grouped_indices_shuffled(
     batch_size: int,
     mega_batch_mult: int | None = None,
     generator: Generator | None = None,
+    indices_order: list[int] | None = None,
     grouped_indices: list[list[int]] | None = None,
 ) -> list[int]:
     """Get shuffled megabatches, A custom version. First is still largest.
@@ -404,15 +405,23 @@ def get_length_grouped_indices_shuffled(
 
     if grouped_indices is not None:
         indices = []
+        if indices_order is not None:
+            grouped_indices = [
+                [item for item in group if item in indices_order]
+                for group in grouped_indices
+            ]
+            grouped_indices = [group for group in grouped_indices if (len(group) > 0)]
         for group in grouped_indices:
             group_perm = torch.randperm(len(group), generator=generator)
             group_indices = [group[i] for i in group_perm]
             indices.extend(group_indices)
+    elif indices_order is not None:
+        indices = torch.randperm(len(indices_order), generator=generator).tolist()
     else:
         indices = torch.randperm(len(lengths), generator=generator).tolist()
     megabatch_size = mega_batch_mult * batch_size
     megabatches = [
-        indices[i : i + megabatch_size] for i in range(0, len(lengths), megabatch_size)
+        indices[i : i + megabatch_size] for i in range(0, len(indices), megabatch_size)
     ]
     megabatches = [
         sorted(megabatch, key=lambda i: lengths[i], reverse=True)
@@ -452,9 +461,14 @@ def get_length_grouped_indices_shuffled(
     batches = [[first_batch, *batches[0]], *batches[1:]]
 
     indices = [i for megabatch in batches for batch in megabatch for i in batch]
-    assert len(indices) == len(lengths)
-    assert len(set(indices)) == len(lengths)
-    assert max(indices) == len(lengths) - 1
+    if indices_order is not None:
+        assert len(indices) == len(indices_order)
+        assert len(set(indices)) == len(indices_order)
+        assert max(indices) == len(indices_order) - 1
+    else:
+        assert len(indices) == len(lengths)
+        assert len(set(indices)) == len(lengths)
+        assert max(indices) == len(lengths) - 1
     assert min(indices) == 0
     return indices
 
@@ -466,12 +480,21 @@ class CustomLengthGroupedSampler(LengthGroupedSampler):
         self,
         *args: Any,
         mega_batch_mult: int | None = None,
+        indices_order: list[int] | None = None,
         grouped_indices: list[list[int]] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.mega_batch_mult = mega_batch_mult
+        self.indices_order = indices_order
         self.grouped_indices = grouped_indices
+
+    def __len__(self) -> int:
+        """Get the length of the sampler."""
+        if self.indices_order is not None:
+            return len(self.indices_order)
+        else:
+            return len(self.lengths)
 
     def __iter__(self) -> Iterator[int]:
         """Get iterator with shuffled indices."""
@@ -480,6 +503,7 @@ class CustomLengthGroupedSampler(LengthGroupedSampler):
             self.batch_size,
             generator=self.generator,
             mega_batch_mult=self.mega_batch_mult,
+            indices_order=self.indices_order,
             grouped_indices=self.grouped_indices,
         )
         return iter(indices)
@@ -508,6 +532,8 @@ class CustomTrainer(Trainer):
         model: PreTrainedModel | nn.Module | None = None,
         args: CustomTrainingArguments | None = None,
         *arguments: Any,
+        test_indices_order: list[int] | None = None,
+        train_indices_order: list[int] | None = None,
         train_grouped_indices: list[list[int]] | None = None,
         test_grouped_indices: list[list[int]] | None = None,
         **kwargs: Any,
@@ -515,6 +541,10 @@ class CustomTrainer(Trainer):
         super().__init__(model, args, *arguments, **kwargs)  # type: ignore
         assert args is not None
         self.args = args
+
+        self.test_indices_order = test_indices_order
+        self.train_indices_order = train_indices_order
+
         self.test_grouped_indices = test_grouped_indices
         self.train_grouped_indices = train_grouped_indices
 
@@ -525,11 +555,18 @@ class CustomTrainer(Trainer):
         # Build the sampler.
         if self.args.group_by_length:
             if self.args.has_length_column:
-                lengths = (
-                    self.train_dataset[self.args.length_column_name]  # type: ignore
-                    if self.args.length_column_name in self.train_dataset.column_names  # type: ignore
-                    else None
-                )
+                if hasattr(self.train_dataset, "metadata"):
+                    lengths = [
+                        v[self.args.length_column_name]
+                        for k, v in self.train_dataset.metadata.items()  # type: ignore
+                    ]
+                else:
+                    lengths = (
+                        self.train_dataset[self.args.length_column_name]  # type: ignore
+                        if self.args.length_column_name
+                        in self.train_dataset.column_names  # type: ignore
+                        else None
+                    )
             else:
                 lengths = None
             model_input_name = (
@@ -543,6 +580,7 @@ class CustomTrainer(Trainer):
                 lengths=lengths,
                 model_input_name=model_input_name,
                 mega_batch_mult=self.args.mega_batch_mult,
+                indices_order=self.train_indices_order,
                 grouped_indices=self.train_grouped_indices,
             )
 
@@ -575,6 +613,7 @@ class CustomTrainer(Trainer):
                 dataset=eval_dataset,
                 lengths=lengths,
                 model_input_name=model_input_name,
+                indices_order=self.test_indices_order,
                 grouped_indices=self.test_grouped_indices,
             )
 
@@ -806,13 +845,13 @@ class FlacDataset(TorchDataset):
 
         padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
         flac_path = self.cache_path / f"{padded_index}.flac"
-        if flac_path.exists():
-            samples = self._load_flac(flac_path)
-        else:
+        if not flac_path.exists():
             if item is None:
                 item = self._inner_dataset[index]
             samples = item["input_values"]
             self._save_flac(flac_path, samples)
+
+        samples = self._load_flac(flac_path)
 
         if index in self.metadata:
             item_metadata = self.metadata[index]
@@ -832,15 +871,28 @@ class FlacDataset(TorchDataset):
         return item
 
     def _save_flac(self, flac_path: Path, samples: list[int]) -> None:
+        _samples = torch.tensor(samples)
+        _samples = _samples - _samples.min()
+        _samples = _samples / _samples.max()
+        _samples = (_samples * (2**31 - 2**24)).to(torch.int32)
         ta.save(
-            str(flac_path.absolute()), torch.tensor(samples)[None, :], self.sample_rate
+            str(flac_path.absolute()),
+            _samples[None, :],
+            self.sample_rate,
+            format="flac",
+            bits_per_sample=24,
+            encoding="PCM_S",
         )
 
     def _load_flac(self, flac_path: Path) -> list[int]:
-        samples, sr = ta.load(flac_path.absolute())
+        samples, sr = ta.load(flac_path.absolute(), normalize=False, format="flac")
         assert sr == self.sample_rate
         assert samples.shape[0] == 1
-        return samples[0, :].tolist()
+        samples = samples[0, :]
+        samples = (samples / (2**30 - 2**24)).to(torch.float32)
+        samples = samples - samples.mean()
+        samples = samples / samples.std()
+        return samples.tolist()
 
 
 class TarS3Dataset(TorchDataset):
@@ -967,7 +1019,7 @@ class TarS3Dataset(TorchDataset):
                 and (head_metadata["HTTPStatusCode"] == 200)
                 and ("HTTPHeaders" in head_metadata)
                 and ("content-length" in head_metadata["HTTPHeaders"])
-                and (int(head_metadata["HTTPHeaders"]["content-length"]) == 0)
+                and (int(head_metadata["HTTPHeaders"]["content-length"]) > 0)
             )
         except ClientError:
             return False
@@ -1021,6 +1073,8 @@ class TarS3Dataset(TorchDataset):
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if isinstance(index, str):
             return self._inner_dataset[index]
+
+        index = index % len(self)
 
         current_group = self._indices_groups[index]
 
@@ -1082,9 +1136,16 @@ class ResizedDataset(TorchDataset):
             type(result), TorchDataset
         ):
             result = ResizedDataset(result, self._size)
+        elif self._is_resizable(result):
+            result = self._resize(result)
         return result
 
     def __len__(self) -> int:
+        """Return the size as specified."""
+        return self._size
+
+    @property
+    def total_length(self) -> int:
         """Return the size as specified."""
         return self._size
 
@@ -1095,10 +1156,88 @@ class ResizedDataset(TorchDataset):
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if isinstance(index, str):
-            return self._inner_dataset[index]
+            result = self._inner_dataset[index]
+            if self._is_resizable(result):  # type: ignore
+                result = self._resize(result)
+            return result
 
-        inner_index = (index % len(self._inner_dataset)) % self._size  # type: ignore
+        if index > self._size:
+            raise IndexError()
+        inner_index = index % len(self._inner_dataset)  # type: ignore
         return self._inner_dataset[inner_index]
+
+    def _is_resizable(self, x: Any) -> bool:
+        return isinstance(x, list) and (len(x) == len(self._inner_dataset))  # type: ignore
+
+    def _resize(self, values: list) -> list:
+        """Resize a list to the custom size."""
+        return [values[i % len(values)] for i in range(self._size)]
+
+
+GB = 1_000_000_000
+
+
+def validate_item(dataset: TorchDataset | HFDataset, index: int) -> None:
+    """Validate item."""
+    item = dataset[index]
+    for _ in range(3):
+        if len(item["input_values"]) == item["length"]:
+            return
+
+        Path(item["file_path"]).unlink(missing_ok=True)
+        item = dataset[index]
+    assert len(item["input_values"]) == item["length"], (
+        f"Length mismatch with index [{index}]"
+    )
+
+
+def prepare_cached_dataset(
+    dataset: TorchDataset | HFDataset,
+    sample_rate: int,
+    cache_path: str,
+    cache_bucket: str,
+    s3_client: S3Client,
+    s3_client_v2: S3Client,
+    tar_size_gb: float | int = 1,
+    syncs_per_group: int = 3,
+) -> TarS3Dataset:
+    """Wrap a dataset with S3 caching and prepare for the first training."""
+    dataset = FlacDataset(dataset, cache_path, sample_rate)
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+    ) as executor:
+        dataset.set_metadata(dataset.load_metadata())
+        if len(dataset.metadata) < len(dataset):
+            for _ in tqdm(
+                executor.map(lambda i: validate_item(dataset, i), range(len(dataset))),
+                total=len(dataset),
+            ):
+                pass
+            dataset.save_metadata()
+
+        indices_order = list(range(len(dataset)))
+        dataset = TarS3Dataset(
+            dataset,
+            cache_path,
+            s3_client,
+            s3_client_v2,
+            cache_bucket,
+            indices_order,
+            {i: v["file_sizes"] for i, v in dataset.metadata.items()},
+            max_tar_bytes=int(tar_size_gb * GB),
+            syncs_per_group=syncs_per_group,
+        )
+        dataset.sync_metadata()
+        if not dataset.group_exists(-1):
+            for _ in tqdm(
+                executor.map(
+                    dataset.sync_group,
+                    range(len(dataset.grouped_indices)),
+                ),
+                total=len(dataset.grouped_indices),
+            ):
+                pass
+    return dataset
 
 
 # gpu_info = !nvidia-smi
@@ -1519,92 +1658,42 @@ Path(train_cache_path).mkdir(parents=True, exist_ok=True)
 test_cache_bucket = f"{repo_name}-cache-{data_seed}-test-set"
 train_cache_bucket = f"{repo_name}-cache-{data_seed}-train-set"
 
-eval_size = 3200
+eval_size = 20_000
 train_size = 100_000
+
+eval_limit = 4_000
 
 common_voice_test = common_voice_test.shuffle(seed=data_seed)
 common_voice_train = common_voice_train.shuffle(seed=data_seed)
 
+common_voice_test = ResizedDataset(common_voice_test, eval_size)
+common_voice_train = ResizedDataset(common_voice_train, train_size)
+
+orig_common_voice_test = common_voice_test
+orig_common_voice_train = common_voice_train
+
+common_voice_test = prepare_cached_dataset(
+    common_voice_test,
+    sample_rate,
+    test_cache_path,
+    test_cache_bucket,
+    s3_client,
+    s3_client_v2,
+)
+common_voice_train = prepare_cached_dataset(
+    common_voice_train,
+    sample_rate,
+    train_cache_path,
+    train_cache_bucket,
+    s3_client,
+    s3_client_v2,
+)
+
+common_voice_test = ResizedDataset(common_voice_test, eval_limit)
+
 test_indices_order = list(range(len(common_voice_test)))
 train_indices_order = list(range(len(common_voice_train)))
 
-common_voice_train = ResizedDataset(common_voice_train, train_size)
-
-common_voice_test = FlacDataset(common_voice_test, test_cache_path, sample_rate)
-common_voice_train = FlacDataset(common_voice_train, train_cache_path, sample_rate)
-
-GB = 1_000_000_000
-common_voice_test = TarS3Dataset(
-    common_voice_test,
-    test_cache_path,
-    s3_client,
-    s3_client_v2,
-    test_cache_bucket,
-    test_indices_order,
-    {i: v["file_sizes"] for i, v in common_voice_test.metadata.items()},
-    max_tar_bytes=1 * GB,
-    syncs_per_group=3,
-)
-common_voice_train = TarS3Dataset(
-    common_voice_train,
-    train_cache_path,
-    s3_client,
-    s3_client_v2,
-    train_cache_bucket,
-    train_indices_order,
-    {i: v["file_sizes"] for i, v in common_voice_train.metadata.items()},
-    max_tar_bytes=1 * GB,
-    syncs_per_group=3,
-)
-
-with concurrent.futures.ThreadPoolExecutor(
-    max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
-) as executor:
-    common_voice_test.sync_metadata()
-    common_voice_test.set_metadata(common_voice_test.load_metadata())
-    if len(common_voice_test.metadata) < len(common_voice_test):
-        for _ in tqdm(
-            executor.map(common_voice_test.__getitem__, range(len(common_voice_test))),
-            total=len(common_voice_test),
-        ):
-            pass
-        common_voice_test.save_metadata()
-        common_voice_test.sync_metadata()
-
-    common_voice_train.sync_metadata()
-    common_voice_train.set_metadata(common_voice_train.load_metadata())
-    if len(common_voice_train.metadata) < len(common_voice_train):
-        for _ in tqdm(
-            executor.map(
-                common_voice_train.__getitem__, range(len(common_voice_train))
-            ),
-            total=len(common_voice_train),
-        ):
-            pass
-        common_voice_train.save_metadata()
-        common_voice_train.sync_metadata()
-
-    if not common_voice_test.group_exists(-1):
-        for _ in tqdm(
-            executor.map(
-                common_voice_test.sync_group,
-                range(len(common_voice_test.grouped_indices)),
-            ),
-            total=len(common_voice_test.grouped_indices),
-        ):
-            pass
-
-    if not common_voice_train.group_exists(-1):
-        for _ in tqdm(
-            executor.map(
-                common_voice_train.sync_group,
-                range(len(common_voice_train.grouped_indices)),
-            ),
-            total=len(common_voice_train.grouped_indices),
-        ):
-            pass
-
-common_voice_test = ResizedDataset(common_voice_test, eval_size)
 
 """**Note**: `datasets` automatically takes care of audio loading and resampling. If you wish to implement your own customized data loading/sampling, feel free to just make use of the `"path"` column instead and disregard the `"audio"` column.
 
@@ -1792,21 +1881,21 @@ effective_batch_size = 16
 per_device_train_batch_size = 4
 per_device_eval_batch_size = 8
 num_devices = 1
-warmup_ratio = 0.00
-# decay_ratio = 0.7
+warmup_ratio = 0.0
+# decay_ratio = 1.0
 learning_rate = 1e-3
 
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
 
 num_training_steps = (
-    len(common_voice_train) // effective_batch_size
+    len(common_voice_train) // effective_batch_size  # type: ignore
 ) * num_train_epochs
 
 # lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
 lr_scheduler_kwargs = dict()
 
-training_args = CustomTrainingArguments(  # type: ignore
+training_args = CustomTrainingArguments(
     seed=seed,
     data_seed=data_seed,
     report_to=["comet_ml", "wandb"],
@@ -1855,8 +1944,12 @@ trainer = CustomTrainer(
     eval_dataset=common_voice_test,
     train_dataset=common_voice_train,
     processing_class=processor.feature_extractor,
-    test_grouped_indices=common_voice_test.sync_safe_groups,
-    train_grouped_indices=common_voice_train.sync_safe_groups,
+    test_indices_order=test_indices_order,
+    train_indices_order=train_indices_order,
+    # test_grouped_indices=common_voice_test.sync_safe_groups,
+    # train_grouped_indices=common_voice_train.sync_safe_groups,
+    test_grouped_indices=None,
+    train_grouped_indices=None,
 )
 
 """---
@@ -1885,8 +1978,6 @@ Cool, let's start training!
 trainer.train()
 trainer.evaluate()
 
-del common_voice_train
-del common_voice_test
 wandb.finish()
 comet_ml.end()
 # print("Auto-selected batch size:", trainer.args.per_device_train_batch_size)
