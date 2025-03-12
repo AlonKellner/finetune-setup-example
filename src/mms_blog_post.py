@@ -1882,8 +1882,8 @@ per_device_train_batch_size = 4
 per_device_eval_batch_size = 8
 num_devices = 1
 warmup_ratio = 0.0
-# decay_ratio = 1.0
-learning_rate = 1e-3
+decay_ratio = 1.0
+learning_rate = 1e-4
 
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
@@ -1892,8 +1892,8 @@ num_training_steps = (
     len(common_voice_train) // effective_batch_size  # type: ignore
 ) * num_train_epochs
 
-# lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
-lr_scheduler_kwargs = dict()
+lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
+# lr_scheduler_kwargs = dict()
 
 training_args = CustomTrainingArguments(
     seed=seed,
@@ -1919,7 +1919,7 @@ training_args = CustomTrainingArguments(
     eval_on_start=True,
     logging_first_step=True,
     learning_rate=learning_rate,
-    # lr_scheduler_type="warmup_stable_decay",
+    lr_scheduler_type="warmup_stable_decay",
     warmup_steps=int(warmup_ratio * num_training_steps),
     lr_scheduler_kwargs=lr_scheduler_kwargs,
     weight_decay=0.01,
@@ -1946,10 +1946,10 @@ trainer = CustomTrainer(
     processing_class=processor.feature_extractor,
     test_indices_order=test_indices_order,
     train_indices_order=train_indices_order,
-    # test_grouped_indices=common_voice_test.sync_safe_groups,
-    # train_grouped_indices=common_voice_train.sync_safe_groups,
-    test_grouped_indices=None,
-    train_grouped_indices=None,
+    test_grouped_indices=common_voice_test.sync_safe_groups,
+    train_grouped_indices=common_voice_train.sync_safe_groups,
+    # test_grouped_indices=None,
+    # train_grouped_indices=None,
 )
 
 """---
