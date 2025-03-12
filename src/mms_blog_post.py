@@ -1341,6 +1341,56 @@ print("Input array shape:", common_voice_train[rand_int]["audio"]["array"].shape
 print("Sampling rate:", common_voice_train[rand_int]["audio"]["sampling_rate"])
 
 
+hf_repo = "mms-meta/mms-zeroshot-300m"
+print(f"hf_repo: {hf_repo}")
+tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(hf_repo)
+vocab_dict = tokenizer.vocab
+
+new_vocab_dict = {target_lang: vocab_dict}
+
+with open(".output/vocab.json", "w") as vocab_file:
+    json.dump(new_vocab_dict, vocab_file)
+
+
+tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
+    ".output/",
+    unk_token=tokenizer.unk_token,
+    pad_token=tokenizer.pad_token,
+    word_delimiter_token=tokenizer.word_delimiter_token,
+    bos_token=tokenizer.bos_token,
+    eos_token=tokenizer.eos_token,
+    target_lang=target_lang,
+)
+
+repo_name = "mms-300m-turkish"
+
+tokenizer.push_to_hub(repo_name)  # type: ignore
+
+feature_extractor = Wav2Vec2FeatureExtractor(
+    feature_size=1,
+    sampling_rate=sample_rate,
+    padding_value=0.0,
+    do_normalize=True,
+    return_attention_mask=True,
+)
+
+
+@runtime_checkable
+class HasCustomFields(Protocol):
+    """Just for pyright type checking."""
+
+    tokenizer: Wav2Vec2CTCTokenizer
+    feature_extractor: Wav2Vec2FeatureExtractor
+
+
+processor: Wav2Vec2Processor = Wav2Vec2Processor(
+    feature_extractor=feature_extractor, tokenizer=tokenizer
+)
+assert isinstance(processor, HasCustomFields) and isinstance(
+    processor, Wav2Vec2Processor
+)
+
+
 def prepare_dataset(batch: Batch) -> Batch:
     """Prepare dataset."""
     audio = batch["audio"]
@@ -1388,8 +1438,6 @@ train_cache_path = f"./.app_cache/{data_seed}/train_set/"
 Path(test_cache_path).mkdir(parents=True, exist_ok=True)
 Path(train_cache_path).mkdir(parents=True, exist_ok=True)
 
-repo_name = "mms-300m-turkish"
-
 test_cache_bucket = f"{repo_name}-cache-{data_seed}-test-set"
 train_cache_bucket = f"{repo_name}-cache-{data_seed}-train-set"
 
@@ -1428,54 +1476,6 @@ common_voice_test = ResizedDataset(common_voice_test, eval_limit)
 
 test_indices_order = list(range(len(common_voice_test)))
 train_indices_order = list(range(len(common_voice_train)))
-
-hf_repo = "mms-meta/mms-zeroshot-300m"
-print(f"hf_repo: {hf_repo}")
-tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(hf_repo)
-vocab_dict = tokenizer.vocab
-
-new_vocab_dict = {target_lang: vocab_dict}
-
-with open(".output/vocab.json", "w") as vocab_file:
-    json.dump(new_vocab_dict, vocab_file)
-
-
-tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
-    ".output/",
-    unk_token=tokenizer.unk_token,
-    pad_token=tokenizer.pad_token,
-    word_delimiter_token=tokenizer.word_delimiter_token,
-    bos_token=tokenizer.bos_token,
-    eos_token=tokenizer.eos_token,
-    target_lang=target_lang,
-)
-
-tokenizer.push_to_hub(repo_name)  # type: ignore
-
-feature_extractor = Wav2Vec2FeatureExtractor(
-    feature_size=1,
-    sampling_rate=sample_rate,
-    padding_value=0.0,
-    do_normalize=True,
-    return_attention_mask=True,
-)
-
-
-@runtime_checkable
-class HasCustomFields(Protocol):
-    """Just for pyright type checking."""
-
-    tokenizer: Wav2Vec2CTCTokenizer
-    feature_extractor: Wav2Vec2FeatureExtractor
-
-
-processor: Wav2Vec2Processor = Wav2Vec2Processor(
-    feature_extractor=feature_extractor, tokenizer=tokenizer
-)
-assert isinstance(processor, HasCustomFields) and isinstance(
-    processor, Wav2Vec2Processor
-)
-
 
 data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
 
@@ -1543,7 +1543,7 @@ per_device_eval_batch_size = 8
 num_devices = 1
 warmup_ratio = 0.0
 decay_ratio = 1.0
-learning_rate = 1e-4
+learning_rate = 5e-3
 
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
