@@ -969,8 +969,11 @@ class TarS3Dataset(TorchDataset):
 
         if not self._bucket_exists(self.cache_bucket):
             self._create_bucket(self.cache_bucket)
-        self.sync_metadata()
-        self.sync_group(0)
+
+        for _ in tqdm(list(range(1))):
+            self.sync_metadata()
+        for _ in tqdm(list(range(1))):
+            self.sync_group(0)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
