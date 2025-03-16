@@ -10,7 +10,7 @@
       "console": "internalConsole",
       "internalConsoleOptions": "openOnSessionStart",
       "presentation": {
-        "hidden": true
+        "hidden": false
       }
     },
     {
