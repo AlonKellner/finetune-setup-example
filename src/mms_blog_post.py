@@ -1543,7 +1543,7 @@ per_device_eval_batch_size = 8
 num_devices = 1
 warmup_ratio = 0.0
 decay_ratio = 1.0
-learning_rate = 5e-3
+learning_rate = 1e-2
 
 global_batch_size = per_device_train_batch_size * num_devices
 accumulation_steps = effective_batch_size // global_batch_size
