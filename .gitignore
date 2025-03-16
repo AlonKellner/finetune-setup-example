@@ -7,5 +7,5 @@ __pycache__/
 *.pickle
 .env/
 *.env
-wandb/
+.wandb/
 .app_cache/
