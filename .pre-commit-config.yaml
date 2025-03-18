@@ -26,13 +26,13 @@ repos:
     hooks:
       - id: uv-requirements
         name: uv-requirements
-        entry: uv pip compile --extra all_cpu pyproject.toml -o requirements.txt
+        entry: uv pip compile pyproject.toml --group dev -o requirements.txt
         language: system
         files: ^pyproject\.toml$
         pass_filenames: false
       - id: uv-sync
         name: uv-sync
-        entry: uv sync --extra all_cpu --link-mode=copy
+        entry: uv sync --link-mode=copy
         language: system
         files: ^pyproject\.toml$
         pass_filenames: false

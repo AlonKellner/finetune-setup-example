@@ -75,11 +75,12 @@ classifiers = [
 
 dependencies = []
 
-[project.optional-dependencies]
-dev = [
+[dependency-groups]
+dev_tools = [
     "pytest",
     "pyright",
 ]
+gpu = ["flash-attn"]
 mms_blog_post = [
   "accelerate",
   "boto3",
@@ -101,9 +102,9 @@ mms_blog_post = [
   "uroman",
   "wandb"
 ]
-gpu = ["flash-attn"]
-all_cpu = ["finetune-setup-example[dev]", "finetune-setup-example[mms_blog_post]"]
-all_gpu = ["finetune-setup-example[all_cpu]", "finetune-setup-example[gpu]"]
+mms_blog_post_gpu = [{include-group = "mms_blog_post"}, {include-group = "gpu"}]
+dev = [{include-group = "dev_tools"}, {include-group = "mms_blog_post"}]
+dev_gpu = [{include-group = "dev"}, {include-group = "gpu"}]
 
 [project.urls]
 Homepage = "https://alonkellner.com"

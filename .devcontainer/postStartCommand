@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+uv python install --preview --default
+uv sync --link-mode=copy --upgrade
 pre-commit run --all-files
-uv sync --extra all_cpu --link-mode=copy --upgrade
