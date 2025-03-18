@@ -6,28 +6,19 @@ Original file is located at
     https://colab.research.google.com/github/patrickvonplaten/notebooks/blob/master/Fine_Tune_MMS_on_Common_Voice.ipynb
 """
 
-import json
 import os
-import random
-import re
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
 
 import boto3
 import comet_ml
-import numpy as np
 import torch
 import torchaudio as ta
-import uroman
 import wandb
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
-from evaluate import load
 from safetensors.torch import save_file as safe_save_file
 from transformers import (
-    EvalPrediction,
-    Wav2Vec2CTCTokenizer,
-    Wav2Vec2FeatureExtractor,
+    Trainer,
     Wav2Vec2Processor,
     set_seed,
 )
@@ -36,16 +27,22 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import (
 )
 from transformers.utils import is_flash_attn_2_available
 
-from src.finetune_setup_example.custom_datasets import prepare_cached_dataset
-from src.finetune_setup_example.custom_datasets.resized import ResizedDataset
-from src.finetune_setup_example.custom_hf.trainer import CustomTrainer
-from src.finetune_setup_example.custom_hf.training_args import CustomTrainingArguments
-from src.finetune_setup_example.custom_wav2vec2.ctc_collator import (
-    DataCollatorCTCWithPadding,
-)
-from src.finetune_setup_example.custom_wav2vec2.wav2vec2_for_ctc import (
+from finetune_setup_example.custom_datasets import prepare_cached_dataset
+from finetune_setup_example.custom_datasets.lazy import LazyDataset
+from finetune_setup_example.custom_datasets.resized import ResizedDataset
+from finetune_setup_example.custom_hf.training_args import CustomTrainingArguments
+from finetune_setup_example.custom_wav2vec2.wav2vec2_for_ctc import (
     CustomWav2Vec2ForCTC,
 )
+from finetune_setup_example.specific_datasets.common_voice import (
+    load_common_voice_for_wav2vec2,
+)
+from finetune_setup_example.specific_wav2vec2.model import load_wav2vec2_for_adaptuning
+from finetune_setup_example.specific_wav2vec2.processor import (
+    HasCustomFields,
+    create_wav2vec2_processor,
+)
+from finetune_setup_example.specific_wav2vec2.trainer import create_trainer
 
 if is_flash_attn_2_available():
     print("Flash-attn 2 Available.")
@@ -58,168 +55,56 @@ seed = 42
 data_seed = 42
 set_seed(seed)
 
-common_voice_train = load_dataset(
-    "mozilla-foundation/common_voice_17_0",
-    "tr",
-    # split="train+validation",
-    split="train",
-    token=True,
-    trust_remote_code=True,
-    # streaming=True,
-)
-assert isinstance(common_voice_train, HFDataset)
-common_voice_test = load_dataset(
-    "mozilla-foundation/common_voice_17_0",
-    "tr",
-    split="test",
-    token=True,
-    trust_remote_code=True,
-    # streaming=True,
-)
-assert isinstance(common_voice_test, HFDataset)
-
-
-common_voice_train = common_voice_train.remove_columns(
-    [
-        "accent",
-        "age",
-        "client_id",
-        "down_votes",
-        "gender",
-        "locale",
-        "segment",
-        "up_votes",
-    ]
-)
-common_voice_test = common_voice_test.remove_columns(
-    [
-        "accent",
-        "age",
-        "client_id",
-        "down_votes",
-        "gender",
-        "locale",
-        "segment",
-        "up_votes",
-    ]
-)
-
-chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
-Batch = dict[str, Any]
-ur = uroman.Uroman()
 target_lang = "tur"
-
-
-def uromanize(batch: Batch) -> Batch:
-    """Uromanize text."""
-    clean_string = re.sub(chars_to_remove_regex, "", batch["sentence"]).lower()
-    batch["sentence"] = ur.romanize_string(clean_string, lcode=target_lang)
-    return batch
-
-
-common_voice_train = common_voice_train.map(uromanize)
-common_voice_test = common_voice_test.map(uromanize)
-
-Vocab = dict[str, Any]
-
-
-def extract_all_chars(batch: Batch) -> Vocab:
-    """Extract all chars from batch."""
-    all_text = " ".join(batch["sentence"])
-    vocab = list(set(all_text))
-    return {"vocab": [vocab], "all_text": [all_text]}
-
-
 sample_rate = 16_000
-
-common_voice_train = common_voice_train.cast_column(
-    "audio", Audio(sampling_rate=sample_rate)
-)
-common_voice_test = common_voice_test.cast_column(
-    "audio", Audio(sampling_rate=sample_rate)
-)
-
-rand_int = random.randint(0, len(common_voice_train) - 1)
-
-print("Target text:", common_voice_train[rand_int]["sentence"])
-print("Input array shape:", common_voice_train[rand_int]["audio"]["array"].shape)
-print("Sampling rate:", common_voice_train[rand_int]["audio"]["sampling_rate"])
+base_hf_repo = "mms-meta/mms-zeroshot-300m"
+target_hf_repo = "mms-300m-turkish"
+print(f"base_hf_repo: {base_hf_repo}")
+print(f"target_hf_repo: {target_hf_repo}")
 
 
-hf_repo = "mms-meta/mms-zeroshot-300m"
-print(f"hf_repo: {hf_repo}")
-tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(hf_repo)
-vocab_dict = tokenizer.vocab
-
-new_vocab_dict = {target_lang: vocab_dict}
-
-with open(".output/vocab.json", "w") as vocab_file:
-    json.dump(new_vocab_dict, vocab_file)
-
-
-tokenizer: Wav2Vec2CTCTokenizer = Wav2Vec2CTCTokenizer.from_pretrained(
-    ".output/",
-    unk_token=tokenizer.unk_token,
-    pad_token=tokenizer.pad_token,
-    word_delimiter_token=tokenizer.word_delimiter_token,
-    bos_token=tokenizer.bos_token,
-    eos_token=tokenizer.eos_token,
+processor = create_wav2vec2_processor(
     target_lang=target_lang,
+    sample_rate=sample_rate,
+    base_hf_repo=base_hf_repo,
+    target_hf_repo=target_hf_repo,
+)
+assert isinstance(processor, HasCustomFields)
+
+
+common_voice_train = LazyDataset(
+    lambda: load_common_voice_for_wav2vec2(
+        processor=processor,
+        target_lang=target_lang,
+        sample_rate=sample_rate,
+        split="train",
+        data_seed=data_seed,
+    ),
+    35147,
+)
+common_voice_test = LazyDataset(
+    lambda: load_common_voice_for_wav2vec2(
+        processor=processor,
+        target_lang=target_lang,
+        sample_rate=sample_rate,
+        split="test",
+        data_seed=data_seed,
+    ),
+    11290,
 )
 
-repo_name = "mms-300m-turkish"
+eval_size = 20_000
+train_size = 100_000
 
-tokenizer.push_to_hub(repo_name)  # type: ignore
+eval_limit = 4_000
 
-feature_extractor = Wav2Vec2FeatureExtractor(
-    feature_size=1,
-    sampling_rate=sample_rate,
-    padding_value=0.0,
-    do_normalize=True,
-    return_attention_mask=True,
-)
-
-
-@runtime_checkable
-class HasCustomFields(Protocol):
-    """Just for pyright type checking."""
-
-    tokenizer: Wav2Vec2CTCTokenizer
-    feature_extractor: Wav2Vec2FeatureExtractor
-
-
-processor: Wav2Vec2Processor = Wav2Vec2Processor(
-    feature_extractor=feature_extractor, tokenizer=tokenizer
-)
-assert isinstance(processor, HasCustomFields) and isinstance(
-    processor, Wav2Vec2Processor
-)
-
-
-def prepare_dataset(batch: Batch) -> Batch:
-    """Prepare dataset."""
-    audio = batch["audio"]
-    batch["input_values"] = processor(
-        audio["array"], sampling_rate=audio["sampling_rate"]
-    ).input_values[0]
-    batch["length"] = len(batch["input_values"])
-
-    batch["labels"] = processor(text=batch["sentence"]).input_ids  # type: ignore
-    return batch
-
-
-common_voice_train = common_voice_train.map(
-    prepare_dataset, remove_columns=common_voice_train.column_names
-)
-common_voice_test = common_voice_test.map(
-    prepare_dataset, remove_columns=common_voice_test.column_names
-)
+common_voice_test = ResizedDataset(common_voice_test, eval_size)
+common_voice_train = ResizedDataset(common_voice_train, train_size)
 
 access_key = os.getenv("HETZNER_ACCESS_KEY")
 secret_key = os.getenv("HETZNER_SECRET_KEY")
 endpoint = os.getenv("HETZNER_ENDPOINT")
 region = os.getenv("HETZNER_REGION")
-
 
 s3_client, s3_client_v2 = [
     boto3.client(
@@ -243,19 +128,8 @@ train_cache_path = f"./.app_cache/{data_seed}/train_set/"
 Path(test_cache_path).mkdir(parents=True, exist_ok=True)
 Path(train_cache_path).mkdir(parents=True, exist_ok=True)
 
-test_cache_bucket = f"{repo_name}-cache-{data_seed}-test-set"
-train_cache_bucket = f"{repo_name}-cache-{data_seed}-train-set"
-
-eval_size = 20_000
-train_size = 100_000
-
-eval_limit = 4_000
-
-common_voice_test = common_voice_test.shuffle(seed=data_seed)
-common_voice_train = common_voice_train.shuffle(seed=data_seed)
-
-common_voice_test = ResizedDataset(common_voice_test, eval_size)
-common_voice_train = ResizedDataset(common_voice_train, train_size)
+test_cache_bucket = f"{target_hf_repo}-cache-{data_seed}-test-set"
+train_cache_bucket = f"{target_hf_repo}-cache-{data_seed}-train-set"
 
 orig_common_voice_test = common_voice_test
 orig_common_voice_train = common_voice_train
@@ -279,68 +153,8 @@ common_voice_train = prepare_cached_dataset(
 
 common_voice_test = ResizedDataset(common_voice_test, eval_limit)
 
-test_indices_order = list(range(len(common_voice_test)))
-train_indices_order = list(range(len(common_voice_train)))
 
-data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
-
-wer_metric = load("wer")
-cer_metric = load("cer")
-
-
-Metrics = dict[str, Any]
-
-
-def compute_metrics(pred: EvalPrediction) -> Metrics:
-    """Compute metrics."""
-    pred_logits = pred.predictions
-    pred_ids = np.argmax(pred_logits, axis=-1)
-
-    assert isinstance(processor, HasCustomFields)
-    if isinstance(pred.label_ids, tuple):
-        pred.label_ids = pred.label_ids[0]
-    pred.label_ids[pred.label_ids == -100] = processor.tokenizer.pad_token_id  # type: ignore
-
-    pred_str = processor.batch_decode(pred_ids)
-    # we do not want to group tokens when computing the metrics
-    label_str = processor.batch_decode(pred.label_ids, group_tokens=False)
-
-    wer = wer_metric.compute(predictions=pred_str, references=label_str)
-    cer = cer_metric.compute(predictions=pred_str, references=label_str)
-    for i in range(100):
-        print(f'({i}) pred: "{pred_str[i]}"')
-        print(f'({i}) targ: "{label_str[i]}"')
-    return {"wer": wer, "cer": cer}
-
-
-model = CustomWav2Vec2ForCTC.from_pretrained(
-    hf_repo,
-    hidden_dropout=0.0,
-    activation_dropout=0.0,
-    attention_dropout=0.0,
-    feat_proj_dropout=0.0,
-    feat_quantizer_dropout=0.0,
-    final_dropout=0.0,
-    layerdrop=0.0,
-    ctc_loss_reduction="mean",
-    vocab_size=len(processor.tokenizer),
-    adapter_attn_dim=len(processor.tokenizer),
-    ignore_mismatched_sizes=True,
-    # attn_implementation="flash_attention_2",
-    # attn_implementation="sdpa",
-)
-
-model.init_adapter_layers()
-
-model.freeze_base_model()
-model.freeze_feature_encoder()
-
-adapter_weights = model._get_adapters()
-for param in adapter_weights.values():
-    param.requires_grad = True
-
-comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
-wandb.init(dir="./.wandb")
+model = load_wav2vec2_for_adaptuning(base_hf_repo=base_hf_repo, processor=processor)
 
 num_train_epochs = 1
 effective_batch_size = 16
@@ -364,8 +178,8 @@ training_args = CustomTrainingArguments(
     seed=seed,
     data_seed=data_seed,
     report_to=["comet_ml", "wandb"],
-    output_dir=f".output/{repo_name}",
-    run_name=repo_name,
+    output_dir=f".output/{target_hf_repo}",
+    run_name=target_hf_repo,
     group_by_length=True,
     per_device_train_batch_size=per_device_train_batch_size,
     per_device_eval_batch_size=per_device_eval_batch_size,
@@ -400,25 +214,28 @@ training_args = CustomTrainingArguments(
     torch_compile=False,
 )
 
-trainer = CustomTrainer(
-    model=model,  # type: ignore
-    data_collator=data_collator,
-    args=training_args,
-    compute_metrics=compute_metrics,
-    eval_dataset=common_voice_test,
-    train_dataset=common_voice_train,
-    processing_class=processor.feature_extractor,
-    test_indices_order=test_indices_order,
-    train_indices_order=train_indices_order,
-    test_grouped_indices=common_voice_test.sync_safe_groups,
-    train_grouped_indices=common_voice_train.sync_safe_groups,
+
+def train(trainer: Trainer) -> None:
+    """Train with cometml and wandb."""
+    comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
+    wandb.init(dir="./.wandb")
+
+    trainer.train()
+    trainer.evaluate()
+
+    comet_ml.end()
+    wandb.finish()
+
+
+trainer = create_trainer(
+    model=model,
+    training_args=training_args,
+    common_voice_test=common_voice_test,
+    common_voice_train=common_voice_train,
+    processor=processor,
 )
+train(trainer)
 
-trainer.train()
-trainer.evaluate()
-
-wandb.finish()
-comet_ml.end()
 
 adapter_file = WAV2VEC2_ADAPTER_SAFE_FILE.format(target_lang)
 assert training_args.output_dir is not None
@@ -428,7 +245,7 @@ safe_save_file(model._get_adapters(), adapter_file, metadata={"format": "pt"})
 
 trainer.push_to_hub()
 
-model_id = f"Kellner/{repo_name}"
+model_id = f"Kellner/{target_hf_repo}"
 
 model = CustomWav2Vec2ForCTC.from_pretrained(model_id, target_lang=target_lang).to(
     "cuda"  # type: ignore
