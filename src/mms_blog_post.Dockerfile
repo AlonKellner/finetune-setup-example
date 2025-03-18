@@ -20,4 +20,4 @@ RUN --mount=type=cache,dst=/root/.cache/ \
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}
-ENTRYPOINT [ "python" ]
+ENTRYPOINT [ "/app/.venv/bin/python" ]
