@@ -36,11 +36,12 @@ class FlacDataset(TorchDataset):
 
     def complete_metadata(self) -> None:
         """Make sure that the metadata is complete."""
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
-        ) as executor:
+        if len(self) == 0:
             self.set_metadata(self.load_metadata())
-            if len(self.metadata) < len(self):
+        if len(self.metadata) < len(self):
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+            ) as executor:
                 for _ in tqdm(
                     executor.map(lambda i: self.validate_item(i), range(len(self))),
                     total=len(self),
@@ -97,6 +98,13 @@ class FlacDataset(TorchDataset):
         """Set the current metadata value."""
         self.metadata = metadata
 
+    @property
+    def column_names(self) -> list[str]:
+        """A property supported by HF datasets."""
+        if len(self.metadata) == 0:
+            self[0]
+        return [*next(iter(self.metadata.values())).keys(), "input_values"]
+
     def __len__(self) -> int:
         """Propegates the length of the inner dataset."""
         return len(self._inner_dataset)  # type: ignore
@@ -108,6 +116,9 @@ class FlacDataset(TorchDataset):
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if isinstance(index, str):
+            if index in self.column_names:
+                self.complete_metadata()
+                return [self.metadata[i][index] for i in range(len(self.metadata))]
             return self._inner_dataset[index]
 
         item = None

@@ -3,9 +3,13 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY pyproject.toml uv.toml uv.lock dev-pyproject/ ./
+COPY uv.toml ./
+
 RUN --mount=type=cache,dst=/root/.cache/ \
-    uv python install --preview --default && \
+    uv python install --preview --default
+
+COPY pyproject.toml uv.lock dev-pyproject/ ./
+RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group dev -o requirements.txt && \
     uv sync --upgrade --link-mode=copy
 

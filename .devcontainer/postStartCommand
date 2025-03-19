@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
-uv python install --preview --default
 uv sync --link-mode=copy --upgrade
 pre-commit run --all-files

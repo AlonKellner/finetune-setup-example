@@ -11,9 +11,12 @@ RUN --mount=type=cache,dst=/root/.cache/ \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && rm ~/miniconda.sh && \
     conda install -c conda-forge 'ffmpeg<7,>5' sox && ffmpeg -version && sox --version
 
-COPY pyproject.toml uv.toml uv.lock dev-pyproject/ ./
+COPY uv.toml ./
 RUN --mount=type=cache,dst=/root/.cache/ \
-    uv python install --preview --default && \
+    uv python install --preview --default
+
+COPY pyproject.toml uv.lock dev-pyproject/ ./
+RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group mms_blog_post_gpu -o requirements.txt && \
     uv sync --group mms_blog_post --upgrade --link-mode=copy && \
     uv sync --group mms_blog_post_gpu --upgrade --link-mode=copy --no-build-isolation-package flash-attn

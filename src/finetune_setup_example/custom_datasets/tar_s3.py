@@ -242,12 +242,10 @@ class TarS3Dataset(TorchDataset):
 
     def sync_all_groups(self) -> None:
         """Sync all groups."""
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
-        ) as executor:
-            if any(
-                (not self.group_exists(i)) for i in range(len(self.grouped_indices))
-            ):
+        if any((not self.group_exists(i)) for i in range(len(self.grouped_indices))):
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+            ) as executor:
                 for _ in tqdm(
                     executor.map(
                         self.sync_group,
