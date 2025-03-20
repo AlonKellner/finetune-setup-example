@@ -23,11 +23,14 @@ def git_checkout(commit_hash: str) -> None:
 def git_push_dir(dir_to_push: Path) -> None:
     """Push changes from a specific directory."""
     repo = git.Repo(".")
-    repo.git.add(str(dir_to_push))
-    commit_message = f"auto: {dir_to_push}"
-    repo.index.commit(commit_message)
-    origin = repo.remote(name="origin")
-    origin.push()
+    if repo.is_dirty(untracked_files=True):
+        print("Auto committing changes...")
+        repo.git.add(str(dir_to_push))
+        commit_message = f"auto: {dir_to_push}"
+        repo.index.commit(commit_message)
+        origin = repo.remote(name="origin")
+        origin.push()
+        print("Auto commit done.")
 
 
 def load_hp_set(hp_path: Path) -> HPSet:
