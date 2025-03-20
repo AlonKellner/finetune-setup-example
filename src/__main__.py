@@ -21,19 +21,25 @@ def load_hp_set(hp_path: Path) -> HPSet:
     return hp_set
 
 
-def train_main(hp_path: Path, job_name: str) -> None:
+def train_main(hp_path: Path, job_id: str, ids: dict[str, str]) -> None:
     """Train a model. A mock train main."""
-    id = f"{job_name}:{threading.get_ident()}"
     hp_set = load_hp_set(hp_path)
-    print(id, "\t", hp_path, "\t", hp_set)
+    print(job_id, "\t", ids, "\t", hp_path, "\t", hp_set)
 
 
 def run_job(hp_path: Path, ids: dict[str, str]) -> str:
     """Mock job running logic."""
     job_id = "-".join(ids.values())
-    thread = threading.Thread(target=train_main, args=(hp_path,))
+    thread = threading.Thread(
+        target=train_main,
+        args=(
+            hp_path,
+            job_id,
+            ids,
+        ),
+    )
     thread.start()
-    return f"{job_id}:{thread.ident}"
+    return job_id
 
 
 def to_full_hp_sets(default_hp_set: HPSet, hp_sets: list[HPSet]) -> list[HPSet]:
