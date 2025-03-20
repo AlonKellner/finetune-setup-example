@@ -1,0 +1,35 @@
+# bert_qa.yaml
+name: bert-qa
+
+resources:
+  cloud: runpod
+  accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
+  use_spot: true # Use spot instances to save cost.
+
+envs:
+  # Fill in your wandb key: copy from https://wandb.ai/authorize
+  # Alternatively, you can use `--env WANDB_API_KEY=$WANDB_API_KEY`
+  # to pass the key in the command line, during `sky jobs launch`.
+  WANDB_API_KEY: c7be420a0c6319903bc91c9c90dc5d8cbac1dec5
+
+setup: |
+  git clone https://github.com/huggingface/transformers.git . -b v4.30.1
+  pip install -e .
+  cd examples/pytorch/question-answering/
+  pip install -r requirements.txt torch==1.12.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
+  pip install wandb numpy
+
+run: |
+  cd examples/pytorch/question-answering/
+  python run_qa.py \
+    --model_name_or_path bert-base-uncased \
+    --dataset_name squad \
+    --do_train \
+    --do_eval \
+    --per_device_train_batch_size 12 \
+    --learning_rate 3e-5 \
+    --num_train_epochs 1 \
+    --max_seq_length 384 \
+    --doc_stride 128 \
+    --report_to wandb \
+    --output_dir /tmp/bert_qa/
