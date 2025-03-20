@@ -20,9 +20,22 @@ respect-gitignore = true
 
 [tool.ruff.lint]
 select = [
-  "E4", "E7", "E9", "F", "B", "Q", "I",
-  "ARG", "ANN", "D", "PL", "S", "RUF",
-  "UP", "TC", "SIM"
+  "E4",
+  "E7",
+  "E9",
+  "F",
+  "B",
+  "Q",
+  "I",
+  "ARG",
+  "ANN",
+  "D",
+  "PL",
+  "S",
+  "RUF",
+  "UP",
+  "TC",
+  "SIM",
 ]
 ignore = ["PLR2004", "PLR0913", "ANN401", "S101", "S311"]
 
@@ -33,16 +46,16 @@ max-args = 10
 convention = "numpy"
 
 [tool.pyright]
-analyzeUnannotatedFunctions=true
-reportMissingParameterType="error"
-reportUnusedImport="error"
-reportUnusedClass="error"
-reportUnusedFunction="error"
-reportUnusedVariable="error"
-extraPaths=[]
+analyzeUnannotatedFunctions = true
+reportMissingParameterType = "error"
+reportUnusedImport = "error"
+reportUnusedClass = "error"
+reportUnusedFunction = "error"
+reportUnusedVariable = "error"
+extraPaths = []
 
 [tool.pytest.ini_options]
-pythonpath="./"
+pythonpath = "./"
 
 [tool.typos.files]
 extend-exclude = ["**/*.env"]
@@ -51,12 +64,8 @@ extend-exclude = ["**/*.env"]
 dynamic = ["version"]
 name = "finetune-setup-example"
 requires-python = ">=3.10.0"
-authors = [
-  {name = "Alon Kellner", email = "me@alonkellner.com"}
-]
-maintainers = [
-  {name = "Alon Kellner", email = "me@alonkellner.com"}
-]
+authors = [{ name = "Alon Kellner", email = "me@alonkellner.com" }]
+maintainers = [{ name = "Alon Kellner", email = "me@alonkellner.com" }]
 description = "An experimental finetuning setup example"
 readme = "README.md"
 
@@ -76,10 +85,8 @@ classifiers = [
 dependencies = []
 
 [dependency-groups]
-dev_tools = [
-    "pytest",
-    "pyright",
-]
+dev_tools = ["pytest", "pyright"]
+jobs = ["pyyaml", "gitpython"]
 gpu = ["flash-attn"]
 mms_blog_post = [
   "accelerate",
@@ -100,11 +107,18 @@ mms_blog_post = [
   "transformers",
   "types-boto3-lite[s3]",
   "uroman",
-  "wandb"
+  "wandb",
 ]
-mms_blog_post_gpu = [{include-group = "mms_blog_post"}, {include-group = "gpu"}]
-dev = [{include-group = "dev_tools"}, {include-group = "mms_blog_post"}]
-dev_gpu = [{include-group = "dev"}, {include-group = "gpu"}]
+mms_blog_post_gpu = [
+  { include-group = "mms_blog_post" },
+  { include-group = "gpu" },
+]
+dev = [
+  { include-group = "dev_tools" },
+  { include-group = "mms_blog_post" },
+  { include-group = "jobs" },
+]
+dev_gpu = [{ include-group = "dev" }, { include-group = "gpu" }]
 
 [project.urls]
 Homepage = "https://alonkellner.com"

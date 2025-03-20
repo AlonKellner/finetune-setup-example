@@ -25,7 +25,7 @@ def load_wav2vec2_for_adaptuning(
         adapter_attn_dim=len(processor.tokenizer),
         ignore_mismatched_sizes=True,
         # attn_implementation="flash_attention_2",
-        attn_implementation="sdpa",
+        # attn_implementation="sdpa",
     )
 
     model.init_adapter_layers()
