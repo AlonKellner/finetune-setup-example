@@ -8,10 +8,26 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import git
 import yaml
-from git import Repo
 
 HPSet = dict[str, Any]
+
+
+def git_checkout(commit_hash: str) -> None:
+    """Checkout code by commit hash."""
+    repo = git.Repo(".")
+    repo.git.checkout(commit_hash)
+
+
+def git_push_dir(dir_to_push: Path) -> None:
+    """Push changes from a specific directory."""
+    repo = git.Repo(".")
+    repo.index.add(dir_to_push)
+    commit_message = f"auto: {dir_to_push}"
+    repo.index.commit(commit_message)
+    origin = repo.remote(name="origin")
+    origin.push()
 
 
 def load_hp_set(hp_path: Path) -> HPSet:
@@ -69,9 +85,8 @@ def save_hp_set(hp_path: Path, hp_set: HPSet) -> Path:
     return hp_path
 
 
-def save_hp_sets(hp_sets: list[HPSet]) -> list[tuple[str, Path]]:
+def save_hp_sets(hp_sets: list[HPSet], hps_dir: Path) -> list[tuple[str, Path]]:
     """Save multiple HP sets at once."""
-    hps_dir = Path("hp_sets")
     if hps_dir.exists():
         shutil.rmtree(hps_dir)
     hps_dir.mkdir(parents=True)
@@ -84,8 +99,10 @@ def save_hp_sets(hp_sets: list[HPSet]) -> list[tuple[str, Path]]:
 
 def hp_main(ids: dict[str, str]) -> None:
     """Create hyper-parameter sets and run jobs for them."""
+    hps_dir = Path("hp_sets")
     hp_sets = create_hp_sets()
-    hp_paths = save_hp_sets(hp_sets)
+    hp_paths = save_hp_sets(hp_sets, hps_dir)
+    git_push_dir(hps_dir)
 
     job_ids = [run_job(hp_path, dict(**ids, i=i)) for (i, hp_path) in hp_paths]
     print(job_ids)
@@ -94,7 +111,7 @@ def hp_main(ids: dict[str, str]) -> None:
 
 def get_exp_ids() -> dict[str, str]:
     """Validate and get ids for the current experiment."""
-    repo = Repo(".")
+    repo = git.Repo(".")
     branch = repo.active_branch.name
     exp_prefix = "exp/"
     if not branch.startswith(exp_prefix):
