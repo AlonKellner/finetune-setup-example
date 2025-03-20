@@ -41,7 +41,7 @@ def run_jobs(hp_paths: list[tuple[str, Path]], ids: dict[str, str]) -> None:
 
 def hp_main() -> None:
     """Create hyper-parameter sets and run jobs for them."""
-    default_hp_set = dict(a=1, b=2, c=30)
+    default_hp_set = dict(a=10, b=2, c=30)
     hp_sets = [dict(b=3, c=c, z=0, x=x) for c in [-1, -2] for x in [0.4, 0.5]]
     hp_paths = prepare_hp_sets(default_hp_set, hp_sets, Path("hp_sets"))
 
