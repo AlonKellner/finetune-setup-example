@@ -69,14 +69,16 @@ def save_hp_set(hp_path: Path, hp_set: HPSet) -> Path:
     return hp_path
 
 
-def save_hp_sets(hp_sets: list[HPSet]) -> list[Path]:
+def save_hp_sets(hp_sets: list[HPSet]) -> list[tuple[str, Path]]:
     """Save multiple HP sets at once."""
     hps_dir = Path("hp_sets")
     if hps_dir.exists():
         shutil.rmtree(hps_dir)
     hps_dir.mkdir(parents=True)
+    indices = [str(i).zfill(len(str(len(hp_sets)))) for i in range(len(hp_sets))]
     return [
-        save_hp_set(hps_dir / f"{i}.yaml", hp_set) for i, hp_set in enumerate(hp_sets)
+        (i, save_hp_set(hps_dir / f"{i}.yaml", hp_set))
+        for i, hp_set in zip(indices, hp_sets, strict=True)
     ]
 
 
@@ -85,7 +87,7 @@ def hp_main(ids: dict[str, str]) -> None:
     hp_sets = create_hp_sets()
     hp_paths = save_hp_sets(hp_sets)
 
-    job_ids = [run_job(hp_path, ids) for hp_path in hp_paths]
+    job_ids = [run_job(hp_path, dict(**ids, i=i)) for (i, hp_path) in hp_paths]
     print(job_ids)
     time.sleep(1)
 
@@ -104,7 +106,7 @@ def get_exp_ids() -> dict[str, str]:
     exp_id = branch.removeprefix(exp_prefix)
     time_id = datetime.now().strftime("%Y%m%d%H%M%S")
     commit_id = repo.git.rev_parse("HEAD", short=True)
-    rand_id = secrets.token_hex(3)
+    rand_id = secrets.token_hex(2)
     return dict(exp=exp_id, time=time_id, commit=commit_id, rand=rand_id)
 
 
