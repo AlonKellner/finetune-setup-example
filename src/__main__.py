@@ -23,7 +23,7 @@ def git_checkout(commit_hash: str) -> None:
 def git_push_dir(dir_to_push: Path) -> None:
     """Push changes from a specific directory."""
     repo = git.Repo(".")
-    repo.index.add(dir_to_push)
+    repo.git.add(str(dir_to_push))
     commit_message = f"auto: {dir_to_push}"
     repo.index.commit(commit_message)
     origin = repo.remote(name="origin")
@@ -97,12 +97,14 @@ def save_hp_sets(hp_sets: list[HPSet], hps_dir: Path) -> list[tuple[str, Path]]:
     ]
 
 
-def hp_main(ids: dict[str, str]) -> None:
+def hp_main() -> None:
     """Create hyper-parameter sets and run jobs for them."""
     hps_dir = Path("hp_sets")
     hp_sets = create_hp_sets()
     hp_paths = save_hp_sets(hp_sets, hps_dir)
-    git_push_dir(hps_dir)
+    git_push_dir(Path("."))
+
+    ids = get_exp_ids()
 
     job_ids = [run_job(hp_path, dict(**ids, i=i)) for (i, hp_path) in hp_paths]
     print(job_ids)
@@ -128,5 +130,4 @@ def get_exp_ids() -> dict[str, str]:
 
 
 if __name__ == "__main__":
-    exp_ids = get_exp_ids()
-    hp_main(exp_ids)
+    hp_main()
