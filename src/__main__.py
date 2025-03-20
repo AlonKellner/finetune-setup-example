@@ -92,6 +92,8 @@ if __name__ == "__main__":
         raise ValueError(
             f"Current branch must start with `{exp_prefix}`, got `{branch}`"
         )
+    if repo.is_dirty(untracked_files=True):
+        raise ValueError("Commit all changes before running.")
     exp_id = branch.removeprefix(exp_prefix)
     time_id = datetime.now().strftime("%Y%m%d%H%M%S")
     commit_id = repo.git.rev_parse("HEAD", short=True)
