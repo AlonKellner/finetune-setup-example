@@ -104,10 +104,10 @@ def get_exp_ids() -> dict[str, str]:
     if repo.is_dirty(untracked_files=True):
         raise ValueError("Commit all changes before running.")
     exp_id = branch.removeprefix(exp_prefix)
-    time_id = datetime.now().strftime("%Y%m%d%H%M%S")
     commit_id = repo.git.rev_parse("HEAD", short=True)
+    time_id = datetime.now().strftime("%Y%m%d%H%M%S")
     rand_id = secrets.token_hex(2)
-    return dict(exp=exp_id, time=time_id, commit=commit_id, rand=rand_id)
+    return dict(exp=exp_id, commit=commit_id, time=time_id, rand=rand_id)
 
 
 if __name__ == "__main__":
