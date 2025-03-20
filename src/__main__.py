@@ -84,7 +84,8 @@ def hp_main(ids: dict[str, str]) -> None:
     time.sleep(1)
 
 
-if __name__ == "__main__":
+def get_exp_ids() -> dict[str, str]:
+    """Validate and get ids for the current experiment."""
     repo = Repo(".")
     branch = repo.active_branch.name
     exp_prefix = "exp/"
@@ -98,4 +99,9 @@ if __name__ == "__main__":
     time_id = datetime.now().strftime("%Y%m%d%H%M%S")
     commit_id = repo.git.rev_parse("HEAD", short=True)
     rand_id = secrets.token_hex(3)
-    hp_main(dict(exp=exp_id, time=time_id, commit=commit_id, rand=rand_id))
+    return dict(exp=exp_id, time=time_id, commit=commit_id, rand=rand_id)
+
+
+if __name__ == "__main__":
+    exp_ids = get_exp_ids()
+    hp_main(exp_ids)
