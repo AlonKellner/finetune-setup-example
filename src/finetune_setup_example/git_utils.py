@@ -20,7 +20,8 @@ def git_push_dir(dir_to_push: Path) -> None:
         commit_message = f"auto: {dir_to_push}"
         repo.index.commit(commit_message)
         print("Auto commit done.")
-    if repo.head.commit != repo.commit(f"origin/{repo.active_branch}"):
+    branch = repo.active_branch
+    if branch.commit != repo.commit(f"origin/{branch.name}"):
         print("Auto pushing changes...")
         origin = repo.remote(name="origin")
         origin.push()
