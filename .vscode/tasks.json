@@ -123,6 +123,46 @@
       "problemMatcher": "$python"
     },
     {
+      "label": "Profile Python (docker compose + upload)  ",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Profile Python (docker compose + upload)",
+        "Remove Python profile (docker)"
+      ],
+      "type": "shell",
+      "command": ":",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Download Profile (docker compose)  ",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Download Profile (docker compose)",
+        "Remove Python profile (docker)"
+      ],
+      "type": "shell",
+      "command": ":",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
       "label": "Run Python (docker)",
       "type": "shell",
       "command": "docker stop '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' || true && docker run ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' ${input:docker-image} ${fileDirname}/${fileBasenameNoExtension}.py",
@@ -346,6 +386,38 @@
       "label": "Profile Python (docker compose)",
       "type": "shell",
       "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'uvx' ${fileBasenameNoExtension} py-spy record -f raw -o ${fileDirname}/${fileBasenameNoExtension}.pyspy --subprocesses --full-filenames -r 10 -- /app/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.py",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Profile Python (docker compose + upload)",
+      "type": "shell",
+      "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'bash -c' ${fileBasenameNoExtension} 'uvx py-spy record -f raw -o ${fileDirname}/${fileBasenameNoExtension}.pyspy --subprocesses --full-filenames -r 10 -- /app/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.py && PYSPY_PATH=${relativeFileDirname}/${fileBasenameNoExtension}.pyspy /app/.venv/bin/python ${workspaceFolder}/src/pyspy_upload.py'",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Download Profile (docker compose)",
+      "type": "shell",
+      "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'bash -c' ${fileBasenameNoExtension} '/app/.venv/bin/python ${workspaceFolder}/src/pyspy_download.py'",
       "hide": true,
       "group": "none",
       "presentation": {

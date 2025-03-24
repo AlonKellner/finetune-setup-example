@@ -12,4 +12,4 @@ setup: |
 run: |
   uvx py-spy record -f raw -o profile.pyspy --subprocesses --full-filenames -r 10 -- \
   /app/.venv/bin/python src/finetune_setup_example/train.py && \
-  /app/.venv/bin/python src/finetune_setup_example/pyspy_upload.py
+  PYSPY_PATH=profile.pyspy /app/.venv/bin/python src/pyspy_upload.py

@@ -82,7 +82,7 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 
-dependencies = []
+dependencies = ["inquirer"]
 
 [dependency-groups]
 dev_tools = ["pytest", "pyright"]

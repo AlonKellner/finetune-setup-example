@@ -26,6 +26,17 @@ if __name__ == "__main__":
     )
 
     job_id = os.getenv("FULL_JOB_ID")
+    if job_id is None:
+        raise ValueError("Env var `FULL_JOB_ID` not provided.")
 
-    with open("profile.pyspy", "rb") as f:
-        s3_client.upload_fileobj(Fileobj=f, Bucket="pyspy", Key=f"{job_id}.pyspy")
+    pyspy_path = os.getenv("PYSPY_PATH")
+    if pyspy_path is None:
+        raise ValueError("Env var `FULL_JOB_ID` not provided.")
+
+    s3_path = f"{job_id}/{pyspy_path}"
+    bucket = "pyspy"
+
+    print(f"Uploading `{bucket}/{s3_path}`...")
+    with open(pyspy_path, "rb") as f:
+        s3_client.upload_fileobj(Fileobj=f, Bucket=bucket, Key=s3_path)
+    print("Upload successful.")

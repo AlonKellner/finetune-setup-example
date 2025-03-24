@@ -1,10 +1,10 @@
 services:
-  mms_blog_post:
+  train:
     env_file:
-      - ./src/mms_blog_post.env
+      - ./src/train.env
     build:
       context: .
-      dockerfile: ./src/mms_blog_post.Dockerfile
+      dockerfile: ./src/train.Dockerfile
       args:
         WORKDIR: ${WORKDIR}
     networks:
