@@ -5,6 +5,8 @@ import os
 import boto3
 from types_boto3_s3.client import S3Client
 
+from finetune_setup_example.experiment_utils import get_exp_ids
+
 if __name__ == "__main__":
     access_key = os.getenv("HETZNER_ACCESS_KEY")
     secret_key = os.getenv("HETZNER_SECRET_KEY")
@@ -25,13 +27,11 @@ if __name__ == "__main__":
         ),
     )
 
-    job_id = os.getenv("FULL_JOB_ID")
-    if job_id is None:
-        raise ValueError("Env var `FULL_JOB_ID` not provided.")
+    job_id, ids = get_exp_ids()
 
     pyspy_path = os.getenv("PYSPY_PATH")
     if pyspy_path is None:
-        raise ValueError("Env var `FULL_JOB_ID` not provided.")
+        raise ValueError("Env var `PYSPY_PATH` not provided.")
 
     s3_path = f"{job_id}/{pyspy_path}"
     bucket = "pyspy"

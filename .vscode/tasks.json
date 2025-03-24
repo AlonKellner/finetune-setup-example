@@ -417,7 +417,7 @@
     {
       "label": "Download Profile (docker compose)",
       "type": "shell",
-      "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'bash -c' ${fileBasenameNoExtension} '/app/.venv/bin/python ${workspaceFolder}/src/pyspy_download.py'",
+      "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'bash -c' ${fileBasenameNoExtension} 'PYSPY_PATH=${relativeFileDirname}/${fileBasenameNoExtension}.pyspy /app/.venv/bin/python ${workspaceFolder}/src/pyspy_download.py'",
       "hide": true,
       "group": "none",
       "presentation": {

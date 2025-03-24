@@ -28,7 +28,11 @@ if __name__ == "__main__":
         ),
     )
 
-    ids = get_exp_ids()
+    pyspy_path = os.getenv("PYSPY_PATH")
+    if pyspy_path is None:
+        raise ValueError("Env var `PYSPY_PATH` not provided.")
+
+    job_id, ids = get_exp_ids()
     exp = ids["exp"]
     commit = ids["commit"]
 
@@ -36,9 +40,11 @@ if __name__ == "__main__":
 
     response = s3_client.list_objects(Bucket=bucket, Prefix=f"{exp}-{commit}")
     if "Contents" not in response:
+        print(response)
         raise RuntimeError("Invalid response from S3")
 
     keys = [v["Key"] for v in response["Contents"] if "Key" in v]
+    keys = [k for k in keys if pyspy_path in k]
     questions = [
         inquirer.List(
             "key",

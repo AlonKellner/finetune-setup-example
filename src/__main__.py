@@ -45,7 +45,7 @@ def hp_main() -> None:
     hp_sets = [dict(b=3, c=c, z=0, x=x) for c in [-1, -2] for x in [0.4, 0.5]]
     hp_paths = prepare_hp_sets(default_hp_set, hp_sets, Path("hp_sets"))
 
-    ids = get_exp_ids()
+    _, ids = get_exp_ids()
 
     run_jobs(hp_paths, ids)
 
