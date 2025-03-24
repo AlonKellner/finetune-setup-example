@@ -23,7 +23,13 @@ class LazyDataset(TorchDataset):
 
     def __len__(self) -> int:
         """Return the size as specified."""
-        return self._size
+        if self._inner_dataset is None:
+            return self._size
+        else:
+            real_size = len(self._inner_dataset)  # type: ignore
+            if real_size != self._size:
+                print("WARNING! Lazy dataset sizes mismatch!")
+            return real_size
 
     @property
     def total_length(self) -> int:

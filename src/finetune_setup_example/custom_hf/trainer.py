@@ -1,8 +1,11 @@
 """Custom `transformers` trainer."""
 
+import os
 from typing import Any
 
+import comet_ml
 import torch
+import wandb
 from datasets import Dataset as HFDataset
 from torch import nn
 from torch.utils.data import RandomSampler, SequentialSampler
@@ -111,3 +114,15 @@ class CustomTrainer(Trainer):
             return SequentialSampler(eval_dataset)
         else:
             return None
+
+
+def train(trainer: Trainer) -> None:
+    """Train with cometml and wandb."""
+    comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
+    wandb.init(dir="./.wandb")
+
+    trainer.train()
+    trainer.evaluate()
+
+    comet_ml.end()
+    wandb.finish()

@@ -8,8 +8,11 @@ resources:
 
 setup: |
   git clone https://github.com/AlonKellner/finetune-setup-example.git .
+  git checkout exp/$JOB_ID_EXP
+  git reset --hard $JOB_ID_COMMIT
+  git clean -df
 
 run: |
-  uvx py-spy record -f raw -o profile.pyspy --subprocesses --full-filenames -r 10 -- \
-  /app/.venv/bin/python src/finetune_setup_example/train.py && \
-  PYSPY_PATH=profile.pyspy /app/.venv/bin/python src/pyspy_upload.py
+  uvx py-spy record -f raw -o src/train.pyspy --subprocesses --full-filenames -r 10 -- \
+    /app/.venv/bin/python src/train.py
+  PYSPY_PATH=src/train.pyspy /app/.venv/bin/python src/pyspy_upload.py

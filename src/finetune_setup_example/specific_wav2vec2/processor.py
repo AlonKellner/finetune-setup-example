@@ -20,10 +20,10 @@ class HasCustomFields(Protocol):
 
 
 def create_wav2vec2_processor(
-    target_lang: str, sample_rate: int, base_hf_repo: str, target_hf_repo: str
+    target_lang: str, sample_rate: int, tokenizer_hf_repo: str, target_hf_repo: str
 ) -> Wav2Vec2Processor:
     """Create a wav2vec2 processor, ready for training a specific language."""
-    tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(base_hf_repo)
+    tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
     vocab_dict = tokenizer.vocab
 
     new_vocab_dict = {target_lang: vocab_dict}

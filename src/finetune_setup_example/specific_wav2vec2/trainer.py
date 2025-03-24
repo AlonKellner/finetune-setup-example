@@ -2,16 +2,16 @@
 
 from transformers import Wav2Vec2Processor
 
-from finetune_setup_example.custom_datasets.resized import ResizedDataset
-from finetune_setup_example.custom_datasets.tar_s3 import TarS3Dataset
-from finetune_setup_example.custom_hf.trainer import CustomTrainer
-from finetune_setup_example.custom_hf.training_args import CustomTrainingArguments
-from finetune_setup_example.custom_wav2vec2.ctc_collator import (
+from ..custom_datasets.resized import ResizedDataset
+from ..custom_datasets.tar_s3 import TarS3Dataset
+from ..custom_hf.trainer import CustomTrainer
+from ..custom_hf.training_args import CustomTrainingArguments
+from ..custom_wav2vec2.ctc_collator import (
     DataCollatorCTCWithPadding,
 )
-from finetune_setup_example.custom_wav2vec2.wav2vec2_for_ctc import CustomWav2Vec2ForCTC
-from finetune_setup_example.specific_metrics.asr import Wav2Vec2ASR
-from finetune_setup_example.specific_wav2vec2.processor import HasCustomFields
+from ..custom_wav2vec2.wav2vec2_for_ctc import CustomWav2Vec2ForCTC
+from ..specific_metrics.asr import Wav2Vec2ASR
+from ..specific_wav2vec2.processor import HasCustomFields
 
 
 def create_trainer(

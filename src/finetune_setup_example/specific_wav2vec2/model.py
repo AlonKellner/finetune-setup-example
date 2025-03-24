@@ -2,30 +2,38 @@
 
 from transformers import Wav2Vec2Processor
 
-from finetune_setup_example.custom_wav2vec2.wav2vec2_for_ctc import CustomWav2Vec2ForCTC
-from finetune_setup_example.specific_wav2vec2.processor import HasCustomFields
+from ..custom_wav2vec2.wav2vec2_for_ctc import CustomWav2Vec2ForCTC
+from ..specific_wav2vec2.processor import HasCustomFields
 
 
 def load_wav2vec2_for_adaptuning(
-    base_hf_repo: str, processor: Wav2Vec2Processor
+    base_hf_repo: str,
+    processor: Wav2Vec2Processor,
+    attn_implementation: str,
+    hidden_dropout: float = 0.0,
+    activation_dropout: float = 0.0,
+    attention_dropout: float = 0.0,
+    feat_proj_dropout: float = 0.0,
+    feat_quantizer_dropout: float = 0.0,
+    final_dropout: float = 0.0,
+    layerdrop: float = 0.0,
 ) -> CustomWav2Vec2ForCTC:
     """Load a wav2vec2 model, ready to train an adapter alone."""
     assert isinstance(processor, HasCustomFields)
     model = CustomWav2Vec2ForCTC.from_pretrained(
         base_hf_repo,
-        hidden_dropout=0.0,
-        activation_dropout=0.0,
-        attention_dropout=0.0,
-        feat_proj_dropout=0.0,
-        feat_quantizer_dropout=0.0,
-        final_dropout=0.0,
-        layerdrop=0.0,
+        hidden_dropout=hidden_dropout,
+        activation_dropout=activation_dropout,
+        attention_dropout=attention_dropout,
+        feat_proj_dropout=feat_proj_dropout,
+        feat_quantizer_dropout=feat_quantizer_dropout,
+        final_dropout=final_dropout,
+        layerdrop=layerdrop,
         ctc_loss_reduction="mean",
         vocab_size=len(processor.tokenizer),
         adapter_attn_dim=len(processor.tokenizer),
         ignore_mismatched_sizes=True,
-        # attn_implementation="flash_attention_2",
-        # attn_implementation="sdpa",
+        attn_implementation=attn_implementation,
     )
 
     model.init_adapter_layers()

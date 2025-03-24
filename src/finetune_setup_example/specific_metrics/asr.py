@@ -9,7 +9,7 @@ from transformers import (
     Wav2Vec2Processor,
 )
 
-from finetune_setup_example.specific_wav2vec2.processor import HasCustomFields
+from ..specific_wav2vec2.processor import HasCustomFields
 
 Metrics = dict[str, Any]
 
