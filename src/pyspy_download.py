@@ -6,7 +6,7 @@ import boto3
 import inquirer
 from types_boto3_s3.client import S3Client
 
-from finetune_setup_example.experiment_utils import get_exp_ids
+from finetune_setup_example.job_utils import get_job_ids
 
 if __name__ == "__main__":
     access_key = os.getenv("HETZNER_ACCESS_KEY")
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     if pyspy_path is None:
         raise ValueError("Env var `PYSPY_PATH` not provided.")
 
-    job_id, ids = get_exp_ids()
+    job_id, ids = get_job_ids()
     exp = ids["exp"]
     commit = ids["commit"]
 

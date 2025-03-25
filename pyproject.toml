@@ -60,6 +60,9 @@ pythonpath = "./"
 [tool.typos.files]
 extend-exclude = ["**/*.env"]
 
+[tool.uv.sources]
+skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-new" }
+
 [project]
 dynamic = ["version"]
 name = "finetune-setup-example"
@@ -86,7 +89,7 @@ dependencies = ["inquirer"]
 
 [dependency-groups]
 dev_tools = ["pytest", "pyright"]
-jobs = ["pyyaml", "gitpython"]
+jobs = ["gitpython", "pyyaml", "skypilot[kubernetes,runpod]"]
 gpu = ["flash-attn"]
 mms_blog_post = [
   "accelerate",

@@ -1,13 +1,15 @@
-"""Experiment ID generation."""
+"""Job utils."""
 
 import os
 import secrets
+from collections.abc import Callable
 from datetime import datetime
 
 import git
+import yaml
 
 
-def get_exp_ids() -> tuple[str, dict[str, str]]:
+def get_job_ids() -> tuple[str, dict[str, str]]:
     """Validate and get ids for the current experiment."""
     job_id = os.getenv("FULL_JOB_ID")
     exp_id = os.getenv("JOB_ID_EXP")
@@ -34,3 +36,15 @@ def get_exp_ids() -> tuple[str, dict[str, str]]:
     assert time_id is not None
     assert rand_id is not None
     return job_id, dict(exp=exp_id, commit=commit_id, time=time_id, rand=rand_id)
+
+
+def run_local_job(job_func: Callable) -> None:
+    """Run a job locally."""
+    hp_path = os.getenv("JOB_HP_PATH")
+    if hp_path is None:
+        hp_set = dict()
+    else:
+        with open(hp_path) as f:
+            hp_set = yaml.safe_load(f)
+
+    job_func(**hp_set)
