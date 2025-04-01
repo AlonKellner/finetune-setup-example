@@ -25,7 +25,9 @@
         "tekumara.typos-vscode",
         "elagil.pre-commit-helper",
         "mhutchie.git-graph",
-        "rafaelha.vscode-flamegraph"
+        "rafaelha.vscode-flamegraph",
+        "github.copilot",
+        "github.copilot-chat"
       ],
       "settings": {
         "pre-commit-helper.runOnSave": "all hooks",
@@ -40,7 +42,13 @@
           "zsh": {
             "path": "zsh"
           }
-        }
+        },
+        "github.copilot.chat.codesearch.enabled": true,
+        "github.copilot.chat.codeGeneration.instructions": [
+          {
+            "text": "Use `pre-commit run --all-files` to apply type-checking, linting, formatting, testing and more."
+          }
+        ]
       }
     }
   },

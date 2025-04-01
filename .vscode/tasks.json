@@ -10,6 +10,22 @@
   ],
   "tasks": [
     {
+      "label": "Pre-Commit All",
+      "type": "shell",
+      "command": "pre-commit run --all-files",
+      "hide": false,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
       "label": "Run Python (venv)",
       "type": "shell",
       "command": "python ${fileDirname}/${fileBasenameNoExtension}.py",

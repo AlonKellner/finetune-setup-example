@@ -13,6 +13,7 @@ setup: |
   git clean -df
 
 run: |
-  uvx py-spy record -f raw -o src/train.pyspy --subprocesses --full-filenames -r 10 -- \
+  export PYSPY_PATH=src/train.pyspy
+  uvx py-spy record -f raw -o "$PYSPY_PATH" --subprocesses --full-filenames -r 10 -- \
     /app/.venv/bin/python src/train.py
-  PYSPY_PATH=src/train.pyspy /app/.venv/bin/python src/pyspy_upload.py
+  /app/.venv/bin/python src/pyspy_upload.py
