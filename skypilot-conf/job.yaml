@@ -1,4 +1,4 @@
-name: finetune_setup_example
+name: job
 
 resources:
   cloud: runpod

@@ -11,8 +11,26 @@
   "tasks": [
     {
       "label": "Pre-Commit All",
+      "detail": "Applies type-checking, linting, formatting, testing and more to all files.",
       "type": "shell",
       "command": "pre-commit run --all-files",
+      "hide": false,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Pre-Commit Current",
+      "detail": "Applies type-checking, linting, formatting, testing and more to the current file.",
+      "type": "shell",
+      "command": "pre-commit run --files ${file}",
       "hide": false,
       "group": "none",
       "presentation": {

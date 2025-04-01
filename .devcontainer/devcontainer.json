@@ -46,7 +46,7 @@
         "github.copilot.chat.codesearch.enabled": true,
         "github.copilot.chat.codeGeneration.instructions": [
           {
-            "text": "Use `pre-commit run --all-files` to apply type-checking, linting, formatting, testing and more."
+            "text": "Use the `Pre-Commit All` and `Pre-commit Current` tasks to check yourself."
           }
         ]
       }
