@@ -4,6 +4,11 @@ When the skypilot API server is up it costs a minimum of 380$ per month (1360nis
 The remaining cost is due to network forwarding rules (20$, 70nis).  
 So, to avoid costs when idle the server must be teared down when not in use.
 
+### Before
+
+1. `gcloud auth login`
+2. `gcloud config set project triple-nectar-447116-d3`
+
 ### Setup
 
 1. `gcloud compute forwarding-rules import a7ffc75a4f58548fdb0633ef00aef1a8 --region=us-central1 --source skypilot/skypilot-forward-rule.yaml`

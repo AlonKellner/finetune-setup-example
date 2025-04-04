@@ -18,5 +18,5 @@ WORKDIR /skypilot
 RUN git remote rm origin && \
     git remote add origin https://github.com/AlonKellner/skypilot-beta.git && \
     git fetch && git branch -v -a && git switch custom-new && \
-    pip install runpod
+    pip install runpod human-readable
 WORKDIR /

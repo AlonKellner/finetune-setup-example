@@ -6,14 +6,87 @@
       "type": "promptString",
       "default": "${env:CONTAINER_IMAGE}",
       "description": "docker-image"
+    },
+    {
+      "id": "python-package",
+      "type": "promptString",
+      "description": "The python package to add to the project (in the pyproject.toml)."
     }
   ],
   "tasks": [
     {
-      "label": "Pre-Commit All",
-      "detail": "Applies type-checking, linting, formatting, testing and more to all files.",
+      "label": "Git push",
+      "detail": "Push an existing branch",
       "type": "shell",
-      "command": "pre-commit run --all-files",
+      "command": "git push",
+      "hide": false,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Git add all",
+      "detail": "Add all changes to the git stage.",
+      "type": "shell",
+      "command": "git add .",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Add uv dependency",
+      "detail": "Use uv to add dependencies in this project (in the pyproject.toml), run `Pre-Commit All` to fully sync the venv.",
+      "type": "shell",
+      "command": "uv add \"${input:python-package}\"",
+      "hide": false,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Remove uv dependency",
+      "detail": "Use uv to remove dependencies from this project (in the pyproject.toml), run `Pre-Commit All` to fully sync the venv.",
+      "type": "shell",
+      "command": "uv remove \"${input:python-package}\"",
+      "hide": false,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Pre-Commit All",
+      "detail": "Applies type-checking, linting, formatting, testing, venv sync and more to all files.",
+      "type": "shell",
+      "command": "git add . && pre-commit run --all-files",
       "hide": false,
       "group": "none",
       "presentation": {

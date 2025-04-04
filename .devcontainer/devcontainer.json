@@ -20,6 +20,7 @@
         "charliermarsh.ruff",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
+        "docker.docker",
         "github.vscode-github-actions",
         "tamasfe.even-better-toml",
         "tekumara.typos-vscode",
@@ -27,29 +28,8 @@
         "mhutchie.git-graph",
         "rafaelha.vscode-flamegraph",
         "github.copilot",
-        "github.copilot-chat"
-      ],
-      "settings": {
-        "pre-commit-helper.runOnSave": "all hooks",
-        "git.autofetch": true,
-        "editor.tabSize": 4,
-        "terminal.integrated.defaultProfile.linux": "zsh",
-        "terminal.integrated.profiles.linux": {
-          "bash": {
-            "path": "bash",
-            "icon": "terminal-bash"
-          },
-          "zsh": {
-            "path": "zsh"
-          }
-        },
-        "github.copilot.chat.codesearch.enabled": true,
-        "github.copilot.chat.codeGeneration.instructions": [
-          {
-            "text": "Use the `Pre-Commit All` and `Pre-commit Current` tasks to check yourself."
-          }
-        ]
-      }
+        "github.copilot-chat@0.26.2025040402"
+      ]
     }
   },
   "initializeCommand": [
@@ -64,6 +44,7 @@
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,dst=/home/vscode/.ssh,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,dst=/home/vscode/.sky,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,dst=/home/vscode/.vscode-server,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders,dst=/home/vscode/.vscode-server-insiders,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud,dst=/home/vscode/.config/gcloud,type=bind",
     "src=${localEnv:MOUNTS_PATH}/home/.cache,dst=/home/vscode/.cache,type=bind",
     "src=${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache,dst=${containerWorkspaceFolder}/.app_cache,type=bind"
@@ -71,9 +52,10 @@
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
     "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:MOUNTS_PATH}/home/.cache':/root/.cache -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
+    "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders':/root/.vscode-server-insiders -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:MOUNTS_PATH}/home/.cache':/root/.cache -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
     "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
-    "USERNAME": "vscode"
+    "USERNAME": "vscode",
+    "UV_LINK_MODE": "copy"
   },
   "runArgs": [
     "--name=${containerWorkspaceFolderBasename}_vsc",

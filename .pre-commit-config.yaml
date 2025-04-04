@@ -43,7 +43,7 @@ repos:
         pass_filenames: false
       - id: ruff-check
         name: ruff-check
-        entry: uvx ruff check --fix --force-exclude
+        entry: uvx ruff check --fix --force-exclude --unsafe-fixes
         language: system
         types_or: [python, pyi, jupyter]
         require_serial: true
