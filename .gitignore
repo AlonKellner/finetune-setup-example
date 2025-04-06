@@ -9,3 +9,5 @@ __pycache__/
 *.env
 .wandb/
 .app_cache/
+node_modules/
+**/.cache/

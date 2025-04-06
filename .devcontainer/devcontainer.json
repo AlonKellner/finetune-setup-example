@@ -46,13 +46,17 @@
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,dst=/home/vscode/.vscode-server,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders,dst=/home/vscode/.vscode-server-insiders,type=bind",
     "src=${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud,dst=/home/vscode/.config/gcloud,type=bind",
-    "src=${localEnv:MOUNTS_PATH}/home/.cache,dst=/home/vscode/.cache,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv,dst=/home/vscode/.cache/uv,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit,dst=/home/vscode/.cache/pre-commit,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python,dst=/home/vscode/.cache/pyright-python,type=bind",
+    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip,dst=/home/vscode/.cache/pip,type=bind",
+    "src=${localEnv:MOUNTS_PATH}/home/.cache/huggingface,dst=/home/vscode/.cache/huggingface,type=bind",
     "src=${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache,dst=${containerWorkspaceFolder}/.app_cache,type=bind"
   ],
   "containerEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
     "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders':/root/.vscode-server-insiders -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:MOUNTS_PATH}/home/.cache':/root/.cache -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
+    "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders':/root/.vscode-server-insiders -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv':/root/.cache/uv -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit':/root/.cache/pre-commit -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python':/root/.cache/pyright-python -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip':/root/.cache/pip -v '${localEnv:MOUNTS_PATH}/home/.cache/huggingface':/root/.cache/huggingface -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
     "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
     "USERNAME": "vscode",
     "UV_LINK_MODE": "copy"

@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
-uv sync --link-mode=copy --upgrade
+uv self update
+pre-commit autoupdate
+uv sync --upgrade
 pre-commit run --all-files

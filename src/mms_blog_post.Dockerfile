@@ -19,8 +19,8 @@ RUN --mount=type=cache,dst=/root/.cache/ \
 COPY pyproject.toml uv.lock dev-pyproject/ ./
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group mms_blog_post_gpu -o requirements.txt && \
-    uv sync --no-default-groups --group mms_blog_post --upgrade --link-mode=copy && \
-    uv sync --no-default-groups --group mms_blog_post_gpu --upgrade --link-mode=copy --no-build-isolation-package flash-attn
+    uv sync --no-default-groups --group mms_blog_post --upgrade && \
+    uv sync --no-default-groups --group mms_blog_post_gpu --upgrade --no-build-isolation-package flash-attn
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}

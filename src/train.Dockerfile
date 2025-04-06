@@ -12,7 +12,7 @@ COPY pyproject.toml uv.lock dev-pyproject/ ./
 
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group dev -o requirements.txt && \
-    uv sync --upgrade --link-mode=copy
+    uv sync --upgrade
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}
