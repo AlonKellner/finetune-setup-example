@@ -1,0 +1,23 @@
+apiVersion: http.keda.sh/v1alpha1
+kind: HTTPScaledObject
+metadata:
+  name: { { .Release.Name } }
+  namespace: { { .Release.Namespace } }
+spec:
+  hosts:
+    - { { .Values.domain } }
+  scaleTargetRef:
+    name: { { .Release.Name } } # ⬅️ your Deployment name
+    kind: Deployment
+    apiVersion: apps/v1
+    service: { { .Release.Name } }
+    port: 80
+  replicas:
+    min: 0 # scale to zero when idle
+    max: 1 # only one pod at a time
+  scaledownPeriod: { { mul .Values.scaledownMinutes 60 } }
+  scalingMetric:
+    requestRate:
+      granularity: 1s # check request rate every second
+      targetValue: 1 # scale to max if more than 1 rps (for 1 pod, adjust as needed)
+      window: 1m # average over a 1-minute window

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: skypilot-custom
+version: 1.0.0
+dependencies:
+  - alias: skypilot
+    name: skypilot-nightly
+    version: ">= 0.1.0-0"
+    repository: "https://helm.skypilot.co"

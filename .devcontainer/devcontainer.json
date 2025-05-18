@@ -8,7 +8,8 @@
   "features": {
     "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/dhoeric/features/google-cloud-cli:1": {}
+    "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {}
   },
   "customizations": {
     "vscode": {
@@ -28,7 +29,8 @@
         "mhutchie.git-graph",
         "rafaelha.vscode-flamegraph",
         "github.copilot",
-        "github.copilot-chat@0.26.2025040402"
+        "github.copilot-chat@0.27.2025042503",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
       ]
     }
   },
@@ -64,6 +66,7 @@
   "runArgs": [
     "--name=${containerWorkspaceFolderBasename}_vsc",
     "--hostname=${containerWorkspaceFolderBasename}_vsc",
-    "--network=${containerWorkspaceFolderBasename}"
+    "--network=${containerWorkspaceFolderBasename}",
+    "--env-file=.devcontainer/devcontainer.env"
   ]
 }

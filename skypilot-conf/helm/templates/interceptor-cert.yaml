@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: { { .Release.Name } }
+  namespace: keda
+spec:
+  domains:
+    - { { .Values.domain } }

@@ -1,5 +1,5 @@
-FROM berkeleyskypilot/skypilot-nightly:latest AS sky
-FROM sky AS update
+FROM berkeleyskypilot/skypilot-nightly:latest AS sky-nightly
+FROM sky-nightly AS update
 COPY . /root/.ssh
 WORKDIR /skypilot-original
 RUN chmod -R 600 /root/.ssh && \
@@ -11,5 +11,11 @@ RUN chmod -R 600 /root/.ssh && \
     git remote rm origin && \
     git remote add origin git@github.com:AlonKellner/skypilot-beta.git && \
     git push --set-upstream origin stable-master:stable-master --force
-FROM sky AS image
-RUN pip install "skypilot[kubernetes,runpod,gcp] @ git+https://github.com/AlonKellner/skypilot-beta.git@custom-stable"
+FROM berkeleyskypilot/skypilot-api-test:latest AS sky-api
+FROM sky-api AS image
+WORKDIR /skypilot
+RUN git remote rm origin && \
+    git remote add origin https://github.com/AlonKellner/skypilot-beta.git && \
+    git fetch && git branch -v -a && git switch stable-master && \
+    pip install .
+WORKDIR /

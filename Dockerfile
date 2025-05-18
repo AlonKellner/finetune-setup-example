@@ -1,5 +1,10 @@
 FROM mcr.microsoft.com/devcontainers/base:debian
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    ln -s /root/.local/bin/uv /usr/bin/uv && \
+    ln -s /root/.local/bin/uvx /usr/bin/uvx && \
+    chmod 777 /root/.local/bin/uv && \
+    chmod 777 /root/.local/bin/uvx && \
+    uv self update
 
 WORKDIR /app
 

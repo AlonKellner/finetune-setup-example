@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/app-protocols: '{"{{ .Release.Name }}":"HTTP"}'
+    cloud.google.com/backend-config: '{"default": "{{ .Release.Name }}", "ports": {"{{ .Release.Name }}":"{{ .Release.Name }}"}}'
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: {{ .Release.Name }}
+      port: 80
+      protocol: TCP
+      targetPort: 46580
+  selector:
+    app: {{ .Release.Name }}-api
+  type: ClusterIP

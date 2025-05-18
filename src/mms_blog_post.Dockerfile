@@ -1,9 +1,14 @@
 FROM nvcr.io/nvidia/cuda-dl-base:25.02-cuda12.8-devel-ubuntu24.04
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    ln -s /root/.local/bin/uv /usr/bin/uv && \
+    ln -s /root/.local/bin/uvx /usr/bin/uvx && \
+    chmod 777 /root/.local/bin/uv && \
+    chmod 777 /root/.local/bin/uvx && \
+    uv self update
 
 WORKDIR /app
 
-ENV CONDA_DIR /opt/conda
+ENV CONDA_DIR=/opt/conda
 ENV PATH=$CONDA_DIR/bin:$PATH
 ENV LD_LIBRARY_PATH=$CONDA_DIR/lib:$LD_LIBRARY_PATH
 

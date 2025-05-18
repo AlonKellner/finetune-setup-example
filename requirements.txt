@@ -151,14 +151,51 @@ gitpython==3.1.44
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   wandb
+google-api-core==2.24.2
+    # via
+    #   google-api-python-client
+    #   google-cloud-core
+    #   google-cloud-storage
+google-api-python-client==2.166.0
+    # via skypilot
 google-auth==2.38.0
-    # via kubernetes
+    # via
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   google-auth-oauthlib
+    #   google-cloud-core
+    #   google-cloud-storage
+    #   kubernetes
+    #   skypilot
+google-auth-httplib2==0.2.0
+    # via
+    #   google-api-python-client
+    #   skypilot
+google-auth-oauthlib==1.2.1
+    # via skypilot
+google-cloud-core==2.4.3
+    # via google-cloud-storage
+google-cloud-storage==3.1.0
+    # via skypilot
+google-crc32c==1.7.1
+    # via
+    #   google-cloud-storage
+    #   google-resumable-media
+google-resumable-media==2.7.2
+    # via google-cloud-storage
+googleapis-common-protos==1.69.2
+    # via google-api-core
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
 httpcore==1.0.7
     # via httpx
+httplib2==0.22.0
+    # via
+    #   google-api-python-client
+    #   google-auth-httplib2
 httptools==0.6.4
     # via uvicorn
 httpx==0.28.1
@@ -301,6 +338,8 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
+omegaconf==2.4.0.dev3
+    # via skypilot
 orjson==3.10.16
     # via fastapi
 packaging==24.2
@@ -344,8 +383,14 @@ propcache==0.3.0
     # via
     #   aiohttp
     #   yarl
+proto-plus==1.26.1
+    # via google-api-core
 protobuf==5.29.3
-    # via wandb
+    # via
+    #   google-api-core
+    #   googleapis-common-protos
+    #   proto-plus
+    #   wandb
 psutil==7.0.0
     # via
     #   accelerate
@@ -385,6 +430,8 @@ pygments==2.19.1
     # via rich
 pynacl==1.5.0
     # via paramiko
+pyparsing==3.2.3
+    # via httplib2
 pyright==1.1.396
     # via finetune-setup-example (pyproject.toml:dev)
 pytest==8.3.5
@@ -415,6 +462,7 @@ pyyaml==6.0.2
     #   fastapi
     #   huggingface-hub
     #   kubernetes
+    #   omegaconf
     #   skypilot
     #   transformers
     #   uvicorn
@@ -436,6 +484,8 @@ requests==2.32.3
     #   comet-ml
     #   datasets
     #   evaluate
+    #   google-api-core
+    #   google-cloud-storage
     #   huggingface-hub
     #   kubernetes
     #   pooch
@@ -446,7 +496,9 @@ requests==2.32.3
     #   transformers
     #   wandb
 requests-oauthlib==2.0.0
-    # via kubernetes
+    # via
+    #   google-auth-oauthlib
+    #   kubernetes
 requests-toolbelt==1.0.0
     # via comet-ml
 rich==13.9.4
@@ -505,7 +557,7 @@ six==1.17.0
     #   docker-pycreds
     #   kubernetes
     #   python-dateutil
-skypilot @ git+https://github.com/AlonKellner/skypilot-beta.git@16f2db448e1c77eb073e32cfd5a6cd5a015adb15
+skypilot @ git+https://github.com/AlonKellner/skypilot-beta.git@323cabf4ca0e5e218572f9571848775462ddce19
     # via finetune-setup-example (pyproject.toml:dev)
 smmap==5.0.2
     # via gitdb
@@ -586,6 +638,8 @@ tzdata==2025.1
     # via pandas
 ujson==5.10.0
     # via fastapi
+uritemplate==4.1.1
+    # via google-api-python-client
 urllib3==2.3.0
     # via
     #   botocore
@@ -618,7 +672,9 @@ wcwidth==0.2.13
 websocket-client==1.8.0
     # via kubernetes
 websockets==15.0.1
-    # via uvicorn
+    # via
+    #   skypilot
+    #   uvicorn
 wheel==0.45.1
     # via skypilot
 wrapt==1.17.2

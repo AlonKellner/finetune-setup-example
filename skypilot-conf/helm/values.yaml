@@ -1,0 +1,40 @@
+skypilot:
+  runpodCredentials:
+    enabled: true
+    runpodSecretName: runpod-creds
+    runpodSecretKey: runpod-secret.toml
+  apiService:
+    enabled: false
+    customEnabled: true
+    image: 4alonkellner/skypilot:20250518-181740
+    skipResourceCheck: true
+    customConfig:
+      allowed_clouds:
+        - kubernetes
+        - runpod
+      jobs:
+        controller:
+          autostop:
+            idle_minutes: 5
+            down: false
+          resources: # same spec as 'resources' in a task YAML
+            cloud: kubernetes
+            cpus: 4+
+            memory: 8+
+            disk_size: 50
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+  ingress:
+    enabled: false
+
+  ingress-nginx:
+    enabled: false
+
+domain: 34.110.185.190.nip.io
+scaledownMinutes: 5

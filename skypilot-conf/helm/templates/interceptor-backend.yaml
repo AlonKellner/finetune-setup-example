@@ -1,0 +1,10 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: interceptor
+  namespace: keda
+spec:
+  healthCheck:
+    requestPath: /health
+    port: 8080 # default Interceptor port
+    type: HTTP

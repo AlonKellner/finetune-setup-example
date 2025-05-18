@@ -1,7 +1,14 @@
 FROM mcr.microsoft.com/devcontainers/base:debian
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV UV_INSTALL_DIR="/usr/local/bin"
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    chmod +x /usr/local/bin/uv /usr/local/bin/uvx && \
+    uv self update
 
 COPY uv.toml  ./
 RUN uv python install --preview --default && \
     mkdir /home/vscode/.cache && \
-    chmod 777 /home/vscode/.cache
+    chmod 777 /home/vscode/.cache && \
+    apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg curl && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update && apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin

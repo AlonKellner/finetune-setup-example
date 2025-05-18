@@ -1,0 +1,10 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: { { .Release.Name } }
+  namespace: { { .Release.Namespace } }
+spec:
+  healthCheck:
+    port: 46580
+    requestPath: /api/health
+    type: HTTP

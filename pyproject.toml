@@ -61,7 +61,7 @@ pythonpath = "./"
 extend-exclude = ["**/*.env"]
 
 [tool.uv.sources]
-skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-new" }
+skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-stable" }
 
 [project]
 dynamic = ["version"]
@@ -89,7 +89,7 @@ dependencies = ["inquirer"]
 
 [dependency-groups]
 dev_tools = ["pytest", "pyright"]
-jobs = ["gitpython", "pyyaml", "skypilot[kubernetes,runpod]"]
+jobs = ["gitpython", "pyyaml", "skypilot[kubernetes,runpod,gcp]"]
 gpu = ["flash-attn"]
 mms_blog_post = [
   "accelerate",
