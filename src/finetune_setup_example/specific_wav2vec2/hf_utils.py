@@ -30,7 +30,7 @@ def demo_trained_model(
 
     processor.tokenizer.set_target_lang(target_lang)  # type: ignore
 
-    common_voice_test_tr: HFDataset = load_dataset(
+    common_voice_eval_tr: HFDataset = load_dataset(
         "mozilla-foundation/common_voice_17_0",
         "tr",
         data_dir="./cv-corpus-17.0-2024-03-20",
@@ -38,12 +38,12 @@ def demo_trained_model(
         token=True,
         trust_remote_code=True,
     )  # type: ignore
-    common_voice_test_tr = common_voice_test_tr.cast_column(
+    common_voice_eval_tr = common_voice_eval_tr.cast_column(
         "audio", Audio(sampling_rate=sample_rate)
     )
 
     input_dict = processor(
-        common_voice_test_tr[0]["audio"]["array"],
+        common_voice_eval_tr[0]["audio"]["array"],
         sampling_rate=sample_rate,
         return_tensors="pt",
         padding=True,
@@ -57,7 +57,7 @@ def demo_trained_model(
     print(processor.decode(pred_ids))
 
     print("\nReference:")
-    print(common_voice_test_tr[0]["sentence"].lower())
+    print(common_voice_eval_tr[0]["sentence"].lower())
 
 
 def hf_push_adapter(

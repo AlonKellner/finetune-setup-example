@@ -30,7 +30,9 @@ class TarS3Dataset(TorchDataset):
         cache_bucket: str,
         indices_order: list[int],
         max_tar_bytes: int,
-        syncs_per_group: int,
+        sync_interval: int = 2,
+        groups_per_sync: int = 6,
+        should_clean_groups: bool = False,
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = Path(cache_path)
@@ -39,7 +41,9 @@ class TarS3Dataset(TorchDataset):
         self.cache_bucket = cache_bucket
         self._indices_order = indices_order
         self.max_tar_bytes = max_tar_bytes
-        self.syncs_per_group = syncs_per_group
+        self.sync_interval = sync_interval
+        self.groups_per_sync = groups_per_sync
+        self.should_clean_groups = should_clean_groups
 
         for _ in tqdm(list(range(1))):
             self.sync_metadata()
@@ -50,9 +54,7 @@ class TarS3Dataset(TorchDataset):
         file_sizes = {i: v["file_sizes"] for i, v in inner_dataset.metadata.items()}
         self._file_sizes = file_sizes
 
-        cum_sizes = np.array(
-            [x[1] for x in sorted(file_sizes.items(), key=lambda x: x[0])]
-        ).cumsum()
+        cum_sizes = np.array([file_sizes[i] for i in indices_order]).cumsum()
         i = 0
         prev_i = 0
         self.grouped_indices = []
@@ -72,30 +74,7 @@ class TarS3Dataset(TorchDataset):
         }
         self._indices_flac_paths = {i: self._get_flac_path(i) for i in indices_order}
 
-        self.sync_groups = [
-            [
-                group_indices[
-                    i * len(group_indices) // syncs_per_group : (i + 1)
-                    * len(group_indices)
-                    // syncs_per_group
-                ]
-                for i in range(syncs_per_group)
-            ]
-            for group_indices in self.grouped_indices
-        ]
-        self.sync_indices = [
-            sync_group[0] for group in self.sync_groups for sync_group in group
-        ]
-
-        self.sync_safe_groups = [
-            sync_safe_group
-            for group in self.sync_groups
-            for sync_group in group
-            for sync_safe_group in [
-                sync_group[: len(sync_group) // 2],
-                sync_group[len(sync_group) // 2 :],
-            ]
-        ]
+        self.sync_indices = [group[0] for group in self.grouped_indices]
 
         if not self._bucket_exists(self.cache_bucket):
             self._create_bucket(self.cache_bucket)
@@ -117,7 +96,9 @@ class TarS3Dataset(TorchDataset):
                 self.cache_bucket,
                 self._indices_order,
                 self.max_tar_bytes,
-                self.syncs_per_group,
+                self.sync_interval,
+                self.groups_per_sync,
+                self.should_clean_groups,
             )
         return result
 
@@ -222,15 +203,20 @@ class TarS3Dataset(TorchDataset):
 
     def sync_adjacent_groups(self, current_group: int) -> None:
         """Sync adjacent groups."""
-        prev_group = (current_group - 1) % len(self.grouped_indices)
-        next_group = (current_group + 1) % len(self.grouped_indices)
-
-        self.sync_group(prev_group)
-        self.sync_group(current_group)
-        self.sync_group(next_group)
+        for i in range(
+            current_group - self.groups_per_sync, current_group + self.groups_per_sync
+        ):
+            self.sync_group(i)
+        if self.should_clean_groups:
+            for i in range(
+                current_group - 2 * self.groups_per_sync,
+                current_group - self.groups_per_sync,
+            ):
+                self.clean_group(i)
 
     def sync_group(self, group: int) -> None:
         """Sync the group of local files with s3 tar."""
+        group = group % len(self.grouped_indices)
         padded_group = str(group).zfill(len(str(len(self.grouped_indices))))  # type: ignore
         group_flac_paths = [
             self._indices_flac_paths[i] for i in self.grouped_indices[group]
@@ -239,6 +225,15 @@ class TarS3Dataset(TorchDataset):
             self._upload(group_flac_paths, padded_group)
         elif self._exists(padded_group):
             self._download(padded_group)
+
+    def clean_group(self, group: int) -> None:
+        """Sync the group of local files with s3 tar."""
+        group = group % len(self.grouped_indices)
+        group_flac_paths = [
+            self._indices_flac_paths[i] for i in self.grouped_indices[group]
+        ]
+        for p in group_flac_paths:
+            p.unlink(missing_ok=True)
 
     def sync_all_groups(self) -> None:
         """Sync all groups."""

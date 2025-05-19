@@ -18,7 +18,8 @@ def prepare_cached_dataset(
     s3_client: S3Client,
     s3_client_v2: S3Client,
     tar_size_gb: float | int = 1,
-    syncs_per_group: int = 3,
+    sync_interval: int = 2,
+    groups_per_sync: int = 6,
 ) -> TarS3Dataset:
     """Wrap a dataset with S3 caching and prepare for the first training."""
     dataset = FlacDataset(dataset, cache_path, sample_rate)
@@ -31,7 +32,8 @@ def prepare_cached_dataset(
         cache_bucket,
         indices_order,
         max_tar_bytes=int(tar_size_gb * GB),
-        syncs_per_group=syncs_per_group,
+        sync_interval=sync_interval,
+        groups_per_sync=groups_per_sync,
     )
     # dataset.sync_all_groups()
     return dataset

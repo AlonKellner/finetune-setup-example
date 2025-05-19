@@ -34,6 +34,8 @@ def main(
     effective_batch_size: int = 16,
     per_device_train_batch_size: int = 4,
     per_device_eval_batch_size: int = 8,
+    per_device_train_batch_total_seconds: float = 30.0,
+    per_device_eval_batch_total_seconds: float = 60.0,
     num_devices: int = 1,
     warmup_ratio: float = 0.0,
     decay_ratio: float = 1.0,
@@ -82,7 +84,7 @@ def main(
         s3_client_v2,
         "train",
     )
-    common_voice_test = create_cached_common_voice_split(
+    common_voice_eval = create_cached_common_voice_split(
         data_seed,
         target_lang,
         sample_rate,
@@ -110,32 +112,35 @@ def main(
     )
 
     training_args = create_training_arguments(
-        seed,
-        data_seed,
-        target_hf_repo,
-        num_train_epochs,
-        effective_batch_size,
-        per_device_train_batch_size,
-        per_device_eval_batch_size,
-        num_devices,
-        warmup_ratio,
-        decay_ratio,
-        learning_rate,
-        mega_batch_mult,
-        dataloader_num_workers,
-        fp16,
-        save_steps,
-        eval_steps,
-        logging_steps,
-        weight_decay,
-        torch_compile,
-        len(common_voice_train),
+        seed=seed,
+        data_seed=data_seed,
+        target_hf_repo=target_hf_repo,
+        num_train_epochs=num_train_epochs,
+        effective_batch_size=effective_batch_size,
+        per_device_train_batch_size=per_device_train_batch_size,
+        per_device_eval_batch_size=per_device_eval_batch_size,
+        per_device_train_batch_total_seconds=per_device_train_batch_total_seconds,
+        per_device_eval_batch_total_seconds=per_device_eval_batch_total_seconds,
+        num_devices=num_devices,
+        warmup_ratio=warmup_ratio,
+        decay_ratio=decay_ratio,
+        learning_rate=learning_rate,
+        mega_batch_mult=mega_batch_mult,
+        dataloader_num_workers=dataloader_num_workers,
+        fp16=fp16,
+        save_steps=save_steps,
+        eval_steps=eval_steps,
+        logging_steps=logging_steps,
+        weight_decay=weight_decay,
+        torch_compile=torch_compile,
+        train_size=len(common_voice_train),
+        sample_rate=sample_rate,
     )
 
     trainer = create_trainer(
         model=model,
         training_args=training_args,
-        common_voice_test=common_voice_test,
+        common_voice_eval=common_voice_eval,
         common_voice_train=common_voice_train,
         processor=processor,
     )
@@ -144,3 +149,7 @@ def main(
     hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
 
     demo_trained_model(target_lang, sample_rate, target_hf_repo, hf_user)
+
+
+if __name__ == "__main__":
+    main()

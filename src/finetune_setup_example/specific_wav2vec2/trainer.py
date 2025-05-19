@@ -17,13 +17,13 @@ from ..specific_wav2vec2.processor import HasCustomFields
 def create_trainer(
     model: CustomWav2Vec2ForCTC,
     training_args: CustomTrainingArguments,
-    common_voice_test: TarS3Dataset | ResizedDataset,
+    common_voice_eval: TarS3Dataset | ResizedDataset,
     common_voice_train: TarS3Dataset | ResizedDataset,
     processor: Wav2Vec2Processor,
 ) -> CustomTrainer:
     """Create a wav2vec2 common voice trainer."""
     assert isinstance(processor, HasCustomFields)
-    test_indices_order = list(range(len(common_voice_test)))
+    eval_indices_order = list(range(len(common_voice_eval)))
     train_indices_order = list(range(len(common_voice_train)))
     wav2vec2_asr = Wav2Vec2ASR(processor=processor)
     data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
@@ -32,12 +32,12 @@ def create_trainer(
         data_collator=data_collator,
         args=training_args,
         compute_metrics=wav2vec2_asr.compute_metrics,
-        eval_dataset=common_voice_test,
+        eval_dataset=common_voice_eval,
         train_dataset=common_voice_train,
         processing_class=processor.feature_extractor,
-        test_indices_order=test_indices_order,
+        eval_indices_order=eval_indices_order,
         train_indices_order=train_indices_order,
-        test_grouped_indices=common_voice_test.sync_safe_groups,
-        train_grouped_indices=common_voice_train.sync_safe_groups,
+        eval_grouped_indices=common_voice_eval.grouped_indices,
+        train_grouped_indices=common_voice_train.grouped_indices,
     )
     return trainer

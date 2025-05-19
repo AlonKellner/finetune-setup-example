@@ -25,20 +25,20 @@ class CustomTrainer(Trainer):
         model: PreTrainedModel | nn.Module | None = None,
         args: CustomTrainingArguments | None = None,
         *arguments: Any,
-        test_indices_order: list[int] | None = None,
         train_indices_order: list[int] | None = None,
         train_grouped_indices: list[list[int]] | None = None,
-        test_grouped_indices: list[list[int]] | None = None,
+        eval_indices_order: list[int] | None = None,
+        eval_grouped_indices: list[list[int]] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(model, args, *arguments, **kwargs)  # type: ignore
         assert args is not None
         self.args = args
 
-        self.test_indices_order = test_indices_order
+        self.eval_indices_order = eval_indices_order
         self.train_indices_order = train_indices_order
 
-        self.test_grouped_indices = test_grouped_indices
+        self.eval_grouped_indices = eval_grouped_indices
         self.train_grouped_indices = train_grouped_indices
 
     def _get_train_sampler(self) -> torch.utils.data.Sampler | None:
@@ -75,6 +75,7 @@ class CustomTrainer(Trainer):
                 mega_batch_mult=self.args.mega_batch_mult,
                 indices_order=self.train_indices_order,
                 grouped_indices=self.train_grouped_indices,
+                batch_total_length=self.args.per_device_train_batch_total_length,
             )
 
         else:
@@ -106,8 +107,9 @@ class CustomTrainer(Trainer):
                 dataset=eval_dataset,
                 lengths=lengths,
                 model_input_name=model_input_name,
-                indices_order=self.test_indices_order,
-                grouped_indices=self.test_grouped_indices,
+                indices_order=self.eval_indices_order,
+                grouped_indices=self.eval_grouped_indices,
+                batch_total_length=self.args.per_device_eval_batch_total_length,
             )
 
         if self.args.world_size <= 1:

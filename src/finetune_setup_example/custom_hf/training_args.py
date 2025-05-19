@@ -12,10 +12,27 @@ class CustomTrainingArguments(TrainingArguments):
     mega_batch_mult: int = field(
         default=50, metadata={"help": "The mega batch multiple."}
     )
+
     has_length_column: bool = field(
         default=True,
         metadata={
             "help": "Sets whether the dataset has a length column for length sampling."
+        },
+    )
+
+    per_device_train_batch_total_length: int | None = field(
+        default=None,
+        metadata={
+            "help": "The total length of the batch for length sampling during training. "
+            "If None, length sampling is disabled."
+        },
+    )
+
+    per_device_eval_batch_total_length: int | None = field(
+        default=None,
+        metadata={
+            "help": "The total length of the batch for length sampling during evaluation. "
+            "If None, length sampling is disabled."
         },
     )
 
@@ -28,6 +45,8 @@ def create_training_arguments(
     effective_batch_size: int,
     per_device_train_batch_size: int,
     per_device_eval_batch_size: int,
+    per_device_train_batch_total_seconds: float,
+    per_device_eval_batch_total_seconds: float,
     num_devices: int,
     warmup_ratio: float,
     decay_ratio: float,
@@ -41,10 +60,18 @@ def create_training_arguments(
     weight_decay: float,
     torch_compile: bool,
     train_size: int,
+    sample_rate: int,
 ) -> CustomTrainingArguments:
     """Create training arguments."""
     global_batch_size = per_device_train_batch_size * num_devices
     accumulation_steps = effective_batch_size // global_batch_size
+
+    per_device_train_batch_total_length = int(
+        per_device_train_batch_total_seconds * sample_rate
+    )
+    per_device_eval_batch_total_length = int(
+        per_device_eval_batch_total_seconds * sample_rate
+    )
 
     num_training_steps = (
         train_size // effective_batch_size  # type: ignore
@@ -61,6 +88,8 @@ def create_training_arguments(
         group_by_length=True,
         per_device_train_batch_size=per_device_train_batch_size,
         per_device_eval_batch_size=per_device_eval_batch_size,
+        per_device_train_batch_total_length=per_device_train_batch_total_length,
+        per_device_eval_batch_total_length=per_device_eval_batch_total_length,
         gradient_accumulation_steps=accumulation_steps,
         eval_strategy="steps",
         num_train_epochs=num_train_epochs,

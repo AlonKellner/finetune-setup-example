@@ -3,6 +3,7 @@
 from collections.abc import Iterator
 from typing import Any
 
+import numpy as np
 import torch
 from torch import Generator
 from transformers.trainer_pt_utils import LengthGroupedSampler
@@ -15,6 +16,7 @@ def get_length_grouped_indices_shuffled(
     generator: Generator | None = None,
     indices_order: list[int] | None = None,
     grouped_indices: list[list[int]] | None = None,
+    batch_total_length: int | None = None,
 ) -> list[int]:
     """Get shuffled megabatches, A custom version. First is still largest.
 
@@ -37,50 +39,55 @@ def get_length_grouped_indices_shuffled(
 
     # We need to use torch for the random part as a distributed sampler will set the random seed for torch.
 
-    if grouped_indices is not None:
-        indices = []
-        if indices_order is not None:
-            grouped_indices = [
-                [item for item in group if item in indices_order]
-                for group in grouped_indices
-            ]
-            grouped_indices = [group for group in grouped_indices if (len(group) > 0)]
-        for group in grouped_indices:
-            group_perm = torch.randperm(len(group), generator=generator)
-            group_indices = [group[i] for i in group_perm]
-            indices.extend(group_indices)
-    elif indices_order is not None:
-        indices = torch.randperm(len(indices_order), generator=generator).tolist()
-    else:
-        indices = torch.randperm(len(lengths), generator=generator).tolist()
+    indices, grouped_indices = shuffle_indices(
+        lengths, generator, indices_order, grouped_indices
+    )
     megabatch_size = mega_batch_mult * batch_size
     megabatches = [
         indices[i : i + megabatch_size] for i in range(0, len(indices), megabatch_size)
     ]
-    megabatches = [
-        sorted(megabatch, key=lambda i: lengths[i], reverse=True)
-        for megabatch in megabatches
-    ]
 
-    # The rest is to get the biggest batch first.
-    # Since each megabatch is sorted by descending length, the longest element is the first
-    megabatch_maximums = [lengths[megabatch[0]] for megabatch in megabatches]
-    max_idx = torch.argmax(torch.tensor(megabatch_maximums)).item()
-    assert isinstance(max_idx, int)
-    # Switch to put the longest element in first position
-    megabatches[0][0], megabatches[max_idx][0] = (
-        megabatches[max_idx][0],
-        megabatches[0][0],
+    # Get the biggest batch first.
+    megabatch_maximums = [
+        max([lengths[i] for i in megabatch]) for megabatch in megabatches
+    ]
+    max_megabatch_idx = torch.argmax(torch.tensor(megabatch_maximums)).item()
+    assert isinstance(max_megabatch_idx, int)
+    max_item_idx = torch.argmax(
+        torch.tensor([lengths[i] for i in megabatches[max_megabatch_idx]])
+    ).item()
+    assert isinstance(max_item_idx, int)
+    first_item_idx = torch.argmax(
+        torch.tensor([lengths[i] for i in megabatches[0]])
+    ).item()
+    assert isinstance(first_item_idx, int)
+    megabatches[0][first_item_idx], megabatches[max_megabatch_idx][max_item_idx] = (
+        megabatches[max_megabatch_idx][max_item_idx],
+        megabatches[0][first_item_idx],
     )
 
-    batches = [
-        [
-            megabatch[i * batch_size : (i + 1) * batch_size]
-            for i in range(mega_batch_mult)
-            if (i * batch_size < len(megabatch))
-        ]
-        for megabatch in megabatches
+    megabatches = [
+        sorted(megabatch, key=lambda i: lengths[i], reverse=((mega_i % 2) == 0))
+        for mega_i, megabatch in enumerate(megabatches)
     ]
+
+    indices = [i for megabatch in megabatches for i in megabatch]
+
+    if batch_total_length is None:
+        cum_sizes = np.array([1 for _ in indices]).cumsum()
+        batch_total = batch_size
+    else:
+        cum_sizes = np.array([lengths[i] for i in indices]).cumsum()
+        batch_total = batch_total_length
+    i = 0
+    prev_i = 0
+    batches = []
+    while (pos_sizes := ((cum_sizes := cum_sizes - batch_total) > 0)).any().item():
+        prev_i = i
+        i = np.diff(pos_sizes).argmax().item()
+
+        batches.append(indices[prev_i:i])
+    batches.append(indices[i:])
 
     first_batch = batches[0][0]
     batches = [batches[0][1:], *batches[1:]]
@@ -107,6 +114,32 @@ def get_length_grouped_indices_shuffled(
     return indices
 
 
+def shuffle_indices(
+    lengths: list[int],
+    generator: Generator | None = None,
+    indices_order: list[int] | None = None,
+    grouped_indices: list[list[int]] | None = None,
+) -> tuple[list[int], list[list[int]] | None]:
+    """Shuffle indices and group them."""
+    if grouped_indices is not None:
+        indices = []
+        if indices_order is not None:
+            grouped_indices = [
+                [item for item in group if item in indices_order]
+                for group in grouped_indices
+            ]
+            grouped_indices = [group for group in grouped_indices if (len(group) > 0)]
+        for group in grouped_indices:
+            group_perm = torch.randperm(len(group), generator=generator)
+            group_indices = [group[i] for i in group_perm]
+            indices.extend(group_indices)
+    elif indices_order is not None:
+        indices = torch.randperm(len(indices_order), generator=generator).tolist()
+    else:
+        indices = torch.randperm(len(lengths), generator=generator).tolist()
+    return indices, grouped_indices
+
+
 class CustomLengthGroupedSampler(LengthGroupedSampler):
     """Custom sampler for random order."""
 
@@ -116,12 +149,14 @@ class CustomLengthGroupedSampler(LengthGroupedSampler):
         mega_batch_mult: int | None = None,
         indices_order: list[int] | None = None,
         grouped_indices: list[list[int]] | None = None,
+        batch_total_length: int | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.mega_batch_mult = mega_batch_mult
         self.indices_order = indices_order
         self.grouped_indices = grouped_indices
+        self.batch_total_length = batch_total_length
 
     def __len__(self) -> int:
         """Get the length of the sampler."""
@@ -139,5 +174,6 @@ class CustomLengthGroupedSampler(LengthGroupedSampler):
             mega_batch_mult=self.mega_batch_mult,
             indices_order=self.indices_order,
             grouped_indices=self.grouped_indices,
+            batch_total_length=self.batch_total_length,
         )
         return iter(indices)
