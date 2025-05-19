@@ -60,6 +60,12 @@ repos:
         language: system
         types_or: [python, pyi]
         require_serial: true
+      # - id: mypy-check
+      #   name: mypy-check
+      #   entry: uv run mypy
+      #   language: system
+      #   types_or: [python, pyi]
+      #   require_serial: true
       - id: typos
         name: typos
         entry: uvx typos

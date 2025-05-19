@@ -276,6 +276,10 @@ multiprocess==0.70.16
     # via
     #   datasets
     #   evaluate
+mypy==1.15.0
+    # via finetune-setup-example (pyproject.toml:dev)
+mypy-extensions==1.1.0
+    # via mypy
 networkx==3.4.2
     # via
     #   skypilot
@@ -619,6 +623,8 @@ types-boto3-lite==1.37.14
     # via finetune-setup-example (pyproject.toml:dev)
 types-boto3-s3==1.37.0
     # via types-boto3-lite
+types-pyyaml==6.0.12.20250516
+    # via finetune-setup-example (pyproject.toml:dev)
 types-s3transfer==0.11.4
     # via types-boto3-lite
 typing-extensions==4.12.2
@@ -626,6 +632,7 @@ typing-extensions==4.12.2
     #   fastapi
     #   huggingface-hub
     #   librosa
+    #   mypy
     #   pydantic
     #   pydantic-core
     #   pydantic-extra-types

@@ -1,9 +1,11 @@
 FROM mcr.microsoft.com/devcontainers/base:debian
-ENV UV_INSTALL_DIR="/usr/local/bin"
+USER vscode
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    chmod +x /usr/local/bin/uv /usr/local/bin/uvx && \
-    uv self update
+    chmod +x $HOME/.local/bin/uv $HOME/.local/bin/uvx
+ENV PATH="/home/vscode/.local/bin/:$PATH"
+RUN uv self update
 
+USER root
 COPY uv.toml  ./
 RUN uv python install --preview --default && \
     mkdir /home/vscode/.cache && \
