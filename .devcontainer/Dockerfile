@@ -6,7 +6,8 @@ ENV PATH="/home/vscode/.local/bin/:$PATH"
 RUN uv self update
 
 USER root
-COPY uv.toml  ./
+
+COPY dev-pyproject/ ./
 RUN uv python install --preview --default && \
     mkdir /home/vscode/.cache && \
     chmod 777 /home/vscode/.cache && \

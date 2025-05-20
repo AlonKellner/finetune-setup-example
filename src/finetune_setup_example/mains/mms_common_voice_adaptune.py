@@ -149,7 +149,3 @@ def main(
     hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
 
     demo_trained_model(target_lang, sample_rate, target_hf_repo, hf_user)
-
-
-if __name__ == "__main__":
-    main()

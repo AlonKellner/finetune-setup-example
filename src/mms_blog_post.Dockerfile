@@ -1,10 +1,8 @@
-FROM nvcr.io/nvidia/cuda-dl-base:25.02-cuda12.8-devel-ubuntu24.04
+FROM nvcr.io/nvidia/cuda-dl-base:25.04-cuda12.9-devel-ubuntu24.04
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    ln -s /root/.local/bin/uv /usr/bin/uv && \
-    ln -s /root/.local/bin/uvx /usr/bin/uvx && \
-    chmod 777 /root/.local/bin/uv && \
-    chmod 777 /root/.local/bin/uvx && \
-    uv self update
+    chmod +x $HOME/.local/bin/uv $HOME/.local/bin/uvx
+ENV PATH="/root/.local/bin/:$PATH"
+RUN uv self update
 
 WORKDIR /app
 
@@ -17,15 +15,14 @@ RUN --mount=type=cache,dst=/root/.cache/ \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && rm ~/miniconda.sh && \
     conda install -c conda-forge 'ffmpeg<7,>5' sox && ffmpeg -version && sox --version
 
-COPY uv.toml ./
+COPY dev-pyproject/ ./
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv python install --preview --default
 
-COPY pyproject.toml uv.lock dev-pyproject/ ./
+COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,dst=/root/.cache/ \
-    uv pip compile pyproject.toml --group mms_blog_post_gpu -o requirements.txt && \
-    uv sync --no-default-groups --group mms_blog_post --upgrade && \
-    uv sync --no-default-groups --group mms_blog_post_gpu --upgrade --no-build-isolation-package flash-attn
+    uv pip compile pyproject.toml --group mms_blog_post --extra gpu -o requirements.txt && \
+    MAX_JOBS=2 uv sync --no-default-groups --group mms_blog_post --extra gpu --upgrade
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}

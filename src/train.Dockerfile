@@ -8,12 +8,12 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
 
 WORKDIR /app
 
-COPY uv.toml ./
+COPY dev-pyproject/ ./
 
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv python install --preview --default
 
-COPY pyproject.toml uv.lock dev-pyproject/ ./
+COPY pyproject.toml uv.lock ./
 
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group dev -o requirements.txt && \

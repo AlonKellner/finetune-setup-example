@@ -71,6 +71,14 @@ pythonpath = "./"
 [tool.typos.files]
 extend-exclude = ["**/*.env"]
 
+[tool.uv]
+python-preference = "only-managed"
+no-build-isolation-package = ["flash-attn"]
+
+[[tool.uv.dependency-metadata]]
+name = "flash-attn"
+requires-dist = ["torch", "einops"]
+
 [tool.uv.sources]
 skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-stable" }
 
@@ -98,6 +106,9 @@ classifiers = [
 
 dependencies = ["inquirer"]
 
+[project.optional-dependencies]
+gpu = ["flash-attn==2.7.3"]
+
 [dependency-groups]
 dev_tools = ["pytest", "pyright", "mypy"]
 jobs = [
@@ -106,7 +117,6 @@ jobs = [
   "types-PyYAML",
   "skypilot[kubernetes,runpod,gcp]",
 ]
-gpu = ["flash-attn"]
 mms_blog_post = [
   "accelerate",
   "boto3",
@@ -121,23 +131,18 @@ mms_blog_post = [
   "pandas",
   "polars",
   "safetensors",
-  "torch",
+  "torch==2.6.0",
   "torchaudio",
   "transformers",
   "types-boto3-lite[s3]",
   "uroman",
   "wandb",
 ]
-mms_blog_post_gpu = [
-  { include-group = "mms_blog_post" },
-  { include-group = "gpu" },
-]
 dev = [
   { include-group = "dev_tools" },
   { include-group = "mms_blog_post" },
   { include-group = "jobs" },
 ]
-dev_gpu = [{ include-group = "dev" }, { include-group = "gpu" }]
 
 [project.urls]
 Homepage = "https://alonkellner.com"
