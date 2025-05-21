@@ -8,7 +8,7 @@ import torch
 import wandb
 from datasets import Dataset as HFDataset
 from torch import nn
-from torch.utils.data import RandomSampler, SequentialSampler
+from torch.utils.data import Dataset, IterableDataset, RandomSampler, SequentialSampler
 from transformers import Trainer
 from transformers.modeling_utils import PreTrainedModel
 from transformers.trainer_utils import has_length
@@ -41,23 +41,27 @@ class CustomTrainer(Trainer):
         self.eval_grouped_indices = eval_grouped_indices
         self.train_grouped_indices = train_grouped_indices
 
-    def _get_train_sampler(self) -> torch.utils.data.Sampler | None:
-        if self.train_dataset is None or not has_length(self.train_dataset):
+    def _get_train_sampler(
+        self, train_dataset: Dataset | IterableDataset | HFDataset | None = None
+    ) -> torch.utils.data.Sampler | None:
+        if train_dataset is None:
+            train_dataset = self.train_dataset
+
+        if train_dataset is None or not has_length(train_dataset):
             return None
 
         # Build the sampler.
         if self.args.group_by_length:
             if self.args.has_length_column:
-                if hasattr(self.train_dataset, "metadata"):
+                if hasattr(train_dataset, "metadata"):
                     lengths = [
                         v[self.args.length_column_name]
-                        for k, v in self.train_dataset.metadata.items()  # type: ignore
+                        for k, v in train_dataset.metadata.items()  # type: ignore
                     ]
                 else:
                     lengths = (
-                        self.train_dataset[self.args.length_column_name]  # type: ignore
-                        if self.args.length_column_name
-                        in self.train_dataset.column_names  # type: ignore
+                        train_dataset[self.args.length_column_name]  # type: ignore
+                        if self.args.length_column_name in train_dataset.column_names  # type: ignore
                         else None
                     )
             else:
@@ -69,7 +73,7 @@ class CustomTrainer(Trainer):
             )
             return CustomLengthGroupedSampler(
                 self.args.train_batch_size * self.args.gradient_accumulation_steps,
-                dataset=self.train_dataset,  # type: ignore
+                dataset=train_dataset,  # type: ignore
                 lengths=lengths,
                 model_input_name=model_input_name,
                 mega_batch_mult=self.args.mega_batch_mult,
@@ -79,7 +83,7 @@ class CustomTrainer(Trainer):
             )
 
         else:
-            return RandomSampler(self.train_dataset)  # type: ignore
+            return RandomSampler(train_dataset)  # type: ignore
 
     def _get_eval_sampler(  # type: ignore
         self, eval_dataset: HFDataset

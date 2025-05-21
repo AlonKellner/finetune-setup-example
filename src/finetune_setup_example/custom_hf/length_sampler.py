@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 import numpy as np
 import torch
+from datasets import Dataset as HFDataset
 from torch import Generator
 from torch.utils.data import Dataset, Sampler
 from transformers import BatchEncoding
@@ -170,11 +171,13 @@ def shuffle_batches(
         megabatch_batches = [megabatch_batches[i] for i in perm]
         megabatch_to_batch_indices[mega_idx] = megabatch_batches
 
-    batches = [
-        batches[batch_i]
+    batches_perm = [
+        batch_i
         for mega_idx in mega_idx_order
         for batch_i in megabatch_to_batch_indices[mega_idx]
     ]
+
+    batches = [batches[batch_i] for batch_i in batches_perm]
     batches = [first_batch, *batches]
     return batches
 
@@ -212,7 +215,7 @@ class CustomLengthGroupedSampler(Sampler[list[int]]):
     def __init__(
         self,
         batch_size: int,
-        dataset: Dataset | None = None,
+        dataset: Dataset | HFDataset | None = None,
         lengths: list[int] | None = None,
         model_input_name: str | None = None,
         generator: Generator | None = None,
