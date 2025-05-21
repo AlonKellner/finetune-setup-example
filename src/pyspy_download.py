@@ -6,7 +6,7 @@ import boto3
 import inquirer
 from types_boto3_s3.client import S3Client
 
-from finetune_setup_example.job_utils import get_job_ids
+from finetune_setup_example.remote_job_utils import get_job_ids
 
 if __name__ == "__main__":
     access_key = os.getenv("HETZNER_ACCESS_KEY")

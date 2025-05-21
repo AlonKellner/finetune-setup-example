@@ -73,6 +73,7 @@ extend-exclude = ["**/*.env"]
 
 [tool.uv]
 python-preference = "only-managed"
+link-mode = "copy"
 no-build-isolation-package = ["flash-attn"]
 
 [[tool.uv.dependency-metadata]]

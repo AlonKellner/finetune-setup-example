@@ -61,7 +61,8 @@
     "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders':/root/.vscode-server-insiders -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv':/root/.cache/uv -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit':/root/.cache/pre-commit -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python':/root/.cache/pyright-python -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip':/root/.cache/pip -v '${localEnv:MOUNTS_PATH}/home/.cache/huggingface':/root/.cache/huggingface -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
     "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
     "USERNAME": "vscode",
-    "UV_LINK_MODE": "copy"
+    "UV_LINK_MODE": "copy",
+    "COMPOSE_BAKE": "true"
   },
   "runArgs": [
     "--name=${containerWorkspaceFolderBasename}_vsc",

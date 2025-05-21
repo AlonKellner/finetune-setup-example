@@ -1,6 +1,6 @@
 """A mockup of multi-HP jobs."""
 
-from finetune_setup_example.job_utils import start_hp_jobs
+from finetune_setup_example.remote_job_utils import start_hp_jobs
 
 
 def hp_main() -> None:

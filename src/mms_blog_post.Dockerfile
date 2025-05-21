@@ -22,7 +22,8 @@ RUN --mount=type=cache,dst=/root/.cache/ \
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group mms_blog_post --extra gpu -o requirements.txt && \
-    MAX_JOBS=2 uv sync --no-default-groups --group mms_blog_post --extra gpu --upgrade
+    MAX_JOBS=4 uv sync --no-default-groups --group mms_blog_post --upgrade && \
+    MAX_JOBS=4 uv sync --no-default-groups --group mms_blog_post --extra gpu --upgrade
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}

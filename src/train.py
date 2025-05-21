@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-from finetune_setup_example.job_utils import run_local_job
+from finetune_setup_example.local_job_utils import run_local_job
 
 
 def train_main(wait_seconds: int, prefix: str) -> None:

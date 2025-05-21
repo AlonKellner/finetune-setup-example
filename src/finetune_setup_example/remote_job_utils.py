@@ -2,7 +2,6 @@
 
 import os
 import secrets
-from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -10,7 +9,6 @@ from typing import Any
 import git
 import sky
 import sky.jobs
-import yaml
 
 from finetune_setup_example.hp_set_handling import prepare_hp_sets
 
@@ -54,18 +52,6 @@ def get_job_ids() -> tuple[str, dict[str, str]]:
     if job_id is None:
         job_id = "-".join(ids.values())
     return job_id, ids
-
-
-def run_local_job(job_func: Callable) -> None:
-    """Run a job locally."""
-    hp_path = os.getenv("JOB_HP_PATH")
-    if hp_path is None:
-        hp_set = dict()
-    else:
-        with open(hp_path) as f:
-            hp_set = yaml.safe_load(f)
-
-    job_func(**hp_set)
 
 
 def start_jobs(hp_paths: list[tuple[str, Path]], ids: dict[str, str]) -> list[str]:
