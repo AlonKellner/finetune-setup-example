@@ -29,7 +29,7 @@ def load_wav2vec2_for_adaptuning(
         feat_quantizer_dropout=feat_quantizer_dropout,
         final_dropout=final_dropout,
         layerdrop=layerdrop,
-        ctc_loss_reduction="mean",
+        ctc_loss_reduction="sum",
         vocab_size=len(processor.tokenizer),
         adapter_attn_dim=len(processor.tokenizer),
         ignore_mismatched_sizes=True,

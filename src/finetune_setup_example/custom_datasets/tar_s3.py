@@ -58,13 +58,10 @@ class TarS3Dataset(TorchDataset):
         i = 0
         prev_i = 0
         self.grouped_indices = []
-        while (
-            (pos_sizes := ((cum_sizes := cum_sizes - self.max_tar_bytes) > 0))
-            .any()
-            .item()
-        ):
+        while (pos_sizes := ((cum_sizes - self.max_tar_bytes) > 0)).any().item():
             prev_i = i
-            i = np.diff(pos_sizes).argmax().item()
+            i = np.diff(pos_sizes).argmax().item() + 1
+            cum_sizes -= cum_sizes[i - 1]
 
             self.grouped_indices.append(indices_order[prev_i:i])
         self.grouped_indices.append(indices_order[i:])
