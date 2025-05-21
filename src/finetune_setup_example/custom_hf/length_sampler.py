@@ -1,12 +1,15 @@
 """A custom version of the `transformers` length grouped sampler."""
 
 from collections.abc import Iterator
-from typing import Any
 
 import numpy as np
 import torch
 from torch import Generator
-from transformers.trainer_pt_utils import LengthGroupedSampler
+from torch.utils.data import Dataset, Sampler
+from transformers import BatchEncoding
+from transformers.utils import logging
+
+logger = logging.get_logger(__name__)
 
 
 def get_length_grouped_batches(
@@ -203,19 +206,48 @@ def shuffle_indices(
     return indices, grouped_indices
 
 
-class CustomLengthGroupedSampler(LengthGroupedSampler):
+class CustomLengthGroupedSampler(Sampler[list[int]]):
     """Custom sampler for random order."""
 
     def __init__(
         self,
-        *args: Any,
+        batch_size: int,
+        dataset: Dataset | None = None,
+        lengths: list[int] | None = None,
+        model_input_name: str | None = None,
+        generator: Generator | None = None,
         mega_batch_mult: int | None = None,
         indices_order: list[int] | None = None,
         grouped_indices: list[list[int]] | None = None,
         batch_total_length: int | None = None,
-        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, **kwargs)
+        if dataset is None and lengths is None:
+            raise ValueError("One of dataset and lengths must be provided.")
+
+        self.batch_size = batch_size
+        if lengths is None:
+            model_input_name = (
+                model_input_name if model_input_name is not None else "input_ids"
+            )
+            assert isinstance(dataset, Dataset)
+            if (
+                not (isinstance(dataset[0], dict | BatchEncoding))
+                or model_input_name not in dataset[0]
+            ):
+                raise ValueError(
+                    "Can only automatically infer lengths for datasets whose items are dictionaries with an "
+                    f"'{model_input_name}' key."
+                )
+            lengths = [len(feature[model_input_name]) for feature in dataset]
+        elif isinstance(lengths, torch.Tensor):
+            logger.info(
+                "If lengths is a torch.Tensor, LengthGroupedSampler will be slow. Converting lengths to List[int]..."
+            )
+            lengths = lengths.tolist()
+
+        self.lengths = lengths
+        self.generator = generator
+
         self.mega_batch_mult = mega_batch_mult
         self.indices_order = indices_order
         self.grouped_indices = grouped_indices
