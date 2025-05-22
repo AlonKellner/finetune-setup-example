@@ -62,55 +62,6 @@ def main(
 
     set_seed(seed)
 
-    processor = create_wav2vec2_processor(
-        target_lang=target_lang,
-        sample_rate=sample_rate,
-        tokenizer_hf_repo=tokenizer_hf_repo,
-        target_hf_repo=target_hf_repo,
-    )
-
-    s3_client, s3_client_v2 = create_s3_client()
-
-    common_voice_train = create_cached_common_voice_split(
-        data_seed,
-        target_lang,
-        sample_rate,
-        target_hf_repo,
-        raw_train_size,
-        train_size,
-        train_limit,
-        processor,
-        s3_client,
-        s3_client_v2,
-        "train",
-    )
-    common_voice_eval = create_cached_common_voice_split(
-        data_seed,
-        target_lang,
-        sample_rate,
-        target_hf_repo,
-        raw_eval_size,
-        eval_size,
-        eval_limit,
-        processor,
-        s3_client,
-        s3_client_v2,
-        "test",
-    )
-
-    model = load_wav2vec2_for_adaptuning(
-        base_hf_repo=base_hf_repo,
-        processor=processor,
-        attn_implementation=attn_implementation,
-        hidden_dropout=hidden_dropout,
-        activation_dropout=activation_dropout,
-        attention_dropout=attention_dropout,
-        feat_proj_dropout=feat_proj_dropout,
-        feat_quantizer_dropout=feat_quantizer_dropout,
-        final_dropout=final_dropout,
-        layerdrop=layerdrop,
-    )
-
     training_args = create_training_arguments(
         seed=seed,
         data_seed=data_seed,
@@ -133,8 +84,66 @@ def main(
         logging_steps=logging_steps,
         weight_decay=weight_decay,
         torch_compile=torch_compile,
-        train_size=len(common_voice_train),
+        train_size=train_limit,
         sample_rate=sample_rate,
+    )
+
+    train_processor = create_wav2vec2_processor(
+        target_lang=target_lang,
+        sample_rate=sample_rate,
+        tokenizer_hf_repo=tokenizer_hf_repo,
+        target_hf_repo=target_hf_repo,
+        max_batch_length=training_args.per_device_train_batch_total_length,
+    )
+
+    eval_processor = create_wav2vec2_processor(
+        target_lang=target_lang,
+        sample_rate=sample_rate,
+        tokenizer_hf_repo=tokenizer_hf_repo,
+        target_hf_repo=target_hf_repo,
+        max_batch_length=training_args.per_device_eval_batch_total_length,
+    )
+
+    s3_client, s3_client_v2 = create_s3_client()
+
+    common_voice_train = create_cached_common_voice_split(
+        data_seed,
+        target_lang,
+        sample_rate,
+        target_hf_repo,
+        raw_train_size,
+        train_size,
+        train_limit,
+        train_processor,
+        s3_client,
+        s3_client_v2,
+        "train",
+    )
+    common_voice_eval = create_cached_common_voice_split(
+        data_seed,
+        target_lang,
+        sample_rate,
+        target_hf_repo,
+        raw_eval_size,
+        eval_size,
+        eval_limit,
+        eval_processor,
+        s3_client,
+        s3_client_v2,
+        "test",
+    )
+
+    model = load_wav2vec2_for_adaptuning(
+        base_hf_repo=base_hf_repo,
+        processor=train_processor,
+        attn_implementation=attn_implementation,
+        hidden_dropout=hidden_dropout,
+        activation_dropout=activation_dropout,
+        attention_dropout=attention_dropout,
+        feat_proj_dropout=feat_proj_dropout,
+        feat_quantizer_dropout=feat_quantizer_dropout,
+        final_dropout=final_dropout,
+        layerdrop=layerdrop,
     )
 
     trainer = create_trainer(
@@ -142,7 +151,8 @@ def main(
         training_args=training_args,
         common_voice_eval=common_voice_eval,
         common_voice_train=common_voice_train,
-        processor=processor,
+        train_processor=train_processor,
+        eval_processor=eval_processor,
     )
     train(trainer)
 

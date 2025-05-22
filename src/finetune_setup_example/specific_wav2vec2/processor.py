@@ -10,6 +10,8 @@ from transformers import (
     Wav2Vec2Processor,
 )
 
+from ..custom_wav2vec2.feature_extractor import CustomWav2Vec2FeatureExtractor
+
 
 @runtime_checkable
 class HasCustomFields(Protocol):
@@ -20,7 +22,11 @@ class HasCustomFields(Protocol):
 
 
 def create_wav2vec2_processor(
-    target_lang: str, sample_rate: int, tokenizer_hf_repo: str, target_hf_repo: str
+    target_lang: str,
+    sample_rate: int,
+    tokenizer_hf_repo: str,
+    target_hf_repo: str,
+    max_batch_length: int | None = None,
 ) -> Wav2Vec2Processor:
     """Create a wav2vec2 processor, ready for training a specific language."""
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
@@ -45,12 +51,13 @@ def create_wav2vec2_processor(
 
     tokenizer.push_to_hub(target_hf_repo)  # type: ignore
 
-    feature_extractor = Wav2Vec2FeatureExtractor(
+    feature_extractor = CustomWav2Vec2FeatureExtractor(
         feature_size=1,
         sampling_rate=sample_rate,
         padding_value=0.0,
         do_normalize=True,
         return_attention_mask=True,
+        max_batch_length=max_batch_length,
     )
 
     processor: Wav2Vec2Processor = Wav2Vec2Processor(
