@@ -103,9 +103,9 @@ def load_meta_common_voice_for_wav2vec2(
         split=split,
         data_seed=data_seed,
     )
-    return common_voice_split[
+    return common_voice_split.select_columns(
         [c for c in common_voice_split.column_names if c != "input_values"]  # type: ignore
-    ]
+    )
 
 
 def create_cached_common_voice_split(
