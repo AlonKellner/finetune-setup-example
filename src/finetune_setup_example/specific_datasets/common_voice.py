@@ -18,94 +18,104 @@ from ..custom_datasets.resized import ResizedDataset
 Batch = dict[str, Any]
 
 
-def load_common_voice_for_wav2vec2(
-    processor: Wav2Vec2Processor,
-    target_lang: str,
-    sample_rate: int,
-    split: str,
-    data_seed: int,
-) -> HFDataset:
-    """Load a split of common voice 17, adapted for wav2vec2."""
-    common_voice_split = load_dataset(
-        "mozilla-foundation/common_voice_17_0",
-        "tr",
-        split=split,
-        token=True,
-        trust_remote_code=True,
-    )
-    assert isinstance(common_voice_split, HFDataset)
+class LazyLoader:
+    """A lazy loader for datasets."""
 
-    common_voice_split = common_voice_split.remove_columns(
-        [
-            "accent",
-            "age",
-            "client_id",
-            "down_votes",
-            "gender",
-            "locale",
-            "segment",
-            "up_votes",
-        ]
-    )
+    def __init__(
+        self,
+        processor: Wav2Vec2Processor,
+        target_lang: str,
+        sample_rate: int,
+        split: str,
+        data_seed: int,
+    ) -> None:
+        self.processor = processor
+        self.target_lang = target_lang
+        self.sample_rate = sample_rate
+        self.split = split
+        self.data_seed = data_seed
+        self.common_voice_split = None
+        self.meta_common_voice_split = None
 
-    chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
-    ur = uroman.Uroman()
+    def load_common_voice_for_wav2vec2(self) -> HFDataset:
+        """Load a split of common voice 17, adapted for wav2vec2."""
+        if self.common_voice_split is None:
+            self.common_voice_split = self._load_common_voice_for_wav2vec2()
+        return self.common_voice_split
 
-    def uromanize(batch: Batch) -> Batch:
-        """Uromanize text."""
-        clean_string = re.sub(chars_to_remove_regex, "", batch["sentence"]).lower()
-        batch["sentence"] = ur.romanize_string(clean_string, lcode=target_lang)
-        return batch
+    def _load_common_voice_for_wav2vec2(self) -> HFDataset:
+        """Load a split of common voice 17, adapted for wav2vec2."""
+        common_voice_split = load_dataset(
+            "mozilla-foundation/common_voice_17_0",
+            "tr",
+            split=self.split,
+            token=True,
+            trust_remote_code=True,
+        )
+        assert isinstance(common_voice_split, HFDataset)
 
-    common_voice_split = common_voice_split.map(uromanize)
+        common_voice_split = common_voice_split.remove_columns(
+            [
+                "accent",
+                "age",
+                "client_id",
+                "down_votes",
+                "gender",
+                "locale",
+                "segment",
+                "up_votes",
+            ]
+        )
 
-    common_voice_split = common_voice_split.cast_column(
-        "audio", Audio(sampling_rate=sample_rate)
-    )
+        chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
+        ur = uroman.Uroman()
 
-    rand_int = random.randint(0, len(common_voice_split) - 1)
+        def uromanize(batch: Batch) -> Batch:
+            """Uromanize text."""
+            clean_string = re.sub(chars_to_remove_regex, "", batch["sentence"]).lower()
+            batch["sentence"] = ur.romanize_string(clean_string, lcode=self.target_lang)
+            return batch
 
-    print("Target text:", common_voice_split[rand_int]["sentence"])
-    print("Input array shape:", common_voice_split[rand_int]["audio"]["array"].shape)
-    print("Sampling rate:", common_voice_split[rand_int]["audio"]["sampling_rate"])
+        common_voice_split = common_voice_split.map(uromanize)
 
-    def prepare_dataset(batch: Batch) -> Batch:
-        """Prepare dataset."""
-        audio = batch["audio"]
-        batch["input_values"] = processor(
-            audio["array"], sampling_rate=audio["sampling_rate"]
-        ).input_values[0]
-        batch["length"] = len(batch["input_values"])
+        common_voice_split = common_voice_split.cast_column(
+            "audio", Audio(sampling_rate=self.sample_rate)
+        )
 
-        batch["labels"] = processor(text=batch["sentence"]).input_ids  # type: ignore
-        return batch
+        rand_int = random.randint(0, len(common_voice_split) - 1)
 
-    common_voice_split = common_voice_split.map(
-        prepare_dataset, remove_columns=common_voice_split.column_names
-    )
-    common_voice_split = common_voice_split.shuffle(seed=data_seed)
+        print("Target text:", common_voice_split[rand_int]["sentence"])
+        print(
+            "Input array shape:", common_voice_split[rand_int]["audio"]["array"].shape
+        )
+        print("Sampling rate:", common_voice_split[rand_int]["audio"]["sampling_rate"])
 
-    return common_voice_split
+        def prepare_dataset(batch: Batch) -> Batch:
+            """Prepare dataset."""
+            audio = batch["audio"]
+            batch["input_values"] = self.processor(
+                audio["array"], sampling_rate=audio["sampling_rate"]
+            ).input_values[0]
+            batch["length"] = len(batch["input_values"])
 
+            batch["labels"] = self.processor(text=batch["sentence"]).input_ids  # type: ignore
+            return batch
 
-def load_meta_common_voice_for_wav2vec2(
-    processor: Wav2Vec2Processor,
-    target_lang: str,
-    sample_rate: int,
-    split: str,
-    data_seed: int,
-) -> HFDataset:
-    """Load a split of common voice 17 metadata, adapted for wav2vec2."""
-    common_voice_split = load_common_voice_for_wav2vec2(
-        processor=processor,
-        target_lang=target_lang,
-        sample_rate=sample_rate,
-        split=split,
-        data_seed=data_seed,
-    )
-    return common_voice_split.select_columns(
-        [c for c in common_voice_split.column_names if c != "input_values"]  # type: ignore
-    )
+        common_voice_split = common_voice_split.map(
+            prepare_dataset, remove_columns=common_voice_split.column_names
+        )
+        common_voice_split = common_voice_split.shuffle(seed=self.data_seed)
+
+        return common_voice_split
+
+    def load_meta_common_voice_for_wav2vec2(self) -> HFDataset:
+        """Load a split of common voice 17 metadata, adapted for wav2vec2."""
+        if self.meta_common_voice_split is None:
+            common_voice_split = self.load_common_voice_for_wav2vec2()
+            self.meta_common_voice_split = common_voice_split.select_columns(
+                [c for c in common_voice_split.column_names if c != "input_values"]  # type: ignore
+            )
+        return self.meta_common_voice_split
 
 
 def create_cached_common_voice_split(
@@ -122,24 +132,20 @@ def create_cached_common_voice_split(
     split: str,
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
+    loader = LazyLoader(
+        processor=processor,
+        target_lang=target_lang,
+        sample_rate=sample_rate,
+        split=split,
+        data_seed=data_seed,
+    )
+
     common_voice_split = LazyDataset(
-        lambda: load_common_voice_for_wav2vec2(
-            processor=processor,
-            target_lang=target_lang,
-            sample_rate=sample_rate,
-            split=split,
-            data_seed=data_seed,
-        ),
+        loader.load_common_voice_for_wav2vec2,
         raw_split_size,
     )
     meta_common_voice_split = LazyDataset(
-        lambda: load_meta_common_voice_for_wav2vec2(
-            processor=processor,
-            target_lang=target_lang,
-            sample_rate=sample_rate,
-            split=split,
-            data_seed=data_seed,
-        ),
+        loader.load_meta_common_voice_for_wav2vec2,
         raw_split_size,
     )
     common_voice_split = ResizedDataset(common_voice_split, split_size)

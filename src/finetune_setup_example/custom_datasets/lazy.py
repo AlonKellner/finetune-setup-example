@@ -1,5 +1,6 @@
 """A torch dataset wrapper that defers inner dataset creation to when accessed."""
 
+import threading
 from collections.abc import Callable
 from typing import Any
 
@@ -16,13 +17,13 @@ class LazyDataset(TorchDataset):
         self._inner_dataset_func = inner_dataset_func
         self._size = size
         self._inner_dataset: HFDataset | TorchDataset | None = None
+        self._lock = threading.Lock()
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
-        if self._inner_dataset is None:
-            self._inner_dataset = self._inner_dataset_func()
+        _inner_dataset = self._get_inner_dataset()
 
-        return getattr(self._inner_dataset, name)
+        return getattr(_inner_dataset, name)
 
     def __len__(self) -> int:
         """Return the size as specified."""
@@ -41,14 +42,18 @@ class LazyDataset(TorchDataset):
 
     def __getitems__(self, keys: list) -> list:
         """Can be used to get a batch using a list of integers indices."""
-        if self._inner_dataset is None:
-            self._inner_dataset = self._inner_dataset_func()
-
         return [self[k] for k in keys]
 
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
-        if self._inner_dataset is None:
-            self._inner_dataset = self._inner_dataset_func()
+        _inner_dataset = self._get_inner_dataset()
 
-        return self._inner_dataset[index]
+        return _inner_dataset[index]
+
+    def _get_inner_dataset(self) -> HFDataset | TorchDataset:
+        """Ensure the inner dataset is loaded."""
+        if self._inner_dataset is None:
+            with self._lock:
+                if self._inner_dataset is None:
+                    self._inner_dataset = self._inner_dataset_func()
+        return self._inner_dataset
