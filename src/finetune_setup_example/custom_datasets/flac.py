@@ -132,7 +132,7 @@ class FlacDataset(TorchDataset):
         flac_path = self.cache_path / f"{padded_index}.flac"
         if not flac_path.exists():
             if item is None:
-                item = self._inner_dataset[index]
+                item = self._inner_dataset[["input_values"]][index]  # type: ignore
             samples = item["input_values"]
             self._save_flac(flac_path, samples)
 
@@ -141,8 +141,9 @@ class FlacDataset(TorchDataset):
         if index in self.metadata:
             item_metadata = self.metadata[index]
         else:
-            if item is None:
-                item = self._inner_dataset[index]
+            item = self._inner_dataset[
+                [c for c in self._inner_dataset.column_names if c != "input_values"]  # type: ignore
+            ][index]
             item_metadata = {k: v for k, v in item.items() if k != "input_values"}
             item_metadata["indices"] = index
             item_metadata["file_paths"] = str(flac_path)
