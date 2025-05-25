@@ -7,10 +7,8 @@ from pathlib import Path
 from typing import Any
 
 import git
-import sky
-import sky.jobs
 
-from finetune_setup_example.hp_set_handling import prepare_hp_sets
+from .hp_set_handling import prepare_hp_sets
 
 
 def get_job_ids() -> tuple[str, dict[str, str]]:
@@ -63,6 +61,9 @@ def start_jobs(hp_paths: list[tuple[str, Path]], ids: dict[str, str]) -> list[st
 
 def start_job(ids: dict[str, str], job_hp_path: str) -> str:
     """Start a SkyPilot job using the job.yaml config."""
+    import sky
+    import sky.jobs
+
     task = sky.Task.from_yaml("skypilot-conf/job.yaml")
 
     job_id = "-".join(ids.values())

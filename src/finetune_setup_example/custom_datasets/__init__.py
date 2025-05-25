@@ -24,10 +24,7 @@ def prepare_cached_dataset(
     """Wrap a dataset with S3 caching and prepare for the first training."""
     dataset = FlacDataset(dataset, cache_path, sample_rate)
     indices_order = list(range(len(dataset)))
-    lengths = [
-        v["length"]
-        for k, v in dataset.metadata.items()  # type: ignore
-    ]
+    lengths = list(dataset["length"])  # type: ignore
     longest_index = max(indices_order, key=lambda i: lengths[i])
     indices_order.remove(longest_index)
     indices_order.insert(0, longest_index)
@@ -42,5 +39,5 @@ def prepare_cached_dataset(
         sync_interval=sync_interval,
         groups_per_sync=groups_per_sync,
     )
-    # dataset.sync_all_groups()
+    dataset.sync_all_groups()
     return dataset

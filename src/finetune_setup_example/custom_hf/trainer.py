@@ -80,6 +80,7 @@ class CustomTrainer(Trainer):
             eval_data_collator if eval_data_collator is not None else default_collator
         )
         self.eval_processing_class = eval_processing_class
+        self.is_batch_sampler = True
 
     def get_train_dataloader(self) -> DataLoader:
         """
@@ -171,9 +172,13 @@ class CustomTrainer(Trainer):
         }
 
         if not isinstance(dataset, torch.utils.data.IterableDataset):
-            if sampler_fn is not None:
-                dataloader_params["sampler"] = sampler_fn(dataset)
-            dataloader_params["drop_last"] = self.args.dataloader_drop_last
+            if self.is_batch_sampler and (sampler_fn is not None):
+                dataloader_params["batch_sampler"] = sampler_fn(dataset)
+                del dataloader_params["batch_size"]
+            else:
+                if sampler_fn is not None:
+                    dataloader_params["sampler"] = sampler_fn(dataset)
+                dataloader_params["drop_last"] = self.args.dataloader_drop_last
             dataloader_params["prefetch_factor"] = self.args.dataloader_prefetch_factor
             if is_training:
                 dataloader_params["worker_init_fn"] = partial(

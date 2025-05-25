@@ -56,6 +56,7 @@ def main(
     feat_quantizer_dropout: float = 0.0,
     final_dropout: float = 0.0,
     layerdrop: float = 0.0,
+    padding_side: str = "random",
 ) -> None:
     """Training a model."""
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
@@ -94,6 +95,7 @@ def main(
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
         max_batch_length=training_args.per_device_train_batch_total_length,
+        padding_side=padding_side,
     )
 
     eval_processor = create_wav2vec2_processor(
@@ -102,6 +104,7 @@ def main(
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
         max_batch_length=training_args.per_device_eval_batch_total_length,
+        padding_side=padding_side,
     )
 
     s3_client, s3_client_v2 = create_s3_client()

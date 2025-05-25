@@ -125,21 +125,26 @@ def generate_total_length_batches(
 ) -> list[list[int]]:
     """Generate batches of indices."""
     if batch_total_length is None:
-        cum_sizes = np.array([1 for _ in indices]).cumsum()
-        batch_total = batch_size
+        sizes = np.array([1 for _ in indices])
+        batch_total_size = batch_size
     else:
-        cum_sizes = np.array([lengths[i] for i in indices]).cumsum()
-        batch_total = batch_total_length
+        assert all(length <= batch_total_length for length in lengths), (
+            "All lengths must be less than or equal to batch_total_length."
+        )
+        sizes = np.array([lengths[i] for i in indices])
+        batch_total_size = batch_total_length
+
     i = 0
     prev_i = 0
     batches = []
-    while (pos_sizes := ((cum_sizes - batch_total) > 0)).any().item():
-        prev_i = i
-        i = np.diff(pos_sizes).argmax().item() + 1
-        cum_sizes -= cum_sizes[i - 1]
-
-        batches.append(indices[prev_i:i])
-    batches.append(indices[i:])
+    while i < len(indices):
+        current_total_size = sizes[prev_i:i].max(initial=0) * (i - prev_i)
+        if current_total_size > batch_total_size:
+            batches.append(indices[prev_i : i - 1])
+            prev_i = i - 1
+        else:
+            i += 1
+    batches.append(indices[prev_i:])
     return batches
 
 

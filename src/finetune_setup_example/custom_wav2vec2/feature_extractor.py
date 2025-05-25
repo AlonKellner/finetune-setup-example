@@ -102,18 +102,15 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
                 for key in processed_features[0]
             }
 
-        assert isinstance(processed_features, dict), (
-            "processed_features should be a dict of lists"
-        )
         # The model's main input name, usually `input_values`, has be passed for padding
         if self.model_input_names[0] not in processed_features:
             raise ValueError(
                 "You should supply an instance of `transformers.BatchFeature` or list of `transformers.BatchFeature`"
                 f" to this method that includes {self.model_input_names[0]}, but you provided"
-                f" {list(processed_features.keys())}"
+                f" {list(processed_features.keys())}"  # type: ignore
             )
 
-        required_input = processed_features[self.model_input_names[0]]
+        required_input = processed_features[self.model_input_names[0]]  # type: ignore
         return_attention_mask = (
             return_attention_mask
             if return_attention_mask is not None
@@ -134,7 +131,7 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
         if return_tensors is None:
             return_tensors = self._infer_tensor_type(first_element)
 
-        for key, value in processed_features.items():
+        for key, value in processed_features.items():  # type: ignore
             if isinstance(value[0], int | float):  # type: ignore
                 processed_features[key] = to_numpy(value)
             else:
@@ -146,18 +143,22 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
             max_length=max_length,
         )
 
-        required_input = processed_features[self.model_input_names[0]]
+        required_input = processed_features[self.model_input_names[0]]  # type: ignore
 
         batch_size = self._get_batch_size(processed_features, required_input)  # type: ignore
 
-        if self.max_batch_length is not None:
-            max_length = self.max_batch_length // batch_size
-
         truncated_inputs = self._truncate_inputs(
-            processed_features, max_length, truncation, pad_to_multiple_of, batch_size
+            processed_features,  # type: ignore
+            max_length,
+            truncation,
+            pad_to_multiple_of,
+            batch_size,  # type: ignore
         )
 
-        if padding_strategy == PaddingStrategy.LONGEST:
+        if self.max_batch_length is not None:
+            max_length = self.max_batch_length // batch_size
+            padding_strategy = PaddingStrategy.MAX_LENGTH
+        elif padding_strategy == PaddingStrategy.LONGEST:
             # make sure that `max_length` cannot be longer than the longest truncated length
             max_length = max(
                 len(input_slice[self.model_input_names[0]])
@@ -227,7 +228,7 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
                     _value = value.astype(np.float32)
                 else:
                     _value = value
-                batch_outputs[key].append(value)
+                batch_outputs[key].append(_value)
         return batch_outputs
 
     def _truncate_inputs(

@@ -27,4 +27,5 @@ RUN --mount=type=cache,dst=/root/.cache/ \
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}
+RUN echo "Some bug makes the last RUN action to be not cached, so this is a workaround"
 ENTRYPOINT [ "/app/.venv/bin/python" ]

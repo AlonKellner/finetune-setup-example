@@ -27,6 +27,7 @@ def create_wav2vec2_processor(
     tokenizer_hf_repo: str,
     target_hf_repo: str,
     max_batch_length: int | None = None,
+    padding_side: str = "random",
 ) -> Wav2Vec2Processor:
     """Create a wav2vec2 processor, ready for training a specific language."""
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
@@ -58,6 +59,7 @@ def create_wav2vec2_processor(
         do_normalize=True,
         return_attention_mask=True,
         max_batch_length=max_batch_length,
+        padding_side=padding_side,
     )
 
     processor: Wav2Vec2Processor = Wav2Vec2Processor(
