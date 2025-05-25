@@ -142,7 +142,7 @@ class FlacDataset(TorchDataset):
             item_metadata = self.metadata[index]
         else:
             item = self._inner_dataset[
-                [c for c in self._inner_dataset.column_names if c != "input_values"]  # type: ignore
+                [c for c in self.column_names if c != "input_values"]  # type: ignore
             ][index]
             item_metadata = {k: v for k, v in item.items() if k != "input_values"}
             item_metadata["indices"] = index

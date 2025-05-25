@@ -19,6 +19,9 @@ class LazyDataset(TorchDataset):
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
+        if self._inner_dataset is None:
+            self._inner_dataset = self._inner_dataset_func()
+
         return getattr(self._inner_dataset, name)
 
     def __len__(self) -> int:
@@ -38,6 +41,9 @@ class LazyDataset(TorchDataset):
 
     def __getitems__(self, keys: list) -> list:
         """Can be used to get a batch using a list of integers indices."""
+        if self._inner_dataset is None:
+            self._inner_dataset = self._inner_dataset_func()
+
         return [self[k] for k in keys]
 
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
