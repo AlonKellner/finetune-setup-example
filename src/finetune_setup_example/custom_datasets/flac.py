@@ -5,6 +5,7 @@ The rest of the metadata is cached as an in memory dict and a parquet file.
 
 import concurrent.futures
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -39,14 +40,16 @@ class FlacDataset(TorchDataset):
         if len(self) == 0:
             self.set_metadata(self.load_metadata())
         if len(self.metadata) < len(self):
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
-            ) as executor:
-                for _ in tqdm(
-                    executor.map(lambda i: self.validate_item(i), range(len(self))),
-                    total=len(self),
-                ):
-                    pass
+            try:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+                ) as executor:
+                    for _ in tqdm(
+                        executor.map(lambda i: self.validate_item(i), range(len(self))),
+                        total=len(self),
+                    ):
+                        pass
+            finally:
                 self.save_metadata()
 
     def validate_item(self, index: int) -> None:
@@ -153,6 +156,17 @@ class FlacDataset(TorchDataset):
         return item
 
     def _save_flac(self, flac_path: Path, samples: list[int]) -> None:
+        for i in range(3):
+            try:
+                return self._raw_save_flac(flac_path, samples)
+            except Exception as e:
+                print(f"Failed to save flac file {flac_path} with error: {e}")
+                flac_path.unlink(missing_ok=True)
+                time.sleep(0.1 * 2**i)  # Give the filesystem some time to recover
+
+        return self._raw_save_flac(flac_path, samples)
+
+    def _raw_save_flac(self, flac_path: Path, samples: list[int]) -> None:
         _samples = torch.tensor(samples)
         _samples = _samples - _samples.min()
         _samples = _samples / _samples.max()
@@ -167,6 +181,16 @@ class FlacDataset(TorchDataset):
         )
 
     def _load_flac(self, flac_path: Path) -> list[int]:
+        for i in range(3):
+            try:
+                return self._raw_load_flac(flac_path)
+            except Exception as e:
+                print(f"Failed to load flac file {flac_path} with error: {e}")
+                time.sleep(0.1 * 2**i)
+
+        return self._raw_load_flac(flac_path)
+
+    def _raw_load_flac(self, flac_path: Path) -> list[int]:
         samples, sr = ta.load(flac_path.absolute(), normalize=False, format="flac")
         assert sr == self.sample_rate
         assert samples.shape[0] == 1
