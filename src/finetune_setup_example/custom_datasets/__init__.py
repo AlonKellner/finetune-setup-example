@@ -12,6 +12,7 @@ GB = 1_000_000_000
 
 def prepare_cached_dataset(
     dataset: TorchDataset | HFDataset,
+    meta_dataset: TorchDataset | HFDataset,
     sample_rate: int,
     cache_path: str,
     cache_bucket: str,
@@ -22,7 +23,7 @@ def prepare_cached_dataset(
     groups_per_sync: int = 6,
 ) -> TarS3Dataset:
     """Wrap a dataset with S3 caching and prepare for the first training."""
-    dataset = FlacDataset(dataset, cache_path, sample_rate)
+    dataset = FlacDataset(dataset, meta_dataset, cache_path, sample_rate)
     indices_order = list(range(len(dataset)))
     lengths = list(dataset["length"])  # type: ignore
     longest_index = max(indices_order, key=lambda i: lengths[i])

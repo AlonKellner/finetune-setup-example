@@ -88,6 +88,26 @@ def load_common_voice_for_wav2vec2(
     return common_voice_split
 
 
+def load_meta_common_voice_for_wav2vec2(
+    processor: Wav2Vec2Processor,
+    target_lang: str,
+    sample_rate: int,
+    split: str,
+    data_seed: int,
+) -> HFDataset:
+    """Load a split of common voice 17 metadata, adapted for wav2vec2."""
+    common_voice_split = load_common_voice_for_wav2vec2(
+        processor=processor,
+        target_lang=target_lang,
+        sample_rate=sample_rate,
+        split=split,
+        data_seed=data_seed,
+    )
+    return common_voice_split[
+        [c for c in common_voice_split.column_names if c != "input_values"]  # type: ignore
+    ]
+
+
 def create_cached_common_voice_split(
     data_seed: int,
     target_lang: str,
@@ -112,12 +132,24 @@ def create_cached_common_voice_split(
         ),
         raw_split_size,
     )
+    meta_common_voice_split = LazyDataset(
+        lambda: load_meta_common_voice_for_wav2vec2(
+            processor=processor,
+            target_lang=target_lang,
+            sample_rate=sample_rate,
+            split=split,
+            data_seed=data_seed,
+        ),
+        raw_split_size,
+    )
     common_voice_split = ResizedDataset(common_voice_split, split_size)
+    meta_common_voice_split = ResizedDataset(meta_common_voice_split, split_size)
     cache_path = f"./.app_cache/{data_seed}/{split}_set/"
     Path(cache_path).mkdir(parents=True, exist_ok=True)
     cache_bucket = f"{target_hf_repo}-cache-{data_seed}-{split}-set"
     common_voice_split = prepare_cached_dataset(
         common_voice_split,
+        meta_common_voice_split,
         sample_rate,
         cache_path,
         cache_bucket,

@@ -23,11 +23,13 @@ class FlacDataset(TorchDataset):
     def __init__(
         self,
         inner_dataset: HFDataset | TorchDataset,
+        inner_meta_dataset: HFDataset | TorchDataset,
         cache_path: str | Path,
         sample_rate: int,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self._inner_dataset = inner_dataset
+        self._inner_meta_dataset = inner_meta_dataset
         self.cache_path = Path(cache_path)
         self.metadata_path = self.cache_path / "metadata.parquet"
         if metadata is None:
@@ -78,11 +80,12 @@ class FlacDataset(TorchDataset):
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
         result = getattr(self._inner_dataset, name)
+        meta_result = getattr(self._inner_meta_dataset, name)
         if issubclass(type(result), HFDataset) or issubclass(
             type(result), TorchDataset
         ):
             result = FlacDataset(
-                result, self.cache_path, self.sample_rate, self.metadata
+                result, meta_result, self.cache_path, self.sample_rate, self.metadata
             )
         return result
 
@@ -132,7 +135,7 @@ class FlacDataset(TorchDataset):
         flac_path = self.cache_path / f"{padded_index}.flac"
         if not flac_path.exists():
             if item is None:
-                item = self._inner_dataset[["input_values"]][index]  # type: ignore
+                item = self._inner_dataset[index]  # type: ignore
             samples = item["input_values"]
             self._save_flac(flac_path, samples)
 
@@ -141,9 +144,8 @@ class FlacDataset(TorchDataset):
         if index in self.metadata:
             item_metadata = self.metadata[index]
         else:
-            item = self._inner_dataset[
-                [c for c in self._inner_dataset.column_names if c != "input_values"]  # type: ignore
-            ][index]
+            if item is None:
+                item = self._inner_meta_dataset[index]
             item_metadata = {k: v for k, v in item.items() if k != "input_values"}
             item_metadata["indices"] = index
             item_metadata["file_paths"] = str(flac_path)
