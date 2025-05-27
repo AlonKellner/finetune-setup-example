@@ -318,10 +318,10 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
         ):
             max_length = ((max_length // pad_to_multiple_of) + 1) * pad_to_multiple_of
 
-        assert max_length is not None, "max_length should be defined"
         needs_to_be_padded = (
             padding_strategy != PaddingStrategy.DO_NOT_PAD
-            and len(required_input) < max_length
+            and (max_length is not None)
+            and (len(required_input) < max_length)
         )
 
         if return_attention_mask and "attention_mask" not in processed_features:
@@ -330,6 +330,9 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
             )
 
         if needs_to_be_padded:
+            assert max_length is not None, (
+                "max_length should not be None when padding is required."
+            )
             difference = max_length - len(required_input)
             if self.padding_side == "right":
                 if return_attention_mask:
