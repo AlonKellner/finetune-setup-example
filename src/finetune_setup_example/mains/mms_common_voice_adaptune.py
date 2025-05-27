@@ -1,5 +1,6 @@
 """Code for "adaptuning" mms checkpoints with common voice."""
 
+import comet_ml  # type: ignore  # noqa: F401
 from transformers import set_seed
 
 from ..custom_hf.trainer import train
