@@ -9,6 +9,7 @@ import uroman
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
 from transformers import Wav2Vec2Processor
+from transformers.utils import PaddingStrategy
 from types_boto3_s3 import S3Client
 
 from ..custom_datasets import prepare_cached_dataset
@@ -36,12 +37,35 @@ class LazyLoader:
         self.data_seed = data_seed
         self.common_voice_split = None
         self.meta_common_voice_split = None
+        self.uroman = uroman.Uroman()
+        self.chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
+
+    def uromanize(self, batch: Batch) -> Batch:
+        """Uromanize text."""
+        clean_string = re.sub(self.chars_to_remove_regex, "", batch["sentence"]).lower()
+        batch["sentence"] = self.uroman.romanize_string(
+            clean_string, lcode=self.target_lang
+        )
+        return batch
 
     def load_common_voice_for_wav2vec2(self) -> HFDataset:
         """Load a split of common voice 17, adapted for wav2vec2."""
         if self.common_voice_split is None:
             self.common_voice_split = self._load_common_voice_for_wav2vec2()
         return self.common_voice_split
+
+    def prepare_dataset(self, batch: Batch) -> Batch:
+        """Prepare dataset."""
+        audio = batch["audio"]
+        batch["input_values"] = self.processor(
+            audio["array"],
+            sampling_rate=audio["sampling_rate"],
+            padding=PaddingStrategy.DO_NOT_PAD,
+        ).input_values[0]
+        batch["length"] = len(batch["input_values"])
+
+        batch["labels"] = self.processor(text=batch["sentence"]).input_ids  # type: ignore
+        return batch
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
         """Load a split of common voice 17, adapted for wav2vec2."""
@@ -67,16 +91,7 @@ class LazyLoader:
             ]
         )
 
-        chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
-        ur = uroman.Uroman()
-
-        def uromanize(batch: Batch) -> Batch:
-            """Uromanize text."""
-            clean_string = re.sub(chars_to_remove_regex, "", batch["sentence"]).lower()
-            batch["sentence"] = ur.romanize_string(clean_string, lcode=self.target_lang)
-            return batch
-
-        common_voice_split = common_voice_split.map(uromanize)
+        common_voice_split = common_voice_split.map(self.uromanize)
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -90,19 +105,8 @@ class LazyLoader:
         )
         print("Sampling rate:", common_voice_split[rand_int]["audio"]["sampling_rate"])
 
-        def prepare_dataset(batch: Batch) -> Batch:
-            """Prepare dataset."""
-            audio = batch["audio"]
-            batch["input_values"] = self.processor(
-                audio["array"], sampling_rate=audio["sampling_rate"]
-            ).input_values[0]
-            batch["length"] = len(batch["input_values"])
-
-            batch["labels"] = self.processor(text=batch["sentence"]).input_ids  # type: ignore
-            return batch
-
         common_voice_split = common_voice_split.map(
-            prepare_dataset, remove_columns=common_voice_split.column_names
+            self.prepare_dataset, remove_columns=common_voice_split.column_names
         )
         common_voice_split = common_voice_split.shuffle(seed=self.data_seed)
 

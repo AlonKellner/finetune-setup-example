@@ -155,7 +155,9 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
             batch_size,  # type: ignore
         )
 
-        if self.max_batch_length is not None:
+        if (self.max_batch_length is not None) and (
+            padding_strategy != PaddingStrategy.DO_NOT_PAD
+        ):
             max_length = self.max_batch_length // batch_size
             padding_strategy = PaddingStrategy.MAX_LENGTH
         elif padding_strategy == PaddingStrategy.LONGEST:

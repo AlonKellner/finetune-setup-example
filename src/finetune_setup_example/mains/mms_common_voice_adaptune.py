@@ -41,7 +41,7 @@ def main(
     decay_ratio: float = 1.0,
     learning_rate: float = 1e-2,
     mega_batch_mult: int = 100,
-    dataloader_num_workers: int = 4,
+    dataloader_num_workers: int = 0,
     fp16: bool = False,
     save_steps: int = 1000,
     eval_steps: int = 1000,
