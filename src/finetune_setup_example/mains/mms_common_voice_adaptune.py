@@ -30,13 +30,14 @@ def main(
     eval_size: int = 20_000,
     train_size: int = 100_000,
     train_limit: int = 100_000,
-    eval_limit: int = 4_000,
-    num_train_epochs: int = 1,
+    eval_limit: int = 400,
+    num_train_epochs: int | float | None = None,
+    num_training_steps: int | None = 10,
     effective_batch_size: int = 16,
     per_device_train_batch_size: int = 4,
     per_device_eval_batch_size: int = 8,
-    per_device_train_batch_total_seconds: float = 30.0,
-    per_device_eval_batch_total_seconds: float = 60.0,
+    per_device_train_batch_total_seconds: float = 100.0,
+    per_device_eval_batch_total_seconds: float = 100.0,
     num_devices: int = 1,
     warmup_ratio: float = 0.0,
     decay_ratio: float = 1.0,
@@ -58,6 +59,8 @@ def main(
     final_dropout: float = 0.0,
     layerdrop: float = 0.0,
     padding_side: str = "random",
+    should_push: bool = False,
+    should_demo: bool = False,
 ) -> None:
     """Training a model."""
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
@@ -69,6 +72,7 @@ def main(
         data_seed=data_seed,
         target_hf_repo=target_hf_repo,
         num_train_epochs=num_train_epochs,
+        num_training_steps=num_training_steps,
         effective_batch_size=effective_batch_size,
         per_device_train_batch_size=per_device_train_batch_size,
         per_device_eval_batch_size=per_device_eval_batch_size,
@@ -90,7 +94,7 @@ def main(
         sample_rate=sample_rate,
     )
 
-    train_processor = create_wav2vec2_processor(
+    train_processor, _ = create_wav2vec2_processor(
         target_lang=target_lang,
         sample_rate=sample_rate,
         tokenizer_hf_repo=tokenizer_hf_repo,
@@ -99,7 +103,7 @@ def main(
         padding_side=padding_side,
     )
 
-    eval_processor = create_wav2vec2_processor(
+    eval_processor, _ = create_wav2vec2_processor(
         target_lang=target_lang,
         sample_rate=sample_rate,
         tokenizer_hf_repo=tokenizer_hf_repo,
@@ -160,6 +164,8 @@ def main(
     )
     train(trainer)
 
-    hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
+    if should_push:
+        hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
 
-    demo_trained_model(target_lang, sample_rate, target_hf_repo, hf_user)
+    if should_demo:
+        demo_trained_model(target_lang, sample_rate, target_hf_repo, hf_user)

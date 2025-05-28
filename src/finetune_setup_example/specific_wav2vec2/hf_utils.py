@@ -19,7 +19,9 @@ def demo_trained_model(
     """Demo trained model."""
     model_id = f"{hf_user}/{target_hf_repo}"
 
-    model = CustomWav2Vec2ForCTC.from_pretrained(model_id, target_lang=target_lang).to(
+    model = CustomWav2Vec2ForCTC.from_pretrained(
+        model_id, target_lang=target_lang, ignore_mismatched_sizes=True
+    ).to(
         "cuda"  # type: ignore
     )
     _processor = Wav2Vec2Processor.from_pretrained(model_id)

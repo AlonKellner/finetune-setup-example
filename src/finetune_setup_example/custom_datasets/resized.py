@@ -15,6 +15,10 @@ class ResizedDataset(TorchDataset):
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
+        if name not in ["grouped_indices", "indices_order", "metadata", "column_names"]:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
         result = getattr(self._inner_dataset, name)
         if issubclass(type(result), HFDataset) or issubclass(
             type(result), TorchDataset
@@ -30,6 +34,11 @@ class ResizedDataset(TorchDataset):
 
     @property
     def total_length(self) -> int:
+        """Return the size as specified."""
+        return self._size
+
+    @property
+    def total_dataset_length(self) -> int:
         """Return the size as specified."""
         return self._size
 

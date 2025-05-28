@@ -28,7 +28,7 @@ def create_wav2vec2_processor(
     target_hf_repo: str,
     max_batch_length: int | None = None,
     padding_side: str = "random",
-) -> Wav2Vec2Processor:
+) -> tuple[Wav2Vec2Processor, CustomWav2Vec2FeatureExtractor]:
     """Create a wav2vec2 processor, ready for training a specific language."""
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
     vocab_dict = tokenizer.vocab
@@ -68,4 +68,4 @@ def create_wav2vec2_processor(
     assert isinstance(processor, HasCustomFields) and isinstance(
         processor, Wav2Vec2Processor
     )
-    return processor
+    return processor, feature_extractor

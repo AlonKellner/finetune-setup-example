@@ -40,5 +40,5 @@ def prepare_cached_dataset(
         sync_interval=sync_interval,
         groups_per_sync=groups_per_sync,
     )
-    dataset.sync_all_groups()
+    # dataset.sync_all_groups()
     return dataset

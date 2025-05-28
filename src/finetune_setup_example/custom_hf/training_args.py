@@ -41,7 +41,6 @@ def create_training_arguments(
     seed: int,
     data_seed: int,
     target_hf_repo: str,
-    num_train_epochs: int,
     effective_batch_size: int,
     per_device_train_batch_size: int,
     per_device_eval_batch_size: int,
@@ -61,6 +60,8 @@ def create_training_arguments(
     torch_compile: bool,
     train_size: int,
     sample_rate: int,
+    num_train_epochs: int | float | None = 3.0,
+    num_training_steps: int | None = None,
 ) -> CustomTrainingArguments:
     """Create training arguments."""
     global_batch_size = per_device_train_batch_size * num_devices
@@ -73,11 +74,23 @@ def create_training_arguments(
         per_device_eval_batch_total_seconds * sample_rate
     )
 
-    num_training_steps = (
-        train_size // effective_batch_size  # type: ignore
-    ) * num_train_epochs
+    if (num_training_steps is None) and (num_train_epochs is not None):
+        _num_training_steps = (
+            train_size // effective_batch_size  # type: ignore
+        ) * num_train_epochs
+        _num_train_epochs = num_train_epochs
+        num_training_steps = -1
+    elif (num_train_epochs is None) and (num_training_steps is not None):
+        _num_train_epochs = num_training_steps // (train_size // effective_batch_size)
+        _num_training_steps = num_training_steps
+        num_train_epochs = 3.0
+    else:
+        raise ValueError(
+            "Either `num_training_steps` or `num_train_epochs` must be provided, "
+            "but not both."
+        )
 
-    lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * num_training_steps))
+    lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * _num_training_steps))
 
     training_args = CustomTrainingArguments(
         seed=seed,
@@ -93,6 +106,7 @@ def create_training_arguments(
         gradient_accumulation_steps=accumulation_steps,
         eval_strategy="steps",
         num_train_epochs=num_train_epochs,
+        max_steps=num_training_steps,
         mega_batch_mult=mega_batch_mult,
         dataloader_num_workers=dataloader_num_workers,
         dataloader_drop_last=True,
@@ -105,7 +119,7 @@ def create_training_arguments(
         logging_first_step=True,
         learning_rate=learning_rate,
         lr_scheduler_type="warmup_stable_decay",
-        warmup_steps=int(warmup_ratio * num_training_steps),
+        warmup_steps=int(warmup_ratio * _num_training_steps),
         lr_scheduler_kwargs=lr_scheduler_kwargs,
         weight_decay=weight_decay,
         save_total_limit=2,
