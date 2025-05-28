@@ -61,7 +61,7 @@ def main(
     padding_side: str = "random",
     should_push: bool = False,
     should_demo: bool = False,
-    eval_on_start: bool = False,
+    eval_on_start: bool = True,
 ) -> None:
     """Training a model."""
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
