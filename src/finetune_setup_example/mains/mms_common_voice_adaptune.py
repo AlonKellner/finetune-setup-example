@@ -30,9 +30,9 @@ def main(
     eval_size: int = 20_000,
     train_size: int = 100_000,
     train_limit: int = 100_000,
-    eval_limit: int = 400,
-    num_train_epochs: int | float | None = None,
-    num_training_steps: int | None = 10,
+    eval_limit: int = 4_000,
+    num_train_epochs: int | float | None = 1,
+    num_training_steps: int | None = None,
     effective_batch_size: int = 16,
     per_device_train_batch_size: int = 4,
     per_device_eval_batch_size: int = 8,
@@ -43,10 +43,10 @@ def main(
     decay_ratio: float = 1.0,
     learning_rate: float = 1e-2,
     mega_batch_mult: int = 100,
-    dataloader_num_workers: int = 0,
+    dataloader_num_workers: int = 4,
     fp16: bool = False,
-    save_steps: int = 1000,
-    eval_steps: int = 1000,
+    save_steps: int = 500,
+    eval_steps: int = 500,
     logging_steps: int = 100,
     weight_decay: float = 0.01,
     torch_compile: bool = False,
@@ -61,6 +61,7 @@ def main(
     padding_side: str = "random",
     should_push: bool = False,
     should_demo: bool = False,
+    eval_on_start: bool = False,
 ) -> None:
     """Training a model."""
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
@@ -92,6 +93,7 @@ def main(
         torch_compile=torch_compile,
         train_size=train_limit,
         sample_rate=sample_rate,
+        eval_on_start=eval_on_start,
     )
 
     train_processor, _ = create_wav2vec2_processor(

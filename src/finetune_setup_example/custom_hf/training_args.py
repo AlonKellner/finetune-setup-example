@@ -60,6 +60,7 @@ def create_training_arguments(
     torch_compile: bool,
     train_size: int,
     sample_rate: int,
+    eval_on_start: bool,
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
 ) -> CustomTrainingArguments:
@@ -115,7 +116,7 @@ def create_training_arguments(
         save_steps=save_steps,
         eval_steps=eval_steps,
         logging_steps=logging_steps,
-        eval_on_start=True,
+        eval_on_start=eval_on_start,
         logging_first_step=True,
         learning_rate=learning_rate,
         lr_scheduler_type="warmup_stable_decay",
