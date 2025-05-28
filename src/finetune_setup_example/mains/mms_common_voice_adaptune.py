@@ -62,6 +62,7 @@ def main(
     should_push: bool = False,
     should_demo: bool = False,
     eval_on_start: bool = True,
+    steps_per_epoch: int | None = 1050,
 ) -> None:
     """Training a model."""
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
@@ -94,6 +95,7 @@ def main(
         train_size=train_limit,
         sample_rate=sample_rate,
         eval_on_start=eval_on_start,
+        steps_per_epoch=steps_per_epoch,
     )
 
     train_processor, _ = create_wav2vec2_processor(

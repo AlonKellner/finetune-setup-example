@@ -63,6 +63,7 @@ def create_training_arguments(
     eval_on_start: bool,
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
+    steps_per_epoch: int | None = None,
 ) -> CustomTrainingArguments:
     """Create training arguments."""
     global_batch_size = per_device_train_batch_size * num_devices
@@ -75,14 +76,15 @@ def create_training_arguments(
         per_device_eval_batch_total_seconds * sample_rate
     )
 
+    if steps_per_epoch is None:
+        steps_per_epoch = train_size // effective_batch_size
+
     if (num_training_steps is None) and (num_train_epochs is not None):
-        _num_training_steps = (
-            train_size // effective_batch_size  # type: ignore
-        ) * num_train_epochs
+        _num_training_steps = num_train_epochs * steps_per_epoch
         _num_train_epochs = num_train_epochs
         num_training_steps = -1
     elif (num_train_epochs is None) and (num_training_steps is not None):
-        _num_train_epochs = num_training_steps // (train_size // effective_batch_size)
+        _num_train_epochs = num_training_steps // steps_per_epoch
         _num_training_steps = num_training_steps
         num_train_epochs = 3.0
     else:
@@ -94,19 +96,22 @@ def create_training_arguments(
     lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * _num_training_steps))
     warmup_steps = int(warmup_ratio * _num_training_steps)
     print(
-        f"num_training_steps: {num_training_steps}, "
-        f"num_train_epochs: {num_train_epochs}, "
-        f"warmup steps: {warmup_steps}, "
-        f"decay steps: {lr_scheduler_kwargs['num_decay_steps']}, "
-        f"learning rate: {learning_rate}, "
-        f"batch size: {global_batch_size}, "
-        f"accumulation steps: {accumulation_steps}, "
-        f"effective batch size: {effective_batch_size}, "
-        f"per device train batch size: {per_device_train_batch_size}, "
-        f"per device eval batch size: {per_device_eval_batch_size}, "
-        f"per device train batch total length: {per_device_train_batch_total_length}, "
-        f"per device eval batch total length: {per_device_eval_batch_total_length}, "
-        f"mega batch mult: {mega_batch_mult} "
+        f"num_training_steps: {num_training_steps}\n"
+        f"_num_training_steps: {_num_training_steps}\n"
+        f"num_train_epochs: {num_train_epochs}\n"
+        f"_num_train_epochs: {_num_train_epochs}\n"
+        f"steps_per_epoch: {steps_per_epoch}\n"
+        f"warmup steps: {warmup_steps}\n"
+        f"decay steps: {lr_scheduler_kwargs['num_decay_steps']}\n"
+        f"learning rate: {learning_rate}\n"
+        f"batch size: {global_batch_size}\n"
+        f"accumulation steps: {accumulation_steps}\n"
+        f"effective batch size: {effective_batch_size}\n"
+        f"per device train batch size: {per_device_train_batch_size}\n"
+        f"per device eval batch size: {per_device_eval_batch_size}\n"
+        f"per device train batch total length: {per_device_train_batch_total_length}\n"
+        f"per device eval batch total length: {per_device_eval_batch_total_length}\n"
+        f"mega batch mult: {mega_batch_mult}\n"
     )
 
     training_args = CustomTrainingArguments(
