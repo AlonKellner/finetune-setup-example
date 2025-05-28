@@ -92,6 +92,22 @@ def create_training_arguments(
         )
 
     lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * _num_training_steps))
+    warmup_steps = int(warmup_ratio * _num_training_steps)
+    print(
+        f"num_training_steps: {num_training_steps}, "
+        f"num_train_epochs: {num_train_epochs}, "
+        f"warmup steps: {warmup_steps}, "
+        f"decay steps: {lr_scheduler_kwargs['num_decay_steps']}, "
+        f"learning rate: {learning_rate}, "
+        f"batch size: {global_batch_size}, "
+        f"accumulation steps: {accumulation_steps}, "
+        f"effective batch size: {effective_batch_size}, "
+        f"per device train batch size: {per_device_train_batch_size}, "
+        f"per device eval batch size: {per_device_eval_batch_size}, "
+        f"per device train batch total length: {per_device_train_batch_total_length}, "
+        f"per device eval batch total length: {per_device_eval_batch_total_length}, "
+        f"mega batch mult: {mega_batch_mult} "
+    )
 
     training_args = CustomTrainingArguments(
         seed=seed,
@@ -120,7 +136,7 @@ def create_training_arguments(
         logging_first_step=True,
         learning_rate=learning_rate,
         lr_scheduler_type="warmup_stable_decay",
-        warmup_steps=int(warmup_ratio * _num_training_steps),
+        warmup_steps=warmup_steps,
         lr_scheduler_kwargs=lr_scheduler_kwargs,
         weight_decay=weight_decay,
         save_total_limit=2,
