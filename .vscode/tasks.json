@@ -250,6 +250,23 @@
       "problemMatcher": "$python"
     },
     {
+      "label": "HP Main  ",
+      "dependsOrder": "sequence",
+      "dependsOn": ["HP Main", "Remove HP Main"],
+      "type": "shell",
+      "command": ":",
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
       "label": "Download Profile (docker compose)  ",
       "dependsOrder": "sequence",
       "dependsOn": [
@@ -305,6 +322,22 @@
       "label": "Remove Python profile (docker)",
       "type": "shell",
       "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Remove HP Main",
+      "type": "shell",
+      "command": "docker stop '${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}' || true",
       "hide": true,
       "group": "none",
       "presentation": {
@@ -490,6 +523,23 @@
       "problemMatcher": "$python"
     },
     {
+      "label": "Start Debugpy server (HP Main)",
+      "dependsOn": ["Remove Debugpy server (docker)"],
+      "type": "shell",
+      "command": "WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_debug --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} --detach --tty --name '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' -v \"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\":/debugpy -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} ${fileBasenameNoExtension} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${fileDirname}/${fileBasenameNoExtension}.hp_main.py && sleep 3s",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": "$python"
+    },
+    {
       "label": "Profile Python (docker compose)",
       "type": "shell",
       "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'uvx' ${fileBasenameNoExtension} py-spy record -f raw -o ${fileDirname}/${fileBasenameNoExtension}.pyspy --subprocesses --full-filenames -r 10 -- /app/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.py",
@@ -509,6 +559,22 @@
       "label": "Profile Python (docker compose + upload)",
       "type": "shell",
       "command": "docker stop '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_profile --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_profile_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'bash -c' ${fileBasenameNoExtension} 'uvx py-spy record -f raw -o ${fileDirname}/${fileBasenameNoExtension}.pyspy --subprocesses --full-filenames -r 10 -- /app/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.py && PYSPY_PATH=${relativeFileDirname}/${fileBasenameNoExtension}.pyspy /app/.venv/bin/python ${workspaceFolder}/src/pyspy_upload.py'",
+      "hide": true,
+      "group": "none",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "HP Main",
+      "type": "shell",
+      "command": "docker stop '${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}' || true && WORKDIR=${workspaceFolder} docker compose --project-name ${workspaceFolderBasename}_hpmain --project-directory ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.compose.yaml run --build ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'bash -c' ${fileBasenameNoExtension} 'uvx py-spy record -f raw -o ${fileDirname}/${fileBasenameNoExtension}.pyspy --subprocesses --full-filenames -r 10 -- /app/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.hp_main.py && PYSPY_PATH=${relativeFileDirname}/${fileBasenameNoExtension}.pyspy /app/.venv/bin/python ${workspaceFolder}/src/pyspy_upload.py'",
       "hide": true,
       "group": "none",
       "presentation": {

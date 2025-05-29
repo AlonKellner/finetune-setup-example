@@ -73,6 +73,19 @@
         "port": 5678
       },
       "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "name": "Debug Python (HP Main)",
+      "justMyCode": false,
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "HP Main",
+      "postDebugTask": "Remove Debugpy server (HP Main)",
+      "connect": {
+        "host": "${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}",
+        "port": 5678
+      },
+      "internalConsoleOptions": "openOnSessionStart"
     }
   ]
 }
