@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import git
+from dotenv import dotenv_values
 
 from .hp_set_handling import prepare_hp_sets
 
@@ -52,28 +53,47 @@ def get_job_ids() -> tuple[str, dict[str, str]]:
     return job_id, ids
 
 
-def start_jobs(hp_paths: list[tuple[str, Path]], ids: dict[str, str]) -> list[str]:
+def start_jobs(
+    job_yaml_path: str,
+    hp_paths: list[tuple[str, Path]],
+    ids: dict[str, str],
+    env_file: str | None = None,
+) -> list[str]:
     """Run multiple SkyPilot jobs for an experiment."""
     return [
-        start_job(dict(**ids, index=str(i)), str(hp_path)) for i, hp_path in hp_paths
+        start_job(
+            job_yaml_path, dict(**ids, index=str(i)), str(hp_path), env_file=env_file
+        )
+        for i, hp_path in hp_paths
     ]
 
 
-def start_job(ids: dict[str, str], job_hp_path: str) -> str:
+def start_job(
+    job_yaml_path: str,
+    ids: dict[str, str],
+    job_hp_path: str,
+    env_file: str | None = None,
+) -> str:
     """Start a SkyPilot job using the job.yaml config."""
     import sky
     import sky.jobs
 
-    task = sky.Task.from_yaml("skypilot-conf/job.yaml")
+    task = sky.Task.from_yaml(job_yaml_path)
 
     job_id = "-".join(ids.values())
 
     # Set environment variables dynamically using update_envs
-    env_vars = {
+    env_vars: dict[str, str] = {
         **{f"JOB_ID_{key.upper()}": value for key, value in ids.items()},
         "JOB_HP_PATH": job_hp_path,
         "FULL_JOB_ID": job_id,
     }
+
+    if env_file is not None:
+        dot_vars = dotenv_values(env_file)
+        dot_vars = {k: v for k, v in dot_vars.items() if v is not None}
+        env_vars.update(dot_vars)
+
     task.update_envs(env_vars)
 
     # Launch the task using sky.launch
@@ -82,11 +102,14 @@ def start_job(ids: dict[str, str], job_hp_path: str) -> str:
 
 
 def start_hp_jobs(
-    default_hp_set: dict[str, Any], hp_sets: list[dict[str, Any]]
+    job_yaml_path: str,
+    default_hp_set: dict[str, Any],
+    hp_sets: list[dict[str, Any]],
+    env_file: str | None = None,
 ) -> list[str]:
     """Start multiple SkyPilot jobs for hyper-parameter sets."""
     hp_paths = prepare_hp_sets(default_hp_set, hp_sets, Path("hp_sets"))
 
     _, ids = get_job_ids()
 
-    return start_jobs(hp_paths, ids)
+    return start_jobs(job_yaml_path, hp_paths, ids, env_file=env_file)

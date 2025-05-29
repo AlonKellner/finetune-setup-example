@@ -1,6 +1,8 @@
 """Generation, saving and loading of HP sets."""
 
+import inspect
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -61,3 +63,18 @@ def prepare_hp_sets(
     hp_paths = save_hp_sets(hp_sets, hps_dir)
     git_push_dir(Path("."))
     return hp_paths
+
+
+def get_defaults(func: Callable) -> dict[str, Any]:
+    """
+    Get function defaults.
+
+    Given a function `func`, returns a dictionary where keys are parameter names
+    with default values, and values are the corresponding default values.
+    """
+    signature = inspect.signature(func)
+    return {
+        name: param.default
+        for name, param in signature.parameters.items()
+        if param.default is not inspect.Parameter.empty
+    }
