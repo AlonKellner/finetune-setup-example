@@ -78,7 +78,7 @@ def start_job(
     import sky
     import sky.jobs
 
-    print(f"Starting job with hp path: {job_hp_path}")
+    print(f"\nStarting job with hp path: {job_hp_path}")
 
     task = sky.Task.from_yaml(job_yaml_path)
 
@@ -102,8 +102,9 @@ def start_job(
 
     # Launch the task using sky.launch
     print(f"Launching job with id: {job_id}")
-    sky.jobs.launch(task, name=job_id)
-    print(f"Job {job_id} started successfully.")
+    sky_id = sky.jobs.launch(task, name=job_id)
+    print(f"Job {job_id} started successfully")
+    print(f"SkyPilot job ID: {sky_id}")
     return job_id
 
 

@@ -1,15 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: { { .Release.Name } }
+  name: {{ .Release.Name }}
   namespace: keda
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: { { .Release.Name } }
+    kubernetes.io/ingress.global-static-ip-name: {{ .Release.Name }}
     kubernetes.io/ingress.class: gce
-    networking.gke.io/managed-certificates: { { .Release.Name } }
+    networking.gke.io/managed-certificates: {{ .Release.Name }}
     kubernetes.io/ingress.allow-http: "false"
-    networking.gke.io/v1beta1.FrontendConfig: { { .Release.Name } }
-    external-dns.alpha.kubernetes.io/hostname: { { .Values.domain } }
+    networking.gke.io/v1beta1.FrontendConfig: {{ .Release.Name }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.domain }}
 spec:
   ingressClassName: gce
   defaultBackend:
@@ -18,7 +18,7 @@ spec:
       port:
         name: proxy
   rules:
-    - host: { { .Values.domain } }
+    - host: {{ .Values.domain }}
       http:
         paths:
           - path: /
