@@ -1,9 +1,9 @@
-name: job
+name: mms_blog_post
 
 resources:
   cloud: runpod
   accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
-  use_spot: true # Use spot instances to save cost.
+  use_spot: true
   image_id: 4alonkellner/finetune-setup-example:20250529-150838
 
 setup: |
