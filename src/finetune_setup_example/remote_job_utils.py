@@ -78,9 +78,12 @@ def start_job(
     import sky
     import sky.jobs
 
+    print(f"Starting job with hp path: {job_hp_path}")
+
     task = sky.Task.from_yaml(job_yaml_path)
 
     job_id = "-".join(ids.values())
+    print(f"Using job id: {job_id}")
 
     # Set environment variables dynamically using update_envs
     env_vars: dict[str, str] = {
@@ -90,6 +93,7 @@ def start_job(
     }
 
     if env_file is not None:
+        print(f"Loading environment variables from {env_file}")
         dot_vars = dotenv_values(env_file)
         dot_vars = {k: v for k, v in dot_vars.items() if v is not None}
         env_vars.update(dot_vars)
@@ -97,7 +101,9 @@ def start_job(
     task.update_envs(env_vars)
 
     # Launch the task using sky.launch
+    print(f"Launching job with id: {job_id}")
     sky.jobs.launch(task, name=job_id)
+    print(f"Job {job_id} started successfully.")
     return job_id
 
 
@@ -111,5 +117,6 @@ def start_hp_jobs(
     hp_paths = prepare_hp_sets(default_hp_set, hp_sets, Path("hp_sets"))
 
     _, ids = get_job_ids()
+    print(f"Using job ids: {ids}")
 
     return start_jobs(job_yaml_path, hp_paths, ids, env_file=env_file)

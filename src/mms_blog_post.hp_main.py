@@ -7,12 +7,14 @@ from finetune_setup_example.remote_job_utils import start_hp_jobs
 
 def hp_main() -> None:
     """Create hyper-parameter sets and run SkyPilot jobs for them."""
-    name = "mms_blog_post"
+    name = "src/mms_blog_post"
+    print(f"Starting hyper-parameter jobs for {name}...")
     default_hp_set = get_defaults(main)
     hp_sets = [
         dict(num_training_steps=num_training_steps, num_train_epochs=None)
         for num_training_steps in [100, 200, 300]
     ]
+    print(f"Created {len(hp_sets)} hyper-parameter sets:\n{hp_sets}")
     job_names = start_hp_jobs(
         f"{name}.job.yaml", default_hp_set, hp_sets, f"{name}.env"
     )
