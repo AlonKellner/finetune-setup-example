@@ -6,7 +6,19 @@
       "justMyCode": false,
       "type": "debugpy",
       "request": "launch",
-      "program": "${file}",
+      "program": "${fileDirname}/${fileBasenameNoExtension}.py",
+      "console": "internalConsole",
+      "internalConsoleOptions": "openOnSessionStart",
+      "presentation": {
+        "hidden": false
+      }
+    },
+    {
+      "name": "Debug HP Main (venv)",
+      "justMyCode": false,
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
       "console": "internalConsole",
       "internalConsoleOptions": "openOnSessionStart",
       "presentation": {
@@ -70,19 +82,6 @@
       "postDebugTask": "Remove Debugpy server (docker)",
       "connect": {
         "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
-        "port": 5678
-      },
-      "internalConsoleOptions": "openOnSessionStart"
-    },
-    {
-      "name": "Debug Python (HP Main)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "attach",
-      "preLaunchTask": "HP Main",
-      "postDebugTask": "Remove Debugpy server (HP Main)",
-      "connect": {
-        "host": "${workspaceFolderBasename}_hpmain_${fileBasenameNoExtension}",
         "port": 5678
       },
       "internalConsoleOptions": "openOnSessionStart"

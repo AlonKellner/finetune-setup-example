@@ -117,6 +117,7 @@ jobs = [
   "pyyaml",
   "types-PyYAML",
   "skypilot[kubernetes,runpod,gcp]",
+  "dotenv",
 ]
 mms_blog_post = [
   "accelerate",
