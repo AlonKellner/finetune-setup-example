@@ -38,7 +38,7 @@ class Wav2Vec2ASR:
 
         wer = self.wer_metric.compute(predictions=pred_str, references=label_str)
         cer = self.cer_metric.compute(predictions=pred_str, references=label_str)
-        for i in range(100):
+        for i in range(min(100, len(pred_str))):
             print(f'({i}) pred: "{pred_str[i]}"')
             print(f'({i}) targ: "{label_str[i]}"')
         return {"wer": wer, "cer": cer}
