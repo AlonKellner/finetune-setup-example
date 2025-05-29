@@ -14,7 +14,7 @@ def hp_main() -> None:
             for prefix in ["A", "B"]
         ],
     ]
-    job_names = start_hp_jobs(default_hp_set, hp_sets)
+    job_names = start_hp_jobs("skypilot-conf/job.yaml", default_hp_set, hp_sets)
     print(f"Started {len(job_names)} jobs: {job_names}")
 
 
