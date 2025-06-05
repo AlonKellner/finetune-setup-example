@@ -14,14 +14,14 @@ skypilot:
         - runpod
       jobs:
         controller:
-          autostop:
-            idle_minutes: 5
-            down: false
           resources: # same spec as 'resources' in a task YAML
             cloud: kubernetes
             cpus: 4+
             memory: 8+
             disk_size: 50
+            autostop:
+              idle_minutes: 5
+              down: false
     resources:
       requests:
         cpu: "2"
