@@ -6,7 +6,7 @@ skypilot:
   apiService:
     enabled: false
     customEnabled: true
-    image: 4alonkellner/skypilot:20250529-184537
+    image: 4alonkellner/skypilot:20250605-191551
     skipResourceCheck: true
     customConfig:
       allowed_clouds:
