@@ -561,7 +561,7 @@ six==1.17.0
     #   docker-pycreds
     #   kubernetes
     #   python-dateutil
-skypilot @ git+https://github.com/AlonKellner/skypilot-beta.git@4e26cd02631b69fc1527a405d63e5ad5de31d172
+skypilot @ git+https://github.com/AlonKellner/skypilot-beta.git@58ca2804171758a7e092e4fe296b5dc01f0e36cf
     # via finetune-setup-example (pyproject.toml:dev)
 smmap==5.0.2
     # via gitdb
