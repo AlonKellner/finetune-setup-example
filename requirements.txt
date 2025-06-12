@@ -344,8 +344,6 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
-omegaconf==2.4.0.dev3
-    # via skypilot
 orjson==3.10.16
     # via fastapi
 packaging==24.2
@@ -469,7 +467,6 @@ pyyaml==6.0.2
     #   fastapi
     #   huggingface-hub
     #   kubernetes
-    #   omegaconf
     #   skypilot
     #   transformers
     #   uvicorn
@@ -564,7 +561,7 @@ six==1.17.0
     #   docker-pycreds
     #   kubernetes
     #   python-dateutil
-skypilot @ git+https://github.com/AlonKellner/skypilot-beta.git@323cabf4ca0e5e218572f9571848775462ddce19
+skypilot @ git+https://github.com/AlonKellner/skypilot-beta.git@4e26cd02631b69fc1527a405d63e5ad5de31d172
     # via finetune-setup-example (pyproject.toml:dev)
 smmap==5.0.2
     # via gitdb
