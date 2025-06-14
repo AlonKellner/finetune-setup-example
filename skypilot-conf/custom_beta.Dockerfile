@@ -12,4 +12,5 @@ RUN chmod -R 600 /root/.ssh && \
     git remote add origin git@github.com:AlonKellner/skypilot-beta.git && \
     git push --set-upstream origin stable-master:stable-master --force
 FROM sky AS image
-RUN pip install "skypilot[kubernetes,runpod,gcp] @ git+https://github.com/AlonKellner/skypilot-beta.git@custom-stable"
+RUN pip uninstall -y skypilot-nightly && \
+    pip install "skypilot[kubernetes,runpod,gcp] @ git+https://github.com/AlonKellner/skypilot-beta.git@custom-stable"
