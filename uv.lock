@@ -3888,7 +3888,7 @@ wheels = [
 [[package]]
 name = "skypilot"
 version = "0.9.3"
-source = { git = "https://github.com/AlonKellner/skypilot-beta.git?rev=custom-stable#c3ed8ed3e79fa387e4e235a9732fbffad3661c28" }
+source = { git = "https://github.com/AlonKellner/skypilot-beta.git?rev=custom-stable#fd28c35e893f5896cd1f6839f693c0d371a5a0c1" }
 dependencies = [
     { name = "aiofiles" },
     { name = "cachetools" },
