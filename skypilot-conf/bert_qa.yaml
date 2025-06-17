@@ -5,6 +5,7 @@ resources:
   cloud: runpod
   accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
   use_spot: true # Use spot instances to save cost.
+  disk_size: 1
 
 envs:
   # Fill in your wandb key: copy from https://wandb.ai/authorize

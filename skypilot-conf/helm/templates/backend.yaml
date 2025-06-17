@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
+  timeoutSec: {{ .Values.requestTimeoutSeconds }}
   healthCheck:
     port: 46580
     requestPath: /api/health

@@ -4,6 +4,7 @@ metadata:
   name: interceptor
   namespace: keda
 spec:
+  timeoutSec: {{ .Values.requestTimeoutSeconds }}
   healthCheck:
     requestPath: /health
     port: 8080 # default Interceptor port
