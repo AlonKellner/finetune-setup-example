@@ -6,7 +6,7 @@ skypilot:
   apiService:
     enabled: false
     customEnabled: true
-    image: 4alonkellner/skypilot:20250617-113431
+    image: 4alonkellner/skypilot:20250617-124930
     skipResourceCheck: true
     customConfig:
       allowed_clouds:
@@ -21,7 +21,7 @@ skypilot:
             disk_size: 50
             autostop:
               idle_minutes: 5
-              down: false
+              down: true
     resources:
       requests:
         cpu: "2"
@@ -37,4 +37,4 @@ skypilot:
     enabled: false
 
 domain: 34.110.185.190.nip.io
-scaledownMinutes: 5
+scaledownMinutes: 10
