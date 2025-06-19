@@ -1,6 +1,7 @@
 """A torch dataset wrapper that defers inner dataset creation to when accessed."""
 
 import threading
+import traceback
 from collections.abc import Callable
 from typing import Any
 
@@ -21,6 +22,7 @@ class LazyDataset(TorchDataset):
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
+        print("WARNING: LazyDataset __getattr__ called for", name)
         _inner_dataset = self._get_inner_dataset()
 
         return getattr(_inner_dataset, name)
@@ -46,6 +48,7 @@ class LazyDataset(TorchDataset):
 
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
+        print("WARNING: LazyDataset __getitem__ called for", index)
         _inner_dataset = self._get_inner_dataset()
 
         return _inner_dataset[index]
@@ -55,5 +58,7 @@ class LazyDataset(TorchDataset):
         if self._inner_dataset is None:
             with self._lock:
                 if self._inner_dataset is None:
+                    print("WARNING: Resolving inner dataset...\nSTACK TRACE:")
+                    traceback.print_stack()
                     self._inner_dataset = self._inner_dataset_func()
         return self._inner_dataset
