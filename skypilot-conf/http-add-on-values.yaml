@@ -1,0 +1,12 @@
+interceptor:
+  idleConnTimeout: 305s
+  replicas:
+    min: 1
+    waitTimeout: 300s
+  pdb:
+    enabled: true
+    minAvailable: 1
+  tlsHandshakeTimeout: 305s
+scaler:
+  replicas: 1
+responseHeaderTimeout: 10s

@@ -1,0 +1,7 @@
+interceptor:
+  replicas:
+    min: 1
+scaler:
+  replicas: 1
+http:
+  timeout: 10000 # in milliseconds
