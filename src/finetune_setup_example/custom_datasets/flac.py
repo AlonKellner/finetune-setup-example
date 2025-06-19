@@ -6,6 +6,7 @@ The rest of the metadata is cached as an in memory dict and a parquet file.
 import concurrent.futures
 import os
 import time
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -42,6 +43,10 @@ class FlacDataset(TorchDataset):
         if len(self) == 0:
             self.set_metadata(self.load_metadata())
         if len(self.metadata) < len(self):
+            print(
+                f"WARNING: Metadata is incomplete ({len(self.metadata)}/{len(self)}), validating items...\nSTACKTRACE:"
+            )
+            traceback.print_stack()
             try:
                 with concurrent.futures.ThreadPoolExecutor(
                     max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
@@ -98,6 +103,7 @@ class FlacDataset(TorchDataset):
                 for row in df.to_dicts()
             }
         else:
+            print("WARNING: Metadata file does not exist, creating an empty metadata.")
             return dict()
 
     def set_metadata(self, metadata: dict[int, dict[str, Any]]) -> None:

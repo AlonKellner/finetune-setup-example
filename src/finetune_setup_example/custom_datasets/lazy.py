@@ -58,7 +58,7 @@ class LazyDataset(TorchDataset):
         if self._inner_dataset is None:
             with self._lock:
                 if self._inner_dataset is None:
-                    print("WARNING: Resolving inner dataset...\nSTACK TRACE:")
+                    print("WARNING: Resolving inner dataset...\nSTACKTRACE:")
                     traceback.print_stack()
                     self._inner_dataset = self._inner_dataset_func()
         return self._inner_dataset
