@@ -72,6 +72,7 @@ pythonpath = "./"
 extend-exclude = ["**/*.env"]
 
 [tool.uv]
+package = false
 python-preference = "only-managed"
 link-mode = "copy"
 no-build-isolation-package = ["flash-attn"]
@@ -112,13 +113,8 @@ gpu = ["flash-attn==2.7.3"]
 
 [dependency-groups]
 dev_tools = ["pytest", "pyright", "mypy"]
-jobs = [
-  "gitpython",
-  "pyyaml",
-  "types-PyYAML",
-  "skypilot[kubernetes,runpod,gcp]",
-  "dotenv",
-]
+sky = ["skypilot[kubernetes,runpod,gcp]"]
+jobs = ["gitpython", "pyyaml", "types-PyYAML", "dotenv"]
 mms_blog_post = [
   "accelerate",
   "boto3",
@@ -139,11 +135,12 @@ mms_blog_post = [
   "types-boto3-lite[s3]",
   "uroman",
   "wandb",
+  { include-group = "jobs" },
 ]
 dev = [
   { include-group = "dev_tools" },
   { include-group = "mms_blog_post" },
-  { include-group = "jobs" },
+  { include-group = "sky" },
 ]
 
 [project.urls]
