@@ -10,6 +10,10 @@ metadata:
     kubernetes.io/ingress.allow-http: "false"
     networking.gke.io/v1beta1.FrontendConfig: {{ .Release.Name }}
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.domain }}
+    ingress.gcp.kubernetes.io/backend-timeout: "{{ .Values.requestTimeoutSeconds }}s"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "{{ .Values.requestTimeoutSeconds }}"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "{{ .Values.requestTimeoutSeconds }}"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "{{ .Values.requestTimeoutSeconds }}"
 spec:
   ingressClassName: gce
   defaultBackend:

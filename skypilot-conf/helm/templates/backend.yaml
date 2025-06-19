@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   timeoutSec: {{ .Values.requestTimeoutSeconds }}
+  connectionDraining:
+    drainingTimeoutSec: {{ .Values.requestTimeoutSeconds }}
   healthCheck:
     port: 46580
     requestPath: /api/health

@@ -4,6 +4,7 @@ metadata:
   annotations:
     cloud.google.com/app-protocols: '{"{{ .Release.Name }}":"HTTP"}'
     cloud.google.com/backend-config: '{"default": "{{ .Release.Name }}", "ports": {"{{ .Release.Name }}":"{{ .Release.Name }}"}}'
+    service.alpha.kubernetes.io/timeout: "{{ .Values.requestTimeoutSeconds }}s"
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
