@@ -2,6 +2,7 @@ interceptor:
   idleConnTimeout: 305s
   replicas:
     min: 1
+    max: 1
     waitTimeout: 300s
   pdb:
     enabled: false
