@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: ./src/mms_blog_post.Dockerfile
+      target: python
       args:
         WORKDIR: ${WORKDIR}
     networks:
