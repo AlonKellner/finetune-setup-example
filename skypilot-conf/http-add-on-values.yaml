@@ -4,8 +4,7 @@ interceptor:
     min: 1
     waitTimeout: 300s
   pdb:
-    enabled: true
-    minAvailable: 1
+    enabled: false
   tlsHandshakeTimeout: 305s
 scaler:
   replicas: 1
