@@ -21,8 +21,8 @@ def init_training(
 
 def hf_login() -> None:
     """Login to Hugging Face."""
-    token = os.getenv("HUGGINGFACE_TOKEN")
+    token = os.getenv("HF_TOKEN")
     if token is None:
-        raise ValueError("Env var `HUGGINGFACE_TOKEN` not provided.")
+        raise ValueError("Env var `HF_TOKEN` not provided.")
     hf_hub.login(token=token)
     print("Logged in to Hugging Face successfully.")
