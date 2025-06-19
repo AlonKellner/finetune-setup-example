@@ -40,7 +40,7 @@ class FlacDataset(TorchDataset):
 
     def complete_metadata(self) -> None:
         """Make sure that the metadata is complete."""
-        if len(self) == 0:
+        if len(self.metadata) == 0:
             self.set_metadata(self.load_metadata())
         if len(self.metadata) < len(self):
             print(
