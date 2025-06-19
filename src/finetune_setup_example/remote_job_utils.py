@@ -75,8 +75,8 @@ def start_job(
     env_file: str | None = None,
 ) -> str:
     """Start a SkyPilot job using the job.yaml config."""
-    import sky
-    import sky.jobs
+    import sky  # noqa: PLC0415
+    import sky.jobs  # noqa: PLC0415
 
     print(f"\nStarting job with hp path: {job_hp_path}")
 

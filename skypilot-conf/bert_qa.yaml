@@ -5,8 +5,8 @@ resources:
   cloud: runpod
   accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
   use_spot: true # Use spot instances to save cost.
-  disk_size: 32
-  image_id: docker:4alonkellner/finetune-setup-example:20250618-135006
+  disk_size: 128
+  image_id: docker:4alonkellner/finetune-setup-example:20250619-084608
 
 envs:
   # Fill in your wandb key: copy from https://wandb.ai/authorize

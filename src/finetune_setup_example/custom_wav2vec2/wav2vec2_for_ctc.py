@@ -106,7 +106,7 @@ class CustomWav2Vec2ForCTC(Wav2Vec2ForCTC):
                 )
 
         if not return_dict:
-            output = (logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
+            output = (logits, *outputs[_HIDDEN_STATES_START_POSITION:])
             return (loss, *output) if loss is not None else output
 
         return CausalLMOutput(
