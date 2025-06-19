@@ -1,5 +1,7 @@
 """Code for "adaptuning" mms checkpoints with common voice."""
 
+import os
+
 import comet_ml  # type: ignore  # noqa: F401
 import huggingface_hub as hf_hub
 from transformers import set_seed
@@ -66,7 +68,7 @@ def main(
     steps_per_epoch: int | None = 1050,
 ) -> None:
     """Training a model."""
-    hf_hub.login()
+    hf_hub.login(os.getenv("HF_TOKEN"))
 
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
 
