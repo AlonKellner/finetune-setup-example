@@ -39,7 +39,6 @@ class TarS3Dataset(TorchDataset):
         self.s3_client = s3_client
         self.s3_client_v2 = s3_client_v2
         self.cache_bucket = cache_bucket
-        self._indices_order = indices_order
         self.max_tar_bytes = max_tar_bytes
         self.sync_interval = sync_interval
         self.groups_per_sync = groups_per_sync
@@ -50,6 +49,13 @@ class TarS3Dataset(TorchDataset):
         inner_dataset.complete_metadata()
         for _ in tqdm(list(range(1))):
             self.sync_metadata()
+
+        lengths = {i: self._inner_dataset.metadata[i]["length"] for i in indices_order}  # type: ignore
+        longest_index = max(indices_order, key=lambda i: lengths[i])
+        indices_order.remove(longest_index)
+        indices_order.insert(0, longest_index)
+
+        self._indices_order = indices_order
 
         file_sizes = {i: v["file_sizes"] for i, v in inner_dataset.metadata.items()}
         self._file_sizes = file_sizes

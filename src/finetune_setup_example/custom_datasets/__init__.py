@@ -25,10 +25,6 @@ def prepare_cached_dataset(
     """Wrap a dataset with S3 caching and prepare for the first training."""
     dataset = FlacDataset(dataset, meta_dataset, cache_path, sample_rate)
     indices_order = list(range(len(dataset)))
-    lengths = list(dataset["length"])  # type: ignore
-    longest_index = max(indices_order, key=lambda i: lengths[i])
-    indices_order.remove(longest_index)
-    indices_order.insert(0, longest_index)
     dataset = TarS3Dataset(
         dataset,
         cache_path,
