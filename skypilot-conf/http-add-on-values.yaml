@@ -7,6 +7,8 @@ interceptor:
   pdb:
     enabled: false
   tlsHandshakeTimeout: 305s
+  tcpConnectTimeout: 10s
+  responseHeaderTimeout: 10s
+  expectContinueTimeout: 10s
 scaler:
   replicas: 1
-responseHeaderTimeout: 10s

@@ -7,6 +7,22 @@ resources:
   disk_size: 128
   image_id: docker:4alonkellner/finetune-setup-example:20250619-084608
 
+envs:
+  JOB_ID_EXP: null
+  JOB_ID_COMMIT: null
+  JOB_ID_TIME: null
+  JOB_ID_RAND: null
+  JOB_ID_INDEX: null
+  FULL_JOB_ID: null
+  WANDB_PROJECT: null
+  HETZNER_ENDPOINT: null
+  HETZNER_REGION: null
+  # secrets
+  COMET_API_KEY: null
+  WANDB_API_KEY: null
+  HETZNER_ACCESS_KEY: null
+  HETZNER_SECRET_KEY: null
+
 setup: |
   git clone https://github.com/AlonKellner/finetune-setup-example.git .
   git checkout exp/$JOB_ID_EXP
