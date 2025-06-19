@@ -103,7 +103,9 @@ class FlacDataset(TorchDataset):
                 for row in df.to_dicts()
             }
         else:
-            print("WARNING: Metadata file does not exist, creating an empty metadata.")
+            print(
+                f"WARNING: Metadata file does not exist in: {self.metadata_path}\nCreating empty metadata."
+            )
             return dict()
 
     def set_metadata(self, metadata: dict[int, dict[str, Any]]) -> None:

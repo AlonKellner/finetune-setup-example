@@ -45,7 +45,8 @@ class TarS3Dataset(TorchDataset):
         self.should_clean_groups = should_clean_groups
 
         for _ in tqdm(list(range(1))):
-            self.sync_metadata()
+            metadata_path = self.sync_metadata()
+            print(f"Metadata synced to {metadata_path}")
         inner_dataset.complete_metadata()
         for _ in tqdm(list(range(1))):
             self.sync_metadata()
@@ -255,11 +256,11 @@ class TarS3Dataset(TorchDataset):
                 ):
                     pass
 
-    def sync_metadata(self) -> None:
+    def sync_metadata(self) -> Path:
         """Sync the metadata file with s3."""
-        self.sync_file(self.cache_path / "metadata.parquet")
+        return self.sync_file(self.cache_path / "metadata.parquet")
 
-    def sync_file(self, file: Path) -> None:
+    def sync_file(self, file: Path) -> Path:
         """Sync a single file."""
         if file.exists():
             self._upload([file], file.stem)
@@ -267,3 +268,4 @@ class TarS3Dataset(TorchDataset):
             self._download(file.stem)
         else:
             print(f"WARNING: A file does not exist and cannot be synced: {file}")
+        return file
