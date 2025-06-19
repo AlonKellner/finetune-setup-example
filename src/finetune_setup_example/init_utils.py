@@ -24,5 +24,5 @@ def hf_login() -> None:
     token = os.getenv("HF_TOKEN")
     if token is None:
         raise ValueError("Env var `HF_TOKEN` not provided.")
-    hf_hub.login(token=token)
+    hf_hub.login()
     print("Logged in to Hugging Face successfully.")

@@ -228,6 +228,8 @@ class TarS3Dataset(TorchDataset):
             self._upload(group_flac_paths, padded_group)
         elif self._exists(padded_group):
             self._download(padded_group)
+        else:
+            print("WARNING: A group does not exist and cannot be synced:", padded_group)
 
     def clean_group(self, group: int) -> None:
         """Sync the group of local files with s3 tar."""
@@ -263,3 +265,5 @@ class TarS3Dataset(TorchDataset):
             self._upload([file], file.stem)
         elif self._exists(file.stem):
             self._download(file.stem)
+        else:
+            print(f"WARNING: A file does not exist and cannot be synced: {file}")
