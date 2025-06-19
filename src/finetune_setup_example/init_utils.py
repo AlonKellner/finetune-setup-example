@@ -12,6 +12,9 @@ def init_training(
     seed: int, base_hf_repo: str, tokenizer_hf_repo: str, target_hf_repo: str
 ) -> None:
     """Initialize training setup and login to Hugging Face."""
+    if job_id := os.getenv("FULL_JOB_ID") is not None:
+        print(f"Running job with ID: {job_id}")
+
     hf_login()
 
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
