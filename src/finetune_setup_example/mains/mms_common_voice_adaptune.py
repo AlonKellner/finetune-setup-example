@@ -68,7 +68,7 @@ def main(
     steps_per_epoch: int | None = 1050,
 ) -> None:
     """Training a model."""
-    hf_hub.login(os.getenv("HF_TOKEN"))
+    hf_hub.login(os.getenv("HF_TOKEN"), new_session=False)
 
     print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
 
