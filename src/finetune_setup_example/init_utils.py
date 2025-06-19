@@ -1,0 +1,28 @@
+"""Finetune setup utilities for initializing training and logging in to Hugging Face."""
+
+import os
+
+import huggingface_hub as hf_hub
+from transformers import set_seed
+
+from .printing_utils import print_basics
+
+
+def init_training(
+    seed: int, base_hf_repo: str, tokenizer_hf_repo: str, target_hf_repo: str
+) -> None:
+    """Initialize training setup and login to Hugging Face."""
+    hf_login()
+
+    print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
+
+    set_seed(seed)
+
+
+def hf_login() -> None:
+    """Login to Hugging Face."""
+    token = os.getenv("HUGGINGFACE_TOKEN")
+    if token is None:
+        raise ValueError("Env var `HUGGINGFACE_TOKEN` not provided.")
+    hf_hub.login(token=token)
+    print("Logged in to Hugging Face successfully.")

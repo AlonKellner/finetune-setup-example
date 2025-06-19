@@ -1,14 +1,10 @@
 """Code for "adaptuning" mms checkpoints with common voice."""
 
-import os
-
 import comet_ml  # type: ignore  # noqa: F401
-import huggingface_hub as hf_hub
-from transformers import set_seed
 
 from ..custom_hf.trainer import train
 from ..custom_hf.training_args import create_training_arguments
-from ..printing_utils import print_basics
+from ..init_utils import init_training
 from ..s3_utils import create_s3_client
 from ..specific_datasets.common_voice import (
     create_cached_common_voice_split,
@@ -68,11 +64,12 @@ def main(
     steps_per_epoch: int | None = 1050,
 ) -> None:
     """Training a model."""
-    hf_hub.login(token=os.getenv("HF_TOKEN"), new_session=False)
-
-    print_basics(base_hf_repo, tokenizer_hf_repo, target_hf_repo)
-
-    set_seed(seed)
+    init_training(
+        seed=seed,
+        base_hf_repo=base_hf_repo,
+        tokenizer_hf_repo=tokenizer_hf_repo,
+        target_hf_repo=target_hf_repo,
+    )
 
     training_args = create_training_arguments(
         seed=seed,

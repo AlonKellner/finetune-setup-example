@@ -22,6 +22,7 @@ envs:
   WANDB_API_KEY: null
   HETZNER_ACCESS_KEY: null
   HETZNER_SECRET_KEY: null
+  HF_TOKEN: null
 
 setup: |
   git clone https://github.com/AlonKellner/finetune-setup-example.git .
