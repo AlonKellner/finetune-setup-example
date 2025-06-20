@@ -36,7 +36,7 @@ def get_job_ids() -> tuple[str, dict[str, str]]:
             raise ValueError("Commit all changes before running.")
         exp_id = branch.removeprefix(exp_prefix)
         commit_id = repo.git.rev_parse("HEAD", short=True)
-        time_id = datetime.now().strftime("%Y%m%d%H%M%S")
+        time_id = datetime.now().strftime("%Y%m%dT%H%M%S")
         rand_id = secrets.token_hex(2)
         ids = dict(
             exp=exp_id,
@@ -80,8 +80,6 @@ def start_job(
 
     print(f"\nStarting job with hp path: {job_hp_path}")
 
-    task = sky.Task.from_yaml(job_yaml_path)
-
     job_id = "-".join(ids.values())
     print(f"Using job id: {job_id}")
 
@@ -91,14 +89,16 @@ def start_job(
         "JOB_HP_PATH": job_hp_path,
         "JOB_FULL_ID": job_id,
     }
-
     if env_file is not None:
         print(f"Loading environment variables from {env_file}")
         dot_vars = dotenv_values(env_file)
         dot_vars = {k: v for k, v in dot_vars.items() if v is not None}
         env_vars.update(dot_vars)
 
-    task.update_envs(env_vars)
+    os.environ.update(env_vars)
+
+    print(f"Loading job configuration with id: {job_id}")
+    task = sky.Task.from_yaml(job_yaml_path)
 
     # Launch the task using sky.launch
     print(f"Launching job with id: {job_id}")
