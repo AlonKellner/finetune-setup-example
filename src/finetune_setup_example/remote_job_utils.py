@@ -103,7 +103,7 @@ def start_job(
     # Launch the task using sky.launch
     print(f"Launching job with id: {job_id}")
     sky_id = sky.jobs.launch(task, name=job_id)
-    print(f"Job {job_id} started successfully")
+    print(f"Job started successfully with id: {job_id}")
     print(f"SkyPilot job ID: {sky_id}")
     return job_id
 
