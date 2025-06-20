@@ -33,6 +33,7 @@ class TarS3Dataset(TorchDataset):
         sync_interval: int = 2,
         groups_per_sync: int = 6,
         should_clean_groups: bool = False,
+        should_sync_previous: bool = False,
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = Path(cache_path)
@@ -43,6 +44,7 @@ class TarS3Dataset(TorchDataset):
         self.sync_interval = sync_interval
         self.groups_per_sync = groups_per_sync
         self.should_clean_groups = should_clean_groups
+        self.should_sync_previous = should_sync_previous
 
         for _ in tqdm(list(range(1))):
             metadata_path = self.sync_metadata()
@@ -78,13 +80,15 @@ class TarS3Dataset(TorchDataset):
         }
         self._indices_flac_paths = {i: self._get_flac_path(i) for i in indices_order}
 
-        self.sync_indices = [group[0] for group in self.grouped_indices]
+        self.sync_indices = [
+            group[0] for group in self.grouped_indices[::sync_interval]
+        ]
 
         if not self._bucket_exists(self.cache_bucket):
             self._create_bucket(self.cache_bucket)
 
-        for _ in tqdm(list(range(1))):
-            self.sync_group(0)
+        for i in tqdm(list(range(groups_per_sync))):
+            self.sync_group(i)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
@@ -103,6 +107,7 @@ class TarS3Dataset(TorchDataset):
                 self.sync_interval,
                 self.groups_per_sync,
                 self.should_clean_groups,
+                self.should_sync_previous,
             )
         return result
 
@@ -207,10 +212,11 @@ class TarS3Dataset(TorchDataset):
 
     def sync_adjacent_groups(self, current_group: int) -> None:
         """Sync adjacent groups."""
-        for i in range(
-            current_group - self.groups_per_sync, current_group + self.groups_per_sync
-        ):
+        for i in range(0, current_group + self.groups_per_sync):
             self.sync_group(i)
+        if self.should_sync_previous:
+            for i in range(current_group - self.groups_per_sync, 0):
+                self.sync_group(i)
         if self.should_clean_groups:
             for i in range(
                 current_group - 2 * self.groups_per_sync,
