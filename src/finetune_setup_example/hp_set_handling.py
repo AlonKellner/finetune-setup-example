@@ -43,14 +43,19 @@ def save_hp_sets(
     """Save multiple HP sets at once."""
     if hps_dir.exists():
         shutil.rmtree(hps_dir)
-    hps_dir.mkdir(parents=True)
+
+    diff_dir = hps_dir / "diff"
+    full_dir = hps_dir / "full"
+    diff_dir.mkdir(parents=True, exist_ok=True)
+    full_dir.mkdir(parents=True, exist_ok=True)
+
     indices = [str(i).zfill(len(str(len(hp_sets)))) for i in range(len(hp_sets))]
 
     for i, hp_set in zip(indices, hp_sets, strict=True):
-        save_hp_set(hps_dir / f"diff/{i}.yaml", hp_set)
+        save_hp_set(diff_dir / f"{i}.yaml", hp_set)
 
     full_paths = [
-        (i, save_hp_set(hps_dir / f"full/{i}.yaml", full_hp_set))
+        (i, save_hp_set(full_dir / f"{i}.yaml", full_hp_set))
         for i, full_hp_set in zip(indices, full_hp_sets, strict=True)
     ]
     return full_paths

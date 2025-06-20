@@ -13,7 +13,8 @@ envs:
   JOB_ID_TIME: null
   JOB_ID_RAND: null
   JOB_ID_INDEX: null
-  FULL_JOB_ID: null
+  JOB_FULL_ID: null
+  JOB_HP_PATH: null
   WANDB_PROJECT: null
   HETZNER_ENDPOINT: null
   HETZNER_REGION: null

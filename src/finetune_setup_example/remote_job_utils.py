@@ -14,7 +14,7 @@ from .hp_set_handling import prepare_hp_sets
 
 def get_job_ids() -> tuple[str, dict[str, str]]:
     """Validate and get ids for the current experiment."""
-    job_id = os.getenv("FULL_JOB_ID")
+    job_id = os.getenv("JOB_FULL_ID")
     ids = {
         k.removeprefix("JOB_ID_").lower(): v
         for k, v in os.environ.items()
@@ -89,7 +89,7 @@ def start_job(
     env_vars: dict[str, str] = {
         **{f"JOB_ID_{key.upper()}": value for key, value in ids.items()},
         "JOB_HP_PATH": job_hp_path,
-        "FULL_JOB_ID": job_id,
+        "JOB_FULL_ID": job_id,
     }
 
     if env_file is not None:
