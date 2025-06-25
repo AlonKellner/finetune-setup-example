@@ -21,14 +21,15 @@ def hp_main() -> None:
             torch_compile=False,
             num_train_epochs=3,
             dataloader_num_workers=16,
-            effective_batch_size=4,
-            per_device_train_batch_size=4,
+            effective_batch_size=128,
+            per_device_train_batch_size=128,
+            per_device_eval_batch_size=256,
             learning_rate=learning_rate,
             per_device_train_batch_total_seconds=batch_total_seconds,
             per_device_eval_batch_total_seconds=batch_total_seconds,
         )
         for batch_total_seconds in [2100.0]
-        for learning_rate in [2e-4, 1e-4, 5e-5]
+        for learning_rate in [1e-4]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
