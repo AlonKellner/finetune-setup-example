@@ -24,9 +24,9 @@ num_devices: 1
 num_train_epochs: 3
 padding_side: random
 per_device_eval_batch_size: 8
-per_device_eval_batch_total_seconds: 600.0
+per_device_eval_batch_total_seconds: 900.0
 per_device_train_batch_size: 4
-per_device_train_batch_total_seconds: 600.0
+per_device_train_batch_total_seconds: 900.0
 raw_eval_size: 11290
 raw_train_size: 35147
 sample_rate: 16000
