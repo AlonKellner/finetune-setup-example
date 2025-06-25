@@ -29,7 +29,7 @@ def main(
     eval_size: int = 20_000,
     train_size: int = 100_000,
     train_limit: int = 100_000,
-    eval_limit: int = 1_000,
+    eval_limit: int = 10_000,
     num_train_epochs: int | float | None = 1,
     num_training_steps: int | None = None,
     effective_batch_size: int = 16,

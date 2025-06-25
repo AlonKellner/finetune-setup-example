@@ -18,13 +18,13 @@ def hp_main() -> None:
             should_freeze_base_model=False,
             fp16=True,
             attn_implementation="flash_attention_2",
-            torch_compile=True,
+            torch_compile=False,
             num_train_epochs=3,
             per_device_train_batch_total_seconds=batch_total_seconds,
             per_device_eval_batch_total_seconds=batch_total_seconds,
             dataloader_num_workers=16,
         )
-        for batch_total_seconds in [450.0]
+        for batch_total_seconds in [1200.0]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
