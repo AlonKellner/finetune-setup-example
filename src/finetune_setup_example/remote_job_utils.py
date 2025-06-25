@@ -99,6 +99,7 @@ def start_job(
 
     print(f"Loading job configuration with id: {job_id}")
     task = sky.Task.from_yaml(job_yaml_path)
+    task.name = job_id
 
     # Launch the task using sky.launch
     print(f"Launching job with id: {job_id}")
