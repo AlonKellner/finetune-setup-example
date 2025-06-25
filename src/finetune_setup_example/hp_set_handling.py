@@ -82,5 +82,8 @@ def get_defaults(func: Callable) -> dict[str, Any]:
     return {
         name: param.default
         for name, param in signature.parameters.items()
-        if param.default is not inspect.Parameter.empty
+        if (
+            (param.default is not inspect.Parameter.empty)
+            and (param.default is not None)
+        )
     }

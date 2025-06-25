@@ -8,6 +8,4 @@ from finetune_setup_example.local_job_utils import run_local_job
 from finetune_setup_example.mains.mms_common_voice_adaptune import main
 
 if __name__ == "__main__":
-    job_func = main
-
     run_local_job(main)

@@ -1,5 +1,6 @@
 """Custom `transformers` training args."""
 
+import os
 from dataclasses import dataclass, field
 
 from transformers import TrainingArguments
@@ -36,6 +37,13 @@ class CustomTrainingArguments(TrainingArguments):
         },
     )
 
+    hp_set: dict | None = field(
+        default=None,
+        metadata={
+            "help": ("Extra hyper-parameter set with all of the user defined values.")
+        },
+    )
+
 
 def create_training_arguments(
     seed: int,
@@ -64,8 +72,13 @@ def create_training_arguments(
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
     steps_per_epoch: int | None = None,
+    hp_set: dict | None = None,
 ) -> CustomTrainingArguments:
     """Create training arguments."""
+    run_name = (
+        target_hf_repo if (job_id := os.getenv("JOB_FULL_ID")) is None else job_id
+    )
+
     global_batch_size = per_device_train_batch_size * num_devices
     accumulation_steps = effective_batch_size // global_batch_size
 
@@ -96,6 +109,7 @@ def create_training_arguments(
     lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * _num_training_steps))
     warmup_steps = int(warmup_ratio * _num_training_steps)
     print(
+        f"run name: {run_name}\n",
         f"num_training_steps: {num_training_steps}\n"
         f"_num_training_steps: {_num_training_steps}\n"
         f"num_train_epochs: {num_train_epochs}\n"
@@ -111,7 +125,7 @@ def create_training_arguments(
         f"per device eval batch size: {per_device_eval_batch_size}\n"
         f"per device train batch total length: {per_device_train_batch_total_length}\n"
         f"per device eval batch total length: {per_device_eval_batch_total_length}\n"
-        f"mega batch mult: {mega_batch_mult}\n"
+        f"mega batch mult: {mega_batch_mult}\n",
     )
 
     training_args = CustomTrainingArguments(
@@ -119,7 +133,7 @@ def create_training_arguments(
         data_seed=data_seed,
         report_to=["comet_ml", "wandb"],
         output_dir=f".output/{target_hf_repo}",
-        run_name=target_hf_repo,
+        run_name=run_name,
         group_by_length=True,
         per_device_train_batch_size=per_device_train_batch_size,
         per_device_eval_batch_size=per_device_eval_batch_size,
@@ -152,6 +166,7 @@ def create_training_arguments(
         greater_is_better=False,
         log_level="info",
         torch_compile=torch_compile,
+        hp_set=hp_set,
     )
 
     return training_args

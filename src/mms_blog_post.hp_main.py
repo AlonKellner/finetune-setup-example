@@ -13,15 +13,18 @@ def hp_main() -> None:
     print(f"Starting hyper-parameter jobs for {name}...")
     default_hp_set = get_defaults(main)
     hp_sets = [
-        dict(base_hf_repo=base_hf_repo)
-        for base_hf_repo in [
-            "facebook/mms-1b-all",
-            "facebook/mms-1b-l1107",
-            "facebook/mms-1b-fl102",
-            "facebook/mms-1b",
-            "facebook/mms-300m",
-            "mms-meta/mms-zeroshot-300m",
-        ]
+        dict(
+            base_hf_repo="facebook/mms-1b-all",
+            should_freeze_base_model=False,
+            fp16=True,
+            attn_implementation="flash_attention_2",
+            torch_compile=True,
+            num_train_epochs=3,
+            per_device_train_batch_total_seconds=batch_total_seconds,
+            per_device_eval_batch_total_seconds=batch_total_seconds,
+            dataloader_num_workers=16,
+        )
+        for batch_total_seconds in [450.0]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")

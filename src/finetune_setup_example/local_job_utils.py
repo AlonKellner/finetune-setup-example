@@ -15,4 +15,4 @@ def run_local_job(job_func: Callable) -> None:
         with open(hp_path) as f:
             hp_set = yaml.safe_load(f)
 
-    job_func(**hp_set)
+    job_func(**hp_set, hp_set=hp_set)

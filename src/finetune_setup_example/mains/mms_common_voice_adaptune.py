@@ -62,6 +62,9 @@ def main(
     should_demo: bool = False,
     eval_on_start: bool = True,
     steps_per_epoch: int | None = 1050,
+    should_freeze_base_model: bool = True,
+    should_freeze_feature_encoder: bool = True,
+    hp_set: dict | None = None,
 ) -> None:
     """Training a model."""
     init_training(
@@ -98,6 +101,7 @@ def main(
         sample_rate=sample_rate,
         eval_on_start=eval_on_start,
         steps_per_epoch=steps_per_epoch,
+        hp_set=hp_set,
     )
 
     train_processor, _ = create_wav2vec2_processor(
@@ -158,6 +162,8 @@ def main(
         feat_quantizer_dropout=feat_quantizer_dropout,
         final_dropout=final_dropout,
         layerdrop=layerdrop,
+        should_freeze_base_model=should_freeze_base_model,
+        should_freeze_feature_encoder=should_freeze_feature_encoder,
     )
 
     trainer = create_trainer(
