@@ -24,7 +24,7 @@ def hp_main() -> None:
             per_device_eval_batch_total_seconds=batch_total_seconds,
             dataloader_num_workers=16,
         )
-        for batch_total_seconds in [1200.0]
+        for batch_total_seconds in [600.0, 750.0, 900.0, 1050.0]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
