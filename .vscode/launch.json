@@ -1,90 +1,90 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Debug Python (venv)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${fileDirname}/${fileBasenameNoExtension}.py",
-      "console": "internalConsole",
-      "internalConsoleOptions": "openOnSessionStart",
-      "presentation": {
-        "hidden": false
-      }
-    },
-    {
-      "name": "Debug HP Main (venv)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
-      "console": "internalConsole",
-      "internalConsoleOptions": "openOnSessionStart",
-      "presentation": {
-        "hidden": false
-      }
-    },
-    {
-      "name": "Debug Python (docker)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "attach",
-      "preLaunchTask": "Start Debugpy server (docker)",
-      "postDebugTask": "Remove Debugpy server (docker)",
-      "connect": {
-        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
-        "port": 5678
-      },
-      "internalConsoleOptions": "openOnSessionStart",
-      "presentation": {
-        "hidden": true
-      }
-    },
-    {
-      "name": "Debug Python (docker build)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "attach",
-      "preLaunchTask": "Start Debugpy server (docker build)",
-      "postDebugTask": "Remove Debugpy server (docker)",
-      "connect": {
-        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
-        "port": 5678
-      },
-      "internalConsoleOptions": "openOnSessionStart",
-      "presentation": {
-        "hidden": true
-      }
-    },
-    {
-      "name": "Debug Python (docker build file)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "attach",
-      "preLaunchTask": "Start Debugpy server (docker build file)",
-      "postDebugTask": "Remove Debugpy server (docker)",
-      "connect": {
-        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
-        "port": 5678
-      },
-      "internalConsoleOptions": "openOnSessionStart",
-      "presentation": {
-        "hidden": true
-      }
-    },
-    {
-      "name": "Debug Python (docker compose)",
-      "justMyCode": false,
-      "type": "debugpy",
-      "request": "attach",
-      "preLaunchTask": "Start Debugpy server (docker compose)",
-      "postDebugTask": "Remove Debugpy server (docker)",
-      "connect": {
-        "host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
-        "port": 5678
-      },
-      "internalConsoleOptions": "openOnSessionStart"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug Python (venv)",
+			"justMyCode": false,
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${fileDirname}/${fileBasenameNoExtension}.py",
+			"console": "internalConsole",
+			"internalConsoleOptions": "openOnSessionStart",
+			"presentation": {
+				"hidden": false
+			}
+		},
+		{
+			"name": "Debug HP Main (venv)",
+			"justMyCode": false,
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
+			"console": "internalConsole",
+			"internalConsoleOptions": "openOnSessionStart",
+			"presentation": {
+				"hidden": false
+			}
+		},
+		{
+			"name": "Debug Python (docker)",
+			"justMyCode": false,
+			"type": "debugpy",
+			"request": "attach",
+			"preLaunchTask": "Start Debugpy server (docker)",
+			"postDebugTask": "Remove Debugpy server (docker)",
+			"connect": {
+				"host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
+				"port": 5678
+			},
+			"internalConsoleOptions": "openOnSessionStart",
+			"presentation": {
+				"hidden": true
+			}
+		},
+		{
+			"name": "Debug Python (docker build)",
+			"justMyCode": false,
+			"type": "debugpy",
+			"request": "attach",
+			"preLaunchTask": "Start Debugpy server (docker build)",
+			"postDebugTask": "Remove Debugpy server (docker)",
+			"connect": {
+				"host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
+				"port": 5678
+			},
+			"internalConsoleOptions": "openOnSessionStart",
+			"presentation": {
+				"hidden": true
+			}
+		},
+		{
+			"name": "Debug Python (docker build file)",
+			"justMyCode": false,
+			"type": "debugpy",
+			"request": "attach",
+			"preLaunchTask": "Start Debugpy server (docker build file)",
+			"postDebugTask": "Remove Debugpy server (docker)",
+			"connect": {
+				"host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
+				"port": 5678
+			},
+			"internalConsoleOptions": "openOnSessionStart",
+			"presentation": {
+				"hidden": true
+			}
+		},
+		{
+			"name": "Debug Python (docker compose)",
+			"justMyCode": false,
+			"type": "debugpy",
+			"request": "attach",
+			"preLaunchTask": "Start Debugpy server (docker compose)",
+			"postDebugTask": "Remove Debugpy server (docker)",
+			"connect": {
+				"host": "${workspaceFolderBasename}_debug_${fileBasenameNoExtension}",
+				"port": 5678
+			},
+			"internalConsoleOptions": "openOnSessionStart"
+		}
+	]
 }

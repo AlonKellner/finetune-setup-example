@@ -1,72 +1,73 @@
 {
-  "name": "Python 3",
-  "build": {
-    // Path is relative to the devcontainer.json file.
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
-  "features": {
-    "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {}
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-toolsai.jupyter",
-        "ms-toolsai.jupyter-renderers",
-        "ms-toolsai.vscode-jupyter-cell-tags",
-        "charliermarsh.ruff",
-        "esbenp.prettier-vscode",
-        "ms-azuretools.vscode-docker",
-        "docker.docker",
-        "github.vscode-github-actions",
-        "tamasfe.even-better-toml",
-        "tekumara.typos-vscode",
-        "elagil.pre-commit-helper",
-        "mhutchie.git-graph",
-        "rafaelha.vscode-flamegraph",
-        "github.copilot",
-        "github.copilot-chat@0.27.2025042503",
-        "ms-kubernetes-tools.vscode-kubernetes-tools"
-      ]
-    }
-  },
-  "initializeCommand": [
-    "./.devcontainer/initializeCommand",
-    "${containerWorkspaceFolderBasename}"
-  ],
-  "postCreateCommand": ["./.devcontainer/postCreateCommand"],
-  "postStartCommand": ["./.devcontainer/postStartCommand"],
-  "mounts": [
-    "src=${localWorkspaceFolder},dst=/app,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,dst=/home/vscode/.gitconfig,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,dst=/home/vscode/.ssh,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,dst=/home/vscode/.sky,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,dst=/home/vscode/.vscode-server,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders,dst=/home/vscode/.vscode-server-insiders,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud,dst=/home/vscode/.config/gcloud,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv,dst=/home/vscode/.cache/uv,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit,dst=/home/vscode/.cache/pre-commit,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python,dst=/home/vscode/.cache/pyright-python,type=bind",
-    "src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip,dst=/home/vscode/.cache/pip,type=bind",
-    "src=${localEnv:MOUNTS_PATH}/home/.cache/huggingface,dst=/home/vscode/.cache/huggingface,type=bind",
-    "src=${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache,dst=${containerWorkspaceFolder}/.app_cache,type=bind"
-  ],
-  "containerEnv": {
-    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
-    "LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
-    "DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders':/root/.vscode-server-insiders -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv':/root/.cache/uv -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit':/root/.cache/pre-commit -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python':/root/.cache/pyright-python -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip':/root/.cache/pip -v '${localEnv:MOUNTS_PATH}/home/.cache/huggingface':/root/.cache/huggingface -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
-    "CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
-    "USERNAME": "vscode",
-    "COMPOSE_BAKE": "true"
-  },
-  "runArgs": [
-    "--name=${containerWorkspaceFolderBasename}_vsc",
-    "--hostname=${containerWorkspaceFolderBasename}_vsc",
-    "--network=${containerWorkspaceFolderBasename}",
-    "--env-file=.devcontainer/devcontainer.env"
-  ]
+	"name": "Python 3",
+	"build": {
+		// Path is relative to the devcontainer.json file.
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	"features": {
+		"ghcr.io/devcontainers-extra/features/pre-commit:2": {},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+		"ghcr.io/dhoeric/features/google-cloud-cli:1": {},
+		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-toolsai.jupyter",
+				"ms-toolsai.jupyter-renderers",
+				"ms-toolsai.vscode-jupyter-cell-tags",
+				"charliermarsh.ruff",
+				"esbenp.prettier-vscode",
+				"ms-azuretools.vscode-docker",
+				"docker.docker",
+				"github.vscode-github-actions",
+				"tamasfe.even-better-toml",
+				"tekumara.typos-vscode",
+				"elagil.pre-commit-helper",
+				"mhutchie.git-graph",
+				"rafaelha.vscode-flamegraph",
+				"github.copilot",
+				"github.copilot-chat@0.27.2025042503",
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"astral-sh.ty"
+			]
+		}
+	},
+	"initializeCommand": [
+		"./.devcontainer/initializeCommand",
+		"${containerWorkspaceFolderBasename}"
+	],
+	"postCreateCommand": ["./.devcontainer/postCreateCommand"],
+	"postStartCommand": ["./.devcontainer/postStartCommand"],
+	"mounts": [
+		"src=${localWorkspaceFolder},dst=/app,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,dst=/home/vscode/.gitconfig,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,dst=/home/vscode/.ssh,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.sky,dst=/home/vscode/.sky,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server,dst=/home/vscode/.vscode-server,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders,dst=/home/vscode/.vscode-server-insiders,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud,dst=/home/vscode/.config/gcloud,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv,dst=/home/vscode/.cache/uv,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit,dst=/home/vscode/.cache/pre-commit,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python,dst=/home/vscode/.cache/pyright-python,type=bind",
+		"src=${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip,dst=/home/vscode/.cache/pip,type=bind",
+		"src=${localEnv:MOUNTS_PATH}/home/.cache/huggingface,dst=/home/vscode/.cache/huggingface,type=bind",
+		"src=${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache,dst=${containerWorkspaceFolder}/.app_cache,type=bind"
+	],
+	"containerEnv": {
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+		"LOCAL_USER_HOME": "${localEnv:HOME}${localEnv:USERPROFILE}",
+		"DOCKER_OPTIONS": "-v '${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig':/root/.gitconfig -v '${localEnv:HOME}${localEnv:USERPROFILE}/.ssh':/root/.ssh -v '${localEnv:HOME}${localEnv:USERPROFILE}/.sky':/root/.sky -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server':/root/.vscode-server -v '${localEnv:HOME}${localEnv:USERPROFILE}/.vscode-server-insiders':/root/.vscode-server-insiders -v '${localEnv:HOME}${localEnv:USERPROFILE}/.gcloud':/root/.config/gcloud -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/uv':/root/.cache/uv -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pre-commit':/root/.cache/pre-commit -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pyright-python':/root/.cache/pyright-python -v '${localEnv:HOME}${localEnv:USERPROFILE}/.cache/pip':/root/.cache/pip -v '${localEnv:MOUNTS_PATH}/home/.cache/huggingface':/root/.cache/huggingface -v '${localEnv:MOUNTS_PATH}/${containerWorkspaceFolderBasename}/.app_cache':${containerWorkspaceFolder}/.app_cache",
+		"CONTAINER_IMAGE": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+		"USERNAME": "vscode",
+		"COMPOSE_BAKE": "true"
+	},
+	"runArgs": [
+		"--name=${containerWorkspaceFolderBasename}_vsc",
+		"--hostname=${containerWorkspaceFolderBasename}_vsc",
+		"--network=${containerWorkspaceFolderBasename}",
+		"--env-file=.devcontainer/devcontainer.env"
+	]
 }

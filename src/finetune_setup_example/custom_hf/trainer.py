@@ -37,7 +37,7 @@ from .length_sampler import CustomLengthGroupedSampler
 from .training_args import CustomTrainingArguments
 
 
-class CustomTrainer(Trainer):
+class CustomTrainer(Trainer):  # type: ignore
     """A custom version of the trainer to make sure length sampling is mixed."""
 
     def __init__(
@@ -285,8 +285,8 @@ def train(trainer: Trainer) -> None:
     comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
     wandb.init(dir="./.wandb")
 
-    trainer.train()
-    trainer.evaluate()
+    trainer.train()  # type: ignore
+    trainer.evaluate()  # type: ignore
 
     comet_ml.end()
     wandb.finish()

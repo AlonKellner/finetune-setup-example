@@ -15,7 +15,7 @@ from ..custom_wav2vec2.feature_extractor import CustomWav2Vec2FeatureExtractor
 
 @runtime_checkable
 class HasCustomFields(Protocol):
-    """Just for pyright type checking."""
+    """Just for type checking."""
 
     tokenizer: Wav2Vec2CTCTokenizer
     feature_extractor: Wav2Vec2FeatureExtractor

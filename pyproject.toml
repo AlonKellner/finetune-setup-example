@@ -45,26 +45,6 @@ max-args = 10
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.pyright]
-analyzeUnannotatedFunctions = true
-reportMissingParameterType = "error"
-reportUnusedImport = "error"
-reportUnusedClass = "error"
-reportUnusedFunction = "error"
-reportUnusedVariable = "error"
-reportPrivateImportUsage = "warning"
-extraPaths = []
-
-[tool.mypy]
-strict = true
-warn_unreachable = true
-warn_unused_ignores = true
-show_error_codes = true
-pretty = true
-color_output = true
-show_column_numbers = true
-exclude = ['^src/_version\.py$', '^dev-pyproject/.*$']
-
 [tool.pytest.ini_options]
 pythonpath = "./"
 
@@ -112,7 +92,7 @@ dependencies = ["inquirer"]
 gpu = ["flash-attn==2.7.3"]
 
 [dependency-groups]
-dev_tools = ["pytest", "pyright", "mypy"]
+dev_tools = ["pytest"]
 sky = ["skypilot[kubernetes,runpod,gcp]"]
 jobs = ["gitpython", "pyyaml", "types-PyYAML", "dotenv"]
 mms_blog_post = [

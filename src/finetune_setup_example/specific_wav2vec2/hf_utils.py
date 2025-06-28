@@ -30,16 +30,16 @@ def demo_trained_model(
     )
     processor = _processor
 
-    processor.tokenizer.set_target_lang(target_lang)  # type: ignore
+    processor.tokenizer.set_target_lang(target_lang)
 
-    common_voice_eval_tr: HFDataset = load_dataset(
+    common_voice_eval_tr: HFDataset = load_dataset(  # type: ignore
         "mozilla-foundation/common_voice_17_0",
         "tr",
         data_dir="./cv-corpus-17.0-2024-03-20",
         split="test",
         token=True,
         trust_remote_code=True,
-    )  # type: ignore
+    )
     common_voice_eval_tr = common_voice_eval_tr.cast_column(
         "audio", Audio(sampling_rate=sample_rate)
     )
@@ -75,4 +75,4 @@ def hf_push_adapter(
 
     safe_save_file(model._get_adapters(), adapter_file, metadata={"format": "pt"})
 
-    trainer.push_to_hub()
+    trainer.push_to_hub()  # type: ignore

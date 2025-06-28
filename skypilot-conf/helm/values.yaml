@@ -29,13 +29,10 @@ skypilot:
       limits:
         cpu: "2"
         memory: "4Gi"
-
   ingress:
     enabled: false
-
   ingress-nginx:
     enabled: false
-
 domain: 34.110.185.190.nip.io
 scaledownMinutes: 10
 requestTimeoutSeconds: 600

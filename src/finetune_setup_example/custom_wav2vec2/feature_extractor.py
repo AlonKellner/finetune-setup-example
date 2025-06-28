@@ -95,11 +95,12 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
         # If we have a list of dicts, let's convert it in a dict of lists
         # We do this to allow using this method as a collate_fn function in PyTorch Dataloader
         if isinstance(processed_features, list | tuple) and isinstance(
-            processed_features[0], dict | BatchFeature
+            processed_features[0],  # type: ignore
+            dict | BatchFeature,
         ):
             processed_features = {
                 key: [example[key] for example in processed_features]
-                for key in processed_features[0]
+                for key in processed_features[0]  # type: ignore
             }
 
         # The model's main input name, usually `input_values`, has be passed for padding

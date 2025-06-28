@@ -16,7 +16,6 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
 networks:
   finetune-setup-example:
     external: true
