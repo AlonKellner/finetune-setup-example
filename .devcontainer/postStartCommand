@@ -2,4 +2,5 @@
 uv self update
 pre-commit autoupdate
 uv sync --upgrade
+uv tool upgrade --all
 pre-commit run --all-files

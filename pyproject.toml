@@ -51,19 +51,6 @@ pythonpath = "./"
 [tool.typos.files]
 extend-exclude = ["**/*.env"]
 
-[tool.uv]
-package = false
-python-preference = "only-managed"
-link-mode = "copy"
-no-build-isolation-package = ["flash-attn"]
-
-[[tool.uv.dependency-metadata]]
-name = "flash-attn"
-requires-dist = ["torch", "einops"]
-
-[tool.uv.sources]
-skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-stable" }
-
 [project]
 dynamic = ["version"]
 name = "finetune-setup-example"
@@ -89,7 +76,15 @@ classifiers = [
 dependencies = ["inquirer"]
 
 [project.optional-dependencies]
-gpu = ["flash-attn==2.7.3"]
+# CUDA build with flash-attn
+cuda = ["torch", "flash-attn==2.8.0.post2"]
+# ROCm build with flash-attn
+rocm = [
+  "torch",
+  "pytorch-triton-rocm>=3.3.0 ; sys_platform == 'linux'",
+  "flash-attn==2.8.0.post2",
+]
+
 
 [dependency-groups]
 dev_tools = ["pytest"]
@@ -109,7 +104,6 @@ mms_blog_post = [
   "pandas",
   "polars",
   "safetensors",
-  "torch==2.6.0",
   "torchaudio",
   "transformers",
   "types-boto3-lite[s3]",
@@ -126,3 +120,37 @@ dev = [
 [project.urls]
 Homepage = "https://alonkellner.com"
 Repository = "https://github.com/AlonKellner/finetune-setup-example.git"
+
+
+[tool.uv]
+package = false
+python-preference = "only-managed"
+link-mode = "copy"
+no-build-isolation-package = ["flash-attn"]
+# Prevent installing both CUDA and ROCm builds simultaneously
+conflicts = [[{ extra = "cuda" }, { extra = "rocm" }]]
+
+[[tool.uv.dependency-metadata]]
+name = "flash-attn"
+requires-dist = ["torch", "einops"]
+
+[tool.uv.sources]
+skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-stable" }
+# Configure PyTorch sources for different accelerators
+torch = [
+  { index = "pytorch-cu128", extra = "cuda" },
+  { index = "pytorch-rocm", extra = "rocm" },
+]
+# ROCm-specific triton dependency
+pytorch-triton-rocm = [{ index = "pytorch-rocm", extra = "rocm" }]
+
+# Define PyTorch indexes
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-rocm"
+url = "https://download.pytorch.org/whl/rocm6.3"
+explicit = true

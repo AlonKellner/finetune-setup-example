@@ -1,0 +1,38 @@
+name: mms_blog_post
+
+resources:
+  cloud: runpod
+  accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
+  use_spot: true
+  disk_size: 128
+  image_id: docker:4alonkellner/finetune-setup-example-cuda:20250619-122142
+
+envs:
+  JOB_ID_EXP: null
+  JOB_ID_COMMIT: null
+  JOB_ID_TIME: null
+  JOB_ID_RAND: null
+  JOB_ID_INDEX: null
+  JOB_FULL_ID: null
+  JOB_HP_PATH: null
+  WANDB_PROJECT: null
+  HETZNER_ENDPOINT: null
+  HETZNER_REGION: null
+  # secrets
+  COMET_API_KEY: null
+  WANDB_API_KEY: null
+  HETZNER_ACCESS_KEY: null
+  HETZNER_SECRET_KEY: null
+  HF_TOKEN: null
+
+setup: |
+  git clone https://github.com/AlonKellner/finetune-setup-example.git .
+  git checkout exp/$JOB_ID_EXP
+  git reset --hard $JOB_ID_COMMIT
+  git clean -df
+
+run: |
+  export PYSPY_PATH=src/mms_blog_post.pyspy
+  uvx py-spy record -f raw -o "$PYSPY_PATH" --subprocesses --full-filenames -r 10 -- \
+    /app/.venv/bin/python src/mms_blog_post.py
+  /app/.venv/bin/python src/pyspy_upload.py
