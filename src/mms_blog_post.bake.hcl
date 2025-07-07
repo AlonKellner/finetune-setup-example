@@ -28,7 +28,7 @@ target "rocm" {
   output = [{ type = "registry" }]
   platforms = ["linux/amd64"]
   args = {
-    BASE_IMAGE = "rocm/pytorch:rocm6.4_ubuntu24.04_py3.12_pytorch_release_2.6.0"
+    BASE_IMAGE = "rocm/miopen:ci_faa726"
     IS_ROCM = "TRUE"
     EXTRA_GROUP = "rocm"
   }

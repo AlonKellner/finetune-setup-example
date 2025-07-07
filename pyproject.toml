@@ -76,14 +76,9 @@ classifiers = [
 dependencies = ["inquirer"]
 
 [project.optional-dependencies]
-# CUDA build with flash-attn
-cuda = ["torch", "flash-attn==2.8.0.post2"]
-# ROCm build with flash-attn
-rocm = [
-  "torch",
-  "pytorch-triton-rocm>=3.3.0 ; sys_platform == 'linux'",
-  "flash-attn==2.8.0.post2",
-]
+cuda = ["torch"]
+rocm = ["torch", "pytorch-triton-rocm>=3.3.0 ; sys_platform == 'linux'"]
+flash-attn = ["flash-attn==2.8.0.post2"]
 
 
 [dependency-groups]
