@@ -3,7 +3,7 @@ base_hf_repo: facebook/mms-1b-all
 dataloader_num_workers: 16
 effective_batch_size: 128
 fp16: true
-job_path: src/mms_blog_post.rocm.job.yaml
+job_path: src/mms_blog_post.mi300x.job.yaml
 learning_rate: 0.0001
 num_train_epochs: 3
 per_device_eval_batch_size: 256

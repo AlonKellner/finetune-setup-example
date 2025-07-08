@@ -32,7 +32,7 @@ def hp_main() -> None:
         )
         for batch_total_seconds in [2100.0]
         for learning_rate in [1e-4]
-        for job_type in ["rocm"]
+        for job_type in ["mi300x"]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
