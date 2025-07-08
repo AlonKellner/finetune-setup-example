@@ -3,9 +3,7 @@ name: mms_blog_post
 resources:
   cloud: runpod
   accelerators: { B200:1 }
-  any_of:
-    - use_spot: true
-    - use_spot: false
+  use_spot: false
   disk_size: 128
   image_id: docker:4alonkellner/finetune-setup-example-cuda:20250708-012731
 
