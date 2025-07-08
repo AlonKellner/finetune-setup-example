@@ -5,7 +5,7 @@ resources:
   accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
   use_spot: true
   disk_size: 128
-  image_id: docker:4alonkellner/finetune-setup-example-cuda:20250708-012731
+  image_id: docker:4alonkellner/finetune-setup-example-cuda:20250708-223435
 
 envs:
   JOB_ID_EXP: null
