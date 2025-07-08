@@ -21,7 +21,7 @@ RUN --mount=type=cache,dst=/root/.cache/ \
     echo apt-setup && apt update && apt upgrade -y && \
     echo apt-tools && apt install -y --no-install-recommends bash ca-certificates curl file git \
     inotify-tools jq libgl1 lsof vim nano tmux nginx openssh-server procps \
-    rsync sudo software-properties-common unzip wget zip
+    rsync sudo software-properties-common unzip wget zip && apt autoremove
 
 COPY dev-pyproject/ ./
 RUN --mount=type=cache,dst=/root/.cache/ \

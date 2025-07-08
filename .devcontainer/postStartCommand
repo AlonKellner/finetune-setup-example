@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 uv self update
 pre-commit autoupdate
-uv sync --upgrade
+uv sync --extra cpu --upgrade
 uv tool upgrade --all
 pre-commit run --all-files

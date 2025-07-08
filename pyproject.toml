@@ -76,8 +76,13 @@ classifiers = [
 dependencies = ["inquirer"]
 
 [project.optional-dependencies]
-cuda = ["torch"]
-rocm = ["torch", "pytorch-triton-rocm>=3.3.0 ; sys_platform == 'linux'"]
+cpu = ["torch", "torchaudio"]
+cuda = ["torch", "torchaudio"]
+rocm = [
+  "torch",
+  "torchaudio",
+  "pytorch-triton-rocm>=3.3.0 ; sys_platform == 'linux'",
+]
 flash-attn = ["flash-attn==2.8.0.post2"]
 
 
@@ -99,7 +104,6 @@ mms_blog_post = [
   "pandas",
   "polars",
   "safetensors",
-  "torchaudio",
   "transformers",
   "types-boto3-lite[s3]",
   "uroman",
@@ -123,7 +127,7 @@ python-preference = "only-managed"
 link-mode = "copy"
 no-build-isolation-package = ["flash-attn"]
 # Prevent installing both CUDA and ROCm builds simultaneously
-conflicts = [[{ extra = "cuda" }, { extra = "rocm" }]]
+conflicts = [[{ extra = "cpu" }, { extra = "cuda" }, { extra = "rocm" }]]
 
 [[tool.uv.dependency-metadata]]
 name = "flash-attn"
@@ -133,6 +137,12 @@ requires-dist = ["torch", "einops"]
 skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-stable" }
 # Configure PyTorch sources for different accelerators
 torch = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "cuda" },
+  { index = "pytorch-rocm", extra = "rocm" },
+]
+torchaudio = [
+  { index = "pytorch-cpu", extra = "cpu" },
   { index = "pytorch-cu128", extra = "cuda" },
   { index = "pytorch-rocm", extra = "rocm" },
 ]
@@ -140,6 +150,11 @@ torch = [
 pytorch-triton-rocm = [{ index = "pytorch-rocm", extra = "rocm" }]
 
 # Define PyTorch indexes
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [[tool.uv.index]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
