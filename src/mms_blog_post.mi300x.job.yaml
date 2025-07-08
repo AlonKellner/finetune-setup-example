@@ -1,17 +1,11 @@
 name: mms_blog_post
 
 resources:
-  any_of:
-    - use_spot: true
-      cloud: runpod
-      accelerators: MI300X:1
-      disk_size: 128
-      image_id: docker:4alonkellner/finetune-setup-example-rocm:20250708-012731
-    - use_spot: false
-      cloud: runpod
-      accelerators: MI300X:1
-      disk_size: 128
-      image_id: docker:4alonkellner/finetune-setup-example-rocm:20250708-012731
+  cloud: runpod
+  accelerators: { MI300X:1 }
+  use_spot: false
+  disk_size: 128
+  image_id: docker:4alonkellner/finetune-setup-example-rocm:20250708-012731
 
 envs:
   JOB_ID_EXP: null

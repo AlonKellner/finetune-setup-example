@@ -15,6 +15,22 @@
 	],
 	"tasks": [
 		{
+			"label": "Run HP Main (venv)",
+			"type": "shell",
+			"command": "python ${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
+			"hide": false,
+			"group": "none",
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": true,
+				"panel": "dedicated",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": "$python"
+		},
+		{
 			"label": "Git push",
 			"detail": "Push an existing branch",
 			"type": "shell",
@@ -120,22 +136,6 @@
 			"label": "Run Python (venv)",
 			"type": "shell",
 			"command": "python ${fileDirname}/${fileBasenameNoExtension}.py",
-			"hide": false,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Run HP Main (venv)",
-			"type": "shell",
-			"command": "python ${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
 			"hide": false,
 			"group": "none",
 			"presentation": {
