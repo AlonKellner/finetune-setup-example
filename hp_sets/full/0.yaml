@@ -16,6 +16,7 @@ final_dropout: 0.0
 fp16: true
 hf_user: Kellner
 hidden_dropout: 0.0
+job_path: src/mms_blog_post.rocm.job.yaml
 layerdrop: 0.0
 learning_rate: 0.0001
 logging_steps: 10
