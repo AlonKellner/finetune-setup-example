@@ -14,7 +14,7 @@ target "cuda" {
   output = [{ type = "registry" }]
   platforms = ["linux/amd64"]
   args = {
-    BASE_IMAGE = "nvcr.io/nvidia/cuda-dl-base:25.05-cuda12.9-runtime-ubuntu24.04"
+    BASE_IMAGE = "nvcr.io/nvidia/cuda-dl-base:25.06-cuda12.9-runtime-ubuntu24.04"
     IS_ROCM = "FALSE"
     EXTRA_GROUP = "cuda"
   }

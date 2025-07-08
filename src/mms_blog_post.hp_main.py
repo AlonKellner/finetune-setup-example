@@ -12,8 +12,10 @@ def hp_main() -> None:
     name = "src/mms_blog_post"
     print(f"Starting hyper-parameter jobs for {name}...")
     default_hp_set = get_defaults(main)
+    default_hp_set["job_path"] = f"{name}.job.yaml"
     hp_sets = [
         dict(
+            job_path=f"{name}.{job_type}.job.yaml",
             base_hf_repo="facebook/mms-1b-all",
             should_freeze_base_model=False,
             fp16=True,
@@ -30,12 +32,11 @@ def hp_main() -> None:
         )
         for batch_total_seconds in [2100.0]
         for learning_rate in [1e-4]
+        for job_type in ["rocm"]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
-    job_names = start_hp_jobs(
-        f"{name}.job.yaml", default_hp_set, hp_sets, f"{name}.env"
-    )
+    job_names = start_hp_jobs(default_hp_set, hp_sets, f"{name}.env")
     print(f"Started {len(job_names)} jobs: {job_names}")
 
 

@@ -2,10 +2,10 @@ name: mms_blog_post
 
 resources:
   cloud: runpod
-  accelerators: { A100-80GB:1, A100-80GB-SXM:1 }
+  accelerators: { MI300X:1 }
   use_spot: true
   disk_size: 128
-  image_id: docker:4alonkellner/finetune-setup-example-rocm:20250619-122142
+  image_id: docker:4alonkellner/finetune-setup-example-rocm:20250708-012731
 
 envs:
   JOB_ID_EXP: null

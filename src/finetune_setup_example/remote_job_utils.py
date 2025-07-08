@@ -54,17 +54,15 @@ def get_job_ids() -> tuple[str, dict[str, str]]:
 
 
 def start_jobs(
-    job_yaml_path: str,
+    job_yaml_paths: list[str],
     hp_paths: list[tuple[str, Path]],
     ids: dict[str, str],
     env_file: str | None = None,
 ) -> list[str]:
     """Run multiple SkyPilot jobs for an experiment."""
     return [
-        start_job(
-            job_yaml_path, dict(**ids, index=str(i)), str(hp_path), env_file=env_file
-        )
-        for i, hp_path in hp_paths
+        start_job(job_path, dict(**ids, index=str(i)), str(hp_path), env_file=env_file)
+        for (i, hp_path), job_path in zip(hp_paths, job_yaml_paths, strict=True)
     ]
 
 
@@ -110,7 +108,6 @@ def start_job(
 
 
 def start_hp_jobs(
-    job_yaml_path: str,
     default_hp_set: dict[str, Any],
     hp_sets: list[dict[str, Any]],
     env_file: str | None = None,
@@ -121,4 +118,6 @@ def start_hp_jobs(
     _, ids = get_job_ids()
     print(f"Using job ids: {ids}")
 
-    return start_jobs(job_yaml_path, hp_paths, ids, env_file=env_file)
+    return start_jobs(
+        [hp["job_path"] for hp in hp_sets], hp_paths, ids, env_file=env_file
+    )
