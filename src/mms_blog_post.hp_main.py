@@ -32,7 +32,7 @@ def hp_main() -> None:
             per_device_eval_batch_total_seconds=batch_total_seconds,
         )
         for batch_total_seconds in [2100.0]
-        for job_type in ["mi300x"]
+        for job_type in ["a100"]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")

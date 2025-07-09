@@ -20,9 +20,9 @@ final_dropout: 0.0
 fp16: true
 hf_user: Kellner
 hidden_dropout: 0.0
-job_path: src/mms_blog_post.mi300x.job.yaml
+job_path: src/mms_blog_post.a100.job.yaml
 job_stem: src/mms_blog_post
-job_type: mi300x
+job_type: a100
 layerdrop: 0.0
 logging_steps: 10
 mega_batch_mult: 100
