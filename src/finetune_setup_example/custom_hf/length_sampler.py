@@ -307,7 +307,7 @@ utilization ratio: {utilization_ratio:.2%}""")
 
     def __len__(self) -> int:
         """Get the length of the sampler."""
-        return len(self.epochs[self.current_epoch_index])
+        return len(self.get_epoch(self.current_epoch_index))
 
     def __iter__(self) -> Iterator[list[int]]:
         """Get iterator with shuffled indices."""
