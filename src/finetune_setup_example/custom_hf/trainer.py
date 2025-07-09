@@ -163,8 +163,12 @@ class CustomTrainer(Trainer):  # type: ignore
                         p
                         for n, p in grad_params
                         if (
-                            ((n in decay_parameters) == is_decay)
-                            and ((n in adapter_parameters) == is_adapter)
+                            (
+                                is_adapter
+                                and (n in adapter_parameters)
+                                and ((n in decay_parameters) == is_decay)
+                            )
+                            or ((not is_adapter) and (n not in adapter_parameters))
                         )
                     ],
                     "weight_decay": self.args.weight_decay if is_decay else 0.0,
@@ -174,8 +178,11 @@ class CustomTrainer(Trainer):  # type: ignore
                         else self.args.pretrained_learning_rate
                     ),
                 }
-                for is_adapter in [True, False]
-                for is_decay in [True, False]
+                for is_adapter, is_decay in [
+                    (True, False),
+                    (True, True),
+                    (False, False),
+                ]
             ]
 
             optimizer_cls = AdamW
