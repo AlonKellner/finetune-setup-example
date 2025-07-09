@@ -19,7 +19,7 @@ def hp_main() -> None:
             job_stem=name,
             job_type=job_type,
             base_hf_repo="facebook/mms-1b-all",
-            should_freeze_base_model=False,
+            should_freeze_base_model=True,
             fp16=True,
             attn_implementation="flash_attention_2",
             torch_compile=False,
