@@ -44,6 +44,60 @@ class CustomTrainingArguments(TrainingArguments):
         },
     )
 
+    pretrained_learning_rate: float = field(
+        default=5e-5,
+        metadata={"help": "The max learning rate, for pretrained layers."},
+    )
+    pretrained_min_lr_ratio: float = field(
+        default=0.0,
+        metadata={"help": "The min learning rate ratio, for pretrained layers."},
+    )
+    pretrained_warmup_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": "Linear warmup over warmup_ratio fraction of total steps, for pretrained layers."
+        },
+    )
+    pretrained_stable_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": "Stable period over stable_ratio fraction of total steps, for pretrained layers."
+        },
+    )
+    pretrained_decay_ratio: float = field(
+        default=1.0,
+        metadata={
+            "help": "Cosine decay over decay_ratio fraction of total steps, for pretrained layers."
+        },
+    )
+
+    adapter_learning_rate: float = field(
+        default=5e-5,
+        metadata={"help": "The max learning rate, for adapter layers."},
+    )
+    adapter_min_lr_ratio: float = field(
+        default=0.0,
+        metadata={"help": "The min learning rate ratio, for adapter layers."},
+    )
+    adapter_warmup_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": "Linear warmup over warmup_ratio fraction of total steps, for adapter layers."
+        },
+    )
+    adapter_stable_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": "Stable period over stable_ratio fraction of total steps, for adapter layers."
+        },
+    )
+    adapter_decay_ratio: float = field(
+        default=1.0,
+        metadata={
+            "help": "Cosine decay over decay_ratio fraction of total steps, for adapter layers."
+        },
+    )
+
 
 def create_training_arguments(
     seed: int,
@@ -55,9 +109,16 @@ def create_training_arguments(
     per_device_train_batch_total_seconds: float,
     per_device_eval_batch_total_seconds: float,
     num_devices: int,
-    warmup_ratio: float,
-    decay_ratio: float,
-    learning_rate: float,
+    pretrained_learning_rate: float,
+    pretrained_min_lr_ratio: float,
+    pretrained_warmup_ratio: float,
+    pretrained_stable_ratio: float,
+    pretrained_decay_ratio: float,
+    adapter_learning_rate: float,
+    adapter_min_lr_ratio: float,
+    adapter_warmup_ratio: float,
+    adapter_stable_ratio: float,
+    adapter_decay_ratio: float,
     mega_batch_mult: int,
     dataloader_num_workers: int,
     fp16: bool,
@@ -66,12 +127,10 @@ def create_training_arguments(
     logging_steps: int,
     weight_decay: float,
     torch_compile: bool,
-    train_size: int,
     sample_rate: int,
     eval_on_start: bool,
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
-    steps_per_epoch: int | None = None,
     hp_set: dict | None = None,
 ) -> CustomTrainingArguments:
     """Create training arguments."""
@@ -89,44 +148,15 @@ def create_training_arguments(
         per_device_eval_batch_total_seconds * sample_rate
     )
 
-    if steps_per_epoch is None:
-        steps_per_epoch = train_size // effective_batch_size
-
     if (num_training_steps is None) and (num_train_epochs is not None):
-        _num_training_steps = num_train_epochs * steps_per_epoch
-        _num_train_epochs = num_train_epochs
         num_training_steps = -1
     elif (num_train_epochs is None) and (num_training_steps is not None):
-        _num_train_epochs = num_training_steps // steps_per_epoch
-        _num_training_steps = num_training_steps
         num_train_epochs = 3.0
     else:
         raise ValueError(
             "Either `num_training_steps` or `num_train_epochs` must be provided, "
             "but not both."
         )
-
-    lr_scheduler_kwargs = dict(num_decay_steps=int(decay_ratio * _num_training_steps))
-    warmup_steps = int(warmup_ratio * _num_training_steps)
-    print(
-        f"run name: {run_name}\n",
-        f"num_training_steps: {num_training_steps}\n"
-        f"_num_training_steps: {_num_training_steps}\n"
-        f"num_train_epochs: {num_train_epochs}\n"
-        f"_num_train_epochs: {_num_train_epochs}\n"
-        f"steps_per_epoch: {steps_per_epoch}\n"
-        f"warmup steps: {warmup_steps}\n"
-        f"decay steps: {lr_scheduler_kwargs['num_decay_steps']}\n"
-        f"learning rate: {learning_rate}\n"
-        f"batch size: {global_batch_size}\n"
-        f"accumulation steps: {accumulation_steps}\n"
-        f"effective batch size: {effective_batch_size}\n"
-        f"per device train batch size: {per_device_train_batch_size}\n"
-        f"per device eval batch size: {per_device_eval_batch_size}\n"
-        f"per device train batch total length: {per_device_train_batch_total_length}\n"
-        f"per device eval batch total length: {per_device_eval_batch_total_length}\n"
-        f"mega batch mult: {mega_batch_mult}\n",
-    )
 
     training_args = CustomTrainingArguments(
         seed=seed,
@@ -153,10 +183,16 @@ def create_training_arguments(
         logging_steps=logging_steps,
         eval_on_start=eval_on_start,
         logging_first_step=True,
-        learning_rate=learning_rate,
-        lr_scheduler_type="warmup_stable_decay",
-        warmup_steps=warmup_steps,
-        lr_scheduler_kwargs=lr_scheduler_kwargs,
+        pretrained_learning_rate=pretrained_learning_rate,
+        pretrained_min_lr_ratio=pretrained_min_lr_ratio,
+        pretrained_warmup_ratio=pretrained_warmup_ratio,
+        pretrained_stable_ratio=pretrained_stable_ratio,
+        pretrained_decay_ratio=pretrained_decay_ratio,
+        adapter_learning_rate=adapter_learning_rate,
+        adapter_min_lr_ratio=adapter_min_lr_ratio,
+        adapter_warmup_ratio=adapter_warmup_ratio,
+        adapter_stable_ratio=adapter_stable_ratio,
+        adapter_decay_ratio=adapter_decay_ratio,
         weight_decay=weight_decay,
         save_total_limit=2,
         push_to_hub=False,

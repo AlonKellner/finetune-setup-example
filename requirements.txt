@@ -57,7 +57,7 @@ cachetools==5.5.2
     # via
     #   google-auth
     #   skypilot
-certifi==2025.6.15
+certifi==2025.7.9
     # via
     #   httpcore
     #   httpx

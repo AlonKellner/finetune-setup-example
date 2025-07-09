@@ -16,6 +16,8 @@ def hp_main() -> None:
     hp_sets = [
         dict(
             job_path=f"{name}.{job_type}.job.yaml",
+            job_stem=name,
+            job_type=job_type,
             base_hf_repo="facebook/mms-1b-all",
             should_freeze_base_model=False,
             fp16=True,
