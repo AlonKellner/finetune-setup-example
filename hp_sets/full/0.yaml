@@ -46,7 +46,7 @@ sample_rate: 16000
 save_steps: 100
 seed: 42
 should_demo: false
-should_freeze_base_model: true
+should_freeze_base_model: false
 should_freeze_feature_encoder: true
 should_push: false
 target_hf_repo: mms-300m-turkish

@@ -160,7 +160,7 @@ class TarS3Dataset(TorchDataset):
                     if file.exists():
                         tar.add(str(file.absolute()), arcname=file.name)
                     else:
-                        print(f"Warning: {file} does not exist and will be skipped.")
+                        print(f"WARNING: {file} does not exist and will be skipped.")
             f.seek(0)
             self.s3_client_v2.upload_fileobj(
                 Fileobj=f, Bucket=self.cache_bucket, Key=f"{name}.tar.gz"

@@ -11,5 +11,5 @@ per_device_eval_batch_size: 256
 per_device_eval_batch_total_seconds: 2100.0
 per_device_train_batch_size: 128
 per_device_train_batch_total_seconds: 2100.0
-should_freeze_base_model: true
+should_freeze_base_model: false
 torch_compile: false

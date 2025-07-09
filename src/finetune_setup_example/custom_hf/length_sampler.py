@@ -284,14 +284,16 @@ class CustomLengthGroupedSampler(Sampler[list[int]]):
             [sum([self.lengths[i] for i in b]) / self.batch_total_length for b in epoch]
         ).item()
         batch_sizes = [len(b) for b in epoch]
-        logger.info(f"""
+        message = f"""
 === Generated epoch ===
 number of batches: {len(epoch)}
 average batch size: {np.mean(batch_sizes).item():.2f}
 min batch size: {min(batch_sizes)}
 median batch size: {np.median(batch_sizes).astype(int).item()}
 max batch size: {max(batch_sizes)}
-utilization ratio: {utilization_ratio:.2%}""")
+utilization ratio: {utilization_ratio:.2%}"""
+        logger.info(message)
+        print(message)
         return epoch
 
     def pregenerate_enough_steps(self, total_steps: int) -> None:
