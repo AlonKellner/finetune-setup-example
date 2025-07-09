@@ -271,7 +271,7 @@ class CustomLengthGroupedSampler(Sampler[list[int]]):
 
     def _generate_epoch(self) -> list[list[int]]:
         """Generate a new epoch."""
-        return get_length_grouped_batches(
+        epoch = get_length_grouped_batches(
             self.lengths,
             self.batch_size,
             generator=self.generator,
@@ -280,6 +280,13 @@ class CustomLengthGroupedSampler(Sampler[list[int]]):
             grouped_indices=self.grouped_indices,
             batch_total_length=self.batch_total_length,
         )
+        utilization_ratio = np.mean(
+            [sum([self.lengths[i] for i in b]) / self.batch_total_length for b in epoch]
+        ).item()
+        logger.info(
+            f"Generated epoch with {len(epoch)} batches, utilization ratio: {utilization_ratio:.2%}"
+        )
+        return epoch
 
     def pregenerate_enough_steps(self, total_steps: int) -> None:
         """Get the epoch with the given index."""
