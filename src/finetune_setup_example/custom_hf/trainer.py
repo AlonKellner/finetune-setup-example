@@ -64,7 +64,9 @@ class WarmupStableDecayScheduler:
         if current_step < self.wait_steps:
             value = 0.0
         elif current_step < self.wait_steps + self.warmup_steps:
-            progress = float(current_step) / float(max(1, self.warmup_steps))
+            progress = float(current_step - self.wait_steps) / float(
+                max(1, self.warmup_steps)
+            )
             value = max(0.0, progress)
         elif current_step < self.wait_steps + self.warmup_steps + self.stable_steps:
             value = 1.0
@@ -73,7 +75,7 @@ class WarmupStableDecayScheduler:
             < self.wait_steps + self.warmup_steps + self.stable_steps + self.decay_steps
         ):
             progress = float(
-                current_step - self.warmup_steps - self.decay_steps
+                current_step - self.wait_steps - self.warmup_steps - self.stable_steps
             ) / float(max(1, self.decay_steps))
             factor = 0.5 * (1.0 + math.cos(math.pi * progress))
             value = max(0.0, factor)
