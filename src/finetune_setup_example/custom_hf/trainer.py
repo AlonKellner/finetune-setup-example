@@ -47,29 +47,35 @@ class WarmupStableDecayScheduler:
         self,
         max_steps: int,
         min_lr_ratio: float,
+        wait_ratio: float,
         warmup_ratio: float,
         stable_ratio: float,
         decay_ratio: float,
     ) -> None:
         self.max_steps = max_steps
         self.min_lr_ratio = min_lr_ratio
+        self.wait_steps = int(max_steps * wait_ratio)
         self.warmup_steps = int(max_steps * warmup_ratio)
         self.stable_steps = int(max_steps * stable_ratio)
         self.decay_steps = int(max_steps * decay_ratio)
 
     def __call__(self, current_step: int) -> float:
         """Calculate the learning rate factor based on the current step."""
-        value = 0.0
-        if current_step < self.warmup_steps:
+        if current_step < self.wait_steps:
+            value = 0.0
+        elif current_step < self.wait_steps + self.warmup_steps:
             progress = float(current_step) / float(max(1, self.warmup_steps))
             value = max(0.0, progress)
-        elif current_step < self.warmup_steps + self.stable_steps:
+        elif current_step < self.wait_steps + self.warmup_steps + self.stable_steps:
             value = 1.0
-        elif current_step < self.warmup_steps + self.stable_steps + self.decay_steps:
+        elif (
+            current_step
+            < self.wait_steps + self.warmup_steps + self.stable_steps + self.decay_steps
+        ):
             progress = float(
                 current_step - self.warmup_steps - self.decay_steps
             ) / float(max(1, self.decay_steps))
-            factor = 0.5 * (1.0 + math.cos(math.pi * 2.0 * progress))
+            factor = 0.5 * (1.0 + math.cos(math.pi * progress))
             value = max(0.0, factor)
         else:
             value = 0.0
@@ -198,6 +204,7 @@ class CustomTrainer(Trainer):  # type: ignore
             adapter_scheduler = WarmupStableDecayScheduler(
                 num_training_steps,
                 self.args.adapter_min_lr_ratio,
+                self.args.adapter_wait_ratio,
                 self.args.adapter_warmup_ratio,
                 self.args.adapter_stable_ratio,
                 self.args.adapter_decay_ratio,
@@ -205,6 +212,7 @@ class CustomTrainer(Trainer):  # type: ignore
             pretrained_scheduler = WarmupStableDecayScheduler(
                 num_training_steps,
                 self.args.pretrained_min_lr_ratio,
+                self.args.pretrained_wait_ratio,
                 self.args.pretrained_warmup_ratio,
                 self.args.pretrained_stable_ratio,
                 self.args.pretrained_decay_ratio,

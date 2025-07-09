@@ -52,6 +52,12 @@ class CustomTrainingArguments(TrainingArguments):
         default=0.0,
         metadata={"help": "The min learning rate ratio, for pretrained layers."},
     )
+    pretrained_wait_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": "Wait period over wait_ratio fraction of total steps, for pretrained layers."
+        },
+    )
     pretrained_warmup_ratio: float = field(
         default=0.0,
         metadata={
@@ -78,6 +84,12 @@ class CustomTrainingArguments(TrainingArguments):
     adapter_min_lr_ratio: float = field(
         default=0.0,
         metadata={"help": "The min learning rate ratio, for adapter layers."},
+    )
+    adapter_wait_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": "Wait period over wait_ratio fraction of total steps, for adapter layers."
+        },
     )
     adapter_warmup_ratio: float = field(
         default=0.0,
@@ -111,11 +123,13 @@ def create_training_arguments(
     num_devices: int,
     pretrained_learning_rate: float,
     pretrained_min_lr_ratio: float,
+    pretrained_wait_ratio: float,
     pretrained_warmup_ratio: float,
     pretrained_stable_ratio: float,
     pretrained_decay_ratio: float,
     adapter_learning_rate: float,
     adapter_min_lr_ratio: float,
+    adapter_wait_ratio: float,
     adapter_warmup_ratio: float,
     adapter_stable_ratio: float,
     adapter_decay_ratio: float,
@@ -185,11 +199,13 @@ def create_training_arguments(
         logging_first_step=True,
         pretrained_learning_rate=pretrained_learning_rate,
         pretrained_min_lr_ratio=pretrained_min_lr_ratio,
+        pretrained_wait_ratio=pretrained_wait_ratio,
         pretrained_warmup_ratio=pretrained_warmup_ratio,
         pretrained_stable_ratio=pretrained_stable_ratio,
         pretrained_decay_ratio=pretrained_decay_ratio,
         adapter_learning_rate=adapter_learning_rate,
         adapter_min_lr_ratio=adapter_min_lr_ratio,
+        adapter_wait_ratio=adapter_wait_ratio,
         adapter_warmup_ratio=adapter_warmup_ratio,
         adapter_stable_ratio=adapter_stable_ratio,
         adapter_decay_ratio=adapter_decay_ratio,
