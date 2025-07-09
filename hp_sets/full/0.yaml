@@ -24,7 +24,6 @@ job_path: src/mms_blog_post.mi300x.job.yaml
 job_stem: src/mms_blog_post
 job_type: mi300x
 layerdrop: 0.0
-learning_rate: 0.0001
 logging_steps: 10
 mega_batch_mult: 100
 num_devices: 1

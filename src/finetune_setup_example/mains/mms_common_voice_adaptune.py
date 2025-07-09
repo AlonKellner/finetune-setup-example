@@ -70,9 +70,15 @@ def main(
     eval_on_start: bool = True,
     should_freeze_base_model: bool = True,
     should_freeze_feature_encoder: bool = True,
+    job_path: str | None = None,
+    job_stem: str | None = None,
+    job_type: str | None = None,
     hp_set: dict | None = None,
 ) -> None:
     """Training a model."""
+    print(f"Running {job_stem} job of type {job_type}.")
+    print(f"Job path: {job_path}")
+
     init_training(
         seed=seed,
         base_hf_repo=base_hf_repo,
