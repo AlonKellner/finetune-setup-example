@@ -22,7 +22,7 @@ def hp_main() -> None:
             should_freeze_base_model=False,
             fp16=True,
             attn_implementation="flash_attention_2",
-            num_train_epochs=5,
+            num_train_epochs=3,
             dataloader_num_workers=16,
             effective_batch_size=128,
             per_device_train_batch_size=128,
@@ -37,7 +37,7 @@ def hp_main() -> None:
         )
         for batch_total_seconds in [2100.0]
         for job_type in ["a100"]
-        for dropout in [0.0, 0.01, 0.02]
+        for dropout in [0.0]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
