@@ -232,8 +232,11 @@ class CustomTrainer(Trainer):  # type: ignore
                 optimizer,
                 [
                     adapter_scheduler if is_adapter else pretrained_scheduler
-                    for is_adapter in [True, False]
-                    for is_decay in [True, False]
+                    for is_adapter, is_decay in [
+                        (True, False),
+                        (True, True),
+                        (False, False),
+                    ]
                 ],
                 -1,
             )
