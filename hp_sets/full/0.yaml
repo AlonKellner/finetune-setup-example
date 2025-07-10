@@ -1,6 +1,6 @@
 activation_dropout: 0.0
 adapter_decay_ratio: 0.5
-adapter_learning_rate: 0.01
+adapter_learning_rate: 0.001
 adapter_min_lr_ratio: 0.001
 adapter_stable_ratio: 0.45
 adapter_wait_ratio: 0.0
@@ -9,7 +9,7 @@ attention_dropout: 0.0
 attn_implementation: flash_attention_2
 base_hf_repo: facebook/mms-1b-all
 data_seed: 42
-dataloader_num_workers: 16
+dataloader_num_workers: 32
 effective_batch_size: 128
 eval_limit: 10000
 eval_on_start: true
@@ -28,7 +28,7 @@ layerdrop: 0.0
 logging_steps: 10
 mega_batch_mult: 100
 num_devices: 1
-num_train_epochs: 3
+num_train_epochs: 5
 padding_side: random
 per_device_eval_batch_size: 256
 per_device_eval_batch_total_seconds: 2100.0

@@ -44,7 +44,7 @@ def main(
     pretrained_warmup_ratio: float = 0.2,
     pretrained_stable_ratio: float = 0.2,
     pretrained_decay_ratio: float = 0.5,
-    adapter_learning_rate: float = 1e-2,
+    adapter_learning_rate: float = 1e-3,
     adapter_min_lr_ratio: float = 1e-3,
     adapter_wait_ratio: float = 0.0,
     adapter_warmup_ratio: float = 0.05,
