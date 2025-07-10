@@ -1,8 +1,8 @@
 activation_dropout: 0.1
-adapter_decay_ratio: 0.85
+adapter_decay_ratio: 0.75
 adapter_learning_rate: 0.01
 adapter_min_lr_ratio: 0.001
-adapter_stable_ratio: 0.1
+adapter_stable_ratio: 0.2
 adapter_wait_ratio: 0.0
 adapter_warmup_ratio: 0.0
 attention_dropout: 0.1
@@ -34,11 +34,11 @@ per_device_eval_batch_size: 256
 per_device_eval_batch_total_seconds: 2100.0
 per_device_train_batch_size: 128
 per_device_train_batch_total_seconds: 2100.0
-pretrained_decay_ratio: 0.85
+pretrained_decay_ratio: 0.75
 pretrained_learning_rate: 0.0001
-pretrained_min_lr_ratio: 0.001
+pretrained_min_lr_ratio: 0.0
 pretrained_stable_ratio: 0.0
-pretrained_wait_ratio: 0.0
+pretrained_wait_ratio: 0.1
 pretrained_warmup_ratio: 0.1
 raw_eval_size: 11290
 raw_train_size: 35147
