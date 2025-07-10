@@ -49,5 +49,4 @@ def create_trainer(
         eval_grouped_indices=common_voice_eval.grouped_indices,
         train_grouped_indices=common_voice_train.grouped_indices,
     )
-    trainer._get_train_sampler()
     return trainer

@@ -265,9 +265,7 @@ class CustomLengthGroupedSampler(Sampler[list[int]]):
         self.indices_order = indices_order
         self.grouped_indices = grouped_indices
         self.batch_total_length = batch_total_length
-        self.epochs = []
-        self.current_epoch_index = 0
-        self.get_epoch(0)
+        self.epoch = self._generate_epoch()
 
     def _generate_epoch(self) -> list[list[int]]:
         """Generate a new epoch."""
@@ -296,23 +294,11 @@ utilization ratio: {utilization_ratio:.2%}"""
         print(message)
         return epoch
 
-    def pregenerate_enough_steps(self, total_steps: int) -> None:
-        """Get the epoch with the given index."""
-        while sum(len(e) for e in self.epochs) <= total_steps:
-            self.epochs.append(self._generate_epoch())
-
-    def get_epoch(self, epoch_index: int) -> None:
-        """Get the epoch with the given index."""
-        while len(self.epochs) <= epoch_index:
-            self.epochs.append(self._generate_epoch())
-        return self.epochs[epoch_index]
-
     def __len__(self) -> int:
         """Get the length of the sampler."""
-        return len(self.get_epoch(self.current_epoch_index))
+        return len(self.epoch)
 
     def __iter__(self) -> Iterator[list[int]]:
         """Get iterator with shuffled indices."""
-        epoch = self.get_epoch(self.current_epoch_index)
-        self.current_epoch_index += 1
-        return iter(epoch)
+        self.epoch = self._generate_epoch()
+        return iter(self.epoch)
