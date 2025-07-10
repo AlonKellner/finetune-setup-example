@@ -8,7 +8,7 @@ aiofiles==24.1.0
     # via skypilot
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.13
+aiohttp==3.12.14
     # via
     #   aiohttp-retry
     #   fsspec
@@ -119,7 +119,7 @@ email-validator==2.2.0
     # via
     #   fastapi
     #   pydantic
-evaluate==0.4.4
+evaluate==0.4.5
     # via finetune-setup-example (pyproject.toml:dev)
 everett==3.1.0
     # via comet-ml
