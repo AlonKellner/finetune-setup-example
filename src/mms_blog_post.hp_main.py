@@ -23,7 +23,7 @@ def hp_main() -> None:
             fp16=True,
             attn_implementation="flash_attention_2",
             num_train_epochs=5,
-            dataloader_num_workers=32,
+            dataloader_num_workers=16,
             effective_batch_size=128,
             per_device_train_batch_size=128,
             per_device_eval_batch_size=256,

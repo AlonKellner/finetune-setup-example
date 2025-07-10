@@ -2,7 +2,7 @@ activation_dropout: 0.0
 attention_dropout: 0.0
 attn_implementation: flash_attention_2
 base_hf_repo: facebook/mms-1b-all
-dataloader_num_workers: 32
+dataloader_num_workers: 16
 effective_batch_size: 128
 final_dropout: 0.0
 fp16: true
