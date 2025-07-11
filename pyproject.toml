@@ -94,7 +94,7 @@ mms_blog_post = [
   "accelerate",
   "boto3",
   "comet-ml",
-  "datasets[audio]",
+  "datasets[audio]<4",
   "evaluate",
   "huggingface_hub",
   "jiwer",
