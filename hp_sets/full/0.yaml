@@ -12,7 +12,7 @@ data_seed: 42
 dataloader_num_workers: 16
 effective_batch_size: 128
 eval_limit: 10000
-eval_on_start: true
+eval_on_start: false
 eval_size: 20000
 eval_steps: 100
 feat_proj_dropout: 0.0
@@ -21,9 +21,9 @@ final_dropout: 0.0
 fp16: true
 hf_user: Kellner
 hidden_dropout: 0.0
-job_path: src/mms_blog_post.h100.job.yaml
+job_path: src/mms_blog_post.a100.job.yaml
 job_stem: src/mms_blog_post
-job_type: h100
+job_type: a100
 layerdrop: 0.0
 logging_steps: 10
 mega_batch_mult: 100
@@ -37,9 +37,9 @@ per_device_train_batch_total_seconds: 2100.0
 pretrained_decay_ratio: 0.5
 pretrained_learning_rate: 1.0e-05
 pretrained_min_lr_ratio: 0.0
-pretrained_stable_ratio: 0.2
+pretrained_stable_ratio: 0.3
 pretrained_wait_ratio: 0.1
-pretrained_warmup_ratio: 0.2
+pretrained_warmup_ratio: 0.1
 raw_eval_size: 11290
 raw_train_size: 35147
 sample_rate: 16000

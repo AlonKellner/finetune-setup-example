@@ -7,9 +7,9 @@ effective_batch_size: 128
 final_dropout: 0.0
 fp16: true
 hidden_dropout: 0.0
-job_path: src/mms_blog_post.h100.job.yaml
+job_path: src/mms_blog_post.a100.job.yaml
 job_stem: src/mms_blog_post
-job_type: h100
+job_type: a100
 layerdrop: 0.0
 num_train_epochs: 5
 per_device_eval_batch_size: 256
