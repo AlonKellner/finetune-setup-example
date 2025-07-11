@@ -34,9 +34,10 @@ def hp_main() -> None:
             attention_dropout=dropout,
             final_dropout=dropout,
             layerdrop=dropout,
+            num_devices=num_devices,
         )
         for batch_total_seconds in [2100.0]
-        for job_type in ["a100"]
+        for job_type, num_devices in [("a100_x2", 2)]
         for dropout in [0.0]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
