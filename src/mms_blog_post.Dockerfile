@@ -22,8 +22,8 @@ RUN --mount=type=cache,dst=/root/.cache/ \
     echo conda-tools && conda install -y -c conda-forge 'ffmpeg<7,>5' sox libstdcxx-ng libgcc ncurses && ffmpeg -version && sox --version && \
     echo apt-setup && apt update && apt upgrade -y && \
     echo apt-tools && apt install -y --no-install-recommends bash ca-certificates curl file git \
-    inotify-tools jq libgl1 lsof vim nano tmux nginx openssh-server procps \
-    rsync sudo software-properties-common unzip wget zip && apt autoremove -y
+    inotify-tools jq libgl1 lsof vim nano tmux nginx openssh-server procps pkg-config cmake \
+    rsync sudo software-properties-common unzip wget zip && apt autoremove -y && apt update && apt upgrade -y
 
 COPY dev-pyproject/ ./
 RUN --mount=type=cache,dst=/root/.cache/ \

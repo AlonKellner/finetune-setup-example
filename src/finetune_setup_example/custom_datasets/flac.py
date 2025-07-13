@@ -188,7 +188,6 @@ class FlacDataset(TorchDataset):
             self.sample_rate,
             format="flac",
             bits_per_sample=24,
-            encoding="PCM_S",
         )
 
     def _load_flac(self, flac_path: Path) -> list[int]:

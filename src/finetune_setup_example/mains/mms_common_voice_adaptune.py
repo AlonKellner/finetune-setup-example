@@ -16,8 +16,8 @@ from ..specific_wav2vec2.trainer import create_trainer
 
 
 def main(
-    seed: int = 42,
-    data_seed: int = 42,
+    seed: int = 44,
+    data_seed: int = 44,
     target_lang: str = "tur",
     sample_rate: int = 16_000,
     base_hf_repo: str = "mms-meta/mms-zeroshot-300m",
@@ -72,6 +72,7 @@ def main(
     eval_on_start: bool = False,
     should_freeze_base_model: bool = True,
     should_freeze_feature_encoder: bool = True,
+    sp_vocab_size: int = 1000,
     job_path: str | None = None,
     job_stem: str | None = None,
     job_type: str | None = None,
@@ -157,6 +158,7 @@ def main(
         s3_client,
         s3_client_v2,
         "train",
+        sp_vocab_size,
     )
     common_voice_eval = create_cached_common_voice_split(
         data_seed,
@@ -170,6 +172,7 @@ def main(
         s3_client,
         s3_client_v2,
         "test",
+        sp_vocab_size,
     )
 
     model = load_wav2vec2_for_adaptuning(

@@ -104,6 +104,7 @@ mms_blog_post = [
   "pandas",
   "polars",
   "safetensors",
+  "sentencepiece>=0.2.0",
   "transformers",
   "types-boto3-lite[s3]",
   "uroman",

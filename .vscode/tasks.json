@@ -65,74 +65,6 @@
 			"problemMatcher": "$python"
 		},
 		{
-			"label": "Add uv dependency",
-			"detail": "Use uv to add dependencies in this project (in the pyproject.toml), run `Pre-Commit All` to fully sync the venv.",
-			"type": "shell",
-			"command": "uv add \"${input:python-package}\"",
-			"hide": false,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Remove uv dependency",
-			"detail": "Use uv to remove dependencies from this project (in the pyproject.toml), run `Pre-Commit All` to fully sync the venv.",
-			"type": "shell",
-			"command": "uv remove \"${input:python-package}\"",
-			"hide": false,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Pre-Commit All",
-			"detail": "Applies type-checking, linting, formatting, testing, venv sync and more to all files.",
-			"type": "shell",
-			"command": "git add . && pre-commit run --all-files",
-			"hide": false,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Pre-Commit Current",
-			"detail": "Applies type-checking, linting, formatting, testing and more to the current file.",
-			"type": "shell",
-			"command": "pre-commit run --files ${file}",
-			"hide": false,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
 			"label": "Run Python (venv)",
 			"type": "shell",
 			"command": "python ${fileDirname}/${fileBasenameNoExtension}.py",
@@ -145,63 +77,6 @@
 				"panel": "dedicated",
 				"showReuseMessage": false,
 				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Run Python (docker)  ",
-			"dependsOrder": "sequence",
-			"dependsOn": ["Run Python (docker)", "Remove Python run (docker)"],
-			"hide": true,
-			"type": "shell",
-			"command": ":",
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Run Python (docker build)  ",
-			"dependsOrder": "sequence",
-			"dependsOn": ["Run Python (docker build)", "Remove Python run (docker)"],
-			"hide": true,
-			"type": "shell",
-			"command": ":",
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Run Python (docker build file)  ",
-			"dependsOrder": "sequence",
-			"dependsOn": [
-				"Run Python (docker build file)",
-				"Remove Python run (docker)"
-			],
-			"hide": true,
-			"type": "shell",
-			"command": ":",
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
 			},
 			"problemMatcher": "$python"
 		},
@@ -286,22 +161,6 @@
 			"problemMatcher": "$python"
 		},
 		{
-			"label": "Run Python (docker)",
-			"type": "shell",
-			"command": "docker stop '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' || true && docker run ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' -v '${env:LOCAL_WORKSPACE_FOLDER}':${workspaceFolder} --entrypoint 'python3' ${input:docker-image} ${fileDirname}/${fileBasenameNoExtension}.py",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
 			"label": "Remove Python run (docker)",
 			"type": "shell",
 			"command": "docker stop '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' || true",
@@ -334,132 +193,9 @@
 			"problemMatcher": "$python"
 		},
 		{
-			"label": "Start Debugpy server (docker)",
-			"dependsOn": ["Remove Debugpy server (docker)"],
-			"type": "shell",
-			"command": "docker run ${env:DOCKER_OPTIONS} --detach --tty --network '${workspaceFolderBasename}' --name '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' -v \"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\":/debugpy -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} --entrypoint 'python3' ${input:docker-image} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${fileDirname}/${fileBasenameNoExtension}.py && sleep 3s",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": true,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
 			"label": "Remove Debugpy server (docker)",
 			"type": "shell",
 			"command": "docker stop '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' || true",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": true,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Run Python (docker build)",
-			"type": "shell",
-			"dependsOn": ["Build Python (docker build)"],
-			"command": "docker stop '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' || true && docker run ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} ${workspaceFolderBasename} ${fileDirname}/${fileBasenameNoExtension}.py",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Build Python (docker build)",
-			"type": "shell",
-			"command": "docker build ${workspaceFolder} --file ${workspaceFolder}/Dockerfile --tag ${workspaceFolderBasename}",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": true,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Start Debugpy server (docker build)",
-			"dependsOn": [
-				"Remove Debugpy server (docker)",
-				"Build Python (docker build)"
-			],
-			"type": "shell",
-			"command": "docker run ${env:DOCKER_OPTIONS} --detach --tty --network '${workspaceFolderBasename}' --name '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' -v \"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\":/debugpy -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} ${workspaceFolderBasename} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${fileDirname}/${fileBasenameNoExtension}.py && sleep 3s",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": true,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Run Python (docker build file)",
-			"type": "shell",
-			"dependsOn": ["Build Python (docker build file)"],
-			"command": "docker stop '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' && docker rm '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' || true && docker run ${env:DOCKER_OPTIONS} -it --tty --name '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_run_${fileBasenameNoExtension}' -v \"${env:LOCAL_WORKSPACE_FOLDER}\"${workspaceFolder} ${workspaceFolderBasename}_${fileBasenameNoExtension} ${fileDirname}/${fileBasenameNoExtension}.py",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": true,
-				"panel": "dedicated",
-				"showReuseMessage": false,
-				"clear": true
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Build Python (docker build file)",
-			"type": "shell",
-			"command": "docker build ${workspaceFolder} --file ${fileDirname}/${fileBasenameNoExtension}.Dockerfile --tag ${workspaceFolderBasename}_${fileBasenameNoExtension}",
-			"hide": true,
-			"group": "none",
-			"presentation": {
-				"echo": true,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": "$python"
-		},
-		{
-			"label": "Start Debugpy server (docker build file)",
-			"dependsOn": [
-				"Remove Debugpy server (docker)",
-				"Build Python (docker build file)"
-			],
-			"type": "shell",
-			"command": "docker run ${env:DOCKER_OPTIONS} --detach --tty --network '${workspaceFolderBasename}' --name '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' --hostname '${workspaceFolderBasename}_debug_${fileBasenameNoExtension}' -v \"$(echo '${extensionInstallFolder:ms-python.debugpy}' | sed \"s|${userHome}|$(sed 's|\\\\|/|g' <<< '${env:LOCAL_USER_HOME}')|\")/bundled/libs/debugpy\":/debugpy -v \"${env:LOCAL_WORKSPACE_FOLDER}\":${workspaceFolder} ${workspaceFolderBasename}_${fileBasenameNoExtension} /debugpy --wait-for-client --listen 0.0.0.0:5678 ${fileDirname}/${fileBasenameNoExtension}.py && sleep 3s",
 			"hide": true,
 			"group": "none",
 			"presentation": {

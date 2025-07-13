@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+import sentencepiece as spm
 import uroman
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
@@ -29,12 +30,18 @@ class LazyLoader:
         sample_rate: int,
         split: str,
         data_seed: int,
+        sp_dir: str,
+        sp_vocab_size: int,
+        sp_extra_symbols: list[str] | None = None,
     ) -> None:
         self.processor = processor
         self.target_lang = target_lang
         self.sample_rate = sample_rate
         self.split = split
         self.data_seed = data_seed
+        self.sp_dir = sp_dir
+        self.sp_vocab_size = sp_vocab_size
+        self.sp_extra_symbols = [] if sp_extra_symbols is None else sp_extra_symbols
         self.common_voice_split = None
         self.meta_common_voice_split = None
         self.uroman = uroman.Uroman()
@@ -92,6 +99,18 @@ class LazyLoader:
         )
 
         common_voice_split = common_voice_split.map(self.uromanize)
+        train_text = "\n".join([s for s in common_voice_split["sentence"]])
+        train_text_path = f"{self.sp_dir}/train_text.txt"
+        Path(self.sp_dir).mkdir(parents=True, exist_ok=True)
+        with open(train_text_path, "w") as f:
+            f.write(train_text)
+        spm.SentencePieceTrainer.Train(
+            input=train_text_path,
+            model_prefix=f"{self.sp_dir}/spm",
+            vocab_size=self.sp_vocab_size,
+            user_defined_symbols=self.sp_extra_symbols,
+            model_type="bpe",
+        )
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -134,6 +153,7 @@ def create_cached_common_voice_split(
     s3_client: S3Client,
     s3_client_v2: S3Client,
     split: str,
+    sp_vocab_size: int,
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
     loader = LazyLoader(
@@ -142,6 +162,8 @@ def create_cached_common_voice_split(
         sample_rate=sample_rate,
         split=split,
         data_seed=data_seed,
+        sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/spm",
+        sp_vocab_size=sp_vocab_size,
     )
 
     common_voice_split = LazyDataset(
@@ -166,5 +188,8 @@ def create_cached_common_voice_split(
         s3_client,
         s3_client_v2,
     )
+
     common_voice_split = ResizedDataset(common_voice_split, split_limit)
+    common_voice_split[0]
+    raise Exception()
     return common_voice_split

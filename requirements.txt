@@ -123,13 +123,13 @@ evaluate==0.4.5
     # via finetune-setup-example (pyproject.toml:dev)
 everett==3.1.0
     # via comet-ml
-fastapi==0.116.0
+fastapi==0.116.1
     # via
     #   runpod
     #   skypilot
 fastapi-cli==0.0.8
     # via fastapi
-fastapi-cloud-cli==0.1.2
+fastapi-cloud-cli==0.1.4
     # via fastapi-cli
 filelock==3.18.0
     # via
@@ -208,7 +208,7 @@ httpx==0.28.1
     #   fastapi
     #   fastapi-cloud-cli
     #   skypilot
-huggingface-hub==0.33.2
+huggingface-hub==0.33.4
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   accelerate
@@ -507,6 +507,8 @@ scipy==1.16.0
     #   scikit-learn
 semantic-version==2.10.0
     # via comet-ml
+sentencepiece==0.2.0
+    # via finetune-setup-example (pyproject.toml:dev)
 sentry-sdk==2.32.0
     # via
     #   comet-ml
@@ -546,7 +548,7 @@ standard-chunk==3.13.0
     # via standard-aifc
 standard-sunau==3.13.0
     # via librosa
-starlette==0.46.2
+starlette==0.47.1
     # via fastapi
 sympy==1.14.0
     # via torch
@@ -576,7 +578,7 @@ tqdm==4.67.1
     #   transformers
 tqdm-loggable==0.2
     # via runpod
-transformers==4.53.1
+transformers==4.53.2
     # via finetune-setup-example (pyproject.toml:dev)
 typer==0.16.0
     # via
