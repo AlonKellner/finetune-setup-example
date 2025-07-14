@@ -73,6 +73,7 @@ def main(
     should_freeze_base_model: bool = True,
     should_freeze_feature_encoder: bool = True,
     sp_vocab_size: int = 1000,
+    sp_bpe_dropout: float = 0.1,
     job_path: str | None = None,
     job_stem: str | None = None,
     job_type: str | None = None,
@@ -159,6 +160,7 @@ def main(
         s3_client_v2,
         "train",
         sp_vocab_size,
+        sp_bpe_dropout,
     )
     common_voice_eval = create_cached_common_voice_split(
         data_seed,
@@ -173,6 +175,7 @@ def main(
         s3_client_v2,
         "test",
         sp_vocab_size,
+        sp_bpe_dropout,
     )
 
     model = load_wav2vec2_for_adaptuning(

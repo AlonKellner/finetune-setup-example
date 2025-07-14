@@ -16,6 +16,7 @@ from types_boto3_s3 import S3Client
 from ..custom_datasets import prepare_cached_dataset
 from ..custom_datasets.lazy import LazyDataset
 from ..custom_datasets.resized import ResizedDataset
+from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
 
 Batch = dict[str, Any]
 
@@ -32,6 +33,7 @@ class LazyLoader:
         data_seed: int,
         sp_dir: str,
         sp_vocab_size: int,
+        sp_bpe_dropout: float,
         sp_extra_symbols: list[str] | None = None,
     ) -> None:
         self.processor = processor
@@ -41,6 +43,7 @@ class LazyLoader:
         self.data_seed = data_seed
         self.sp_dir = sp_dir
         self.sp_vocab_size = sp_vocab_size
+        self.sp_bpe_dropout = sp_bpe_dropout
         self.sp_extra_symbols = [] if sp_extra_symbols is None else sp_extra_symbols
         self.common_voice_split = None
         self.meta_common_voice_split = None
@@ -70,8 +73,6 @@ class LazyLoader:
             padding=PaddingStrategy.DO_NOT_PAD,
         ).input_values[0]
         batch["length"] = len(batch["input_values"])
-
-        batch["labels"] = self.processor(text=batch["sentence"]).input_ids  # type: ignore
         return batch
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
@@ -107,10 +108,24 @@ class LazyLoader:
         spm.SentencePieceTrainer.Train(
             input=train_text_path,
             model_prefix=f"{self.sp_dir}/spm",
+            character_coverage=1.0,
             vocab_size=self.sp_vocab_size,
             user_defined_symbols=self.sp_extra_symbols,
             model_type="bpe",
+            unk_id=0,
+            pad_id=1,
+            bos_id=2,
+            eos_id=3,
         )
+
+        tokenizer = self.processor.tokenizer
+        tokenizer = BpeWav2Vec2CTCTokenizer(
+            sp_model_path=f"{self.sp_dir}/spm.model",
+            sp_bpe_dropout=self.sp_bpe_dropout,
+            word_delimiter_token=tokenizer.word_delimiter_token,
+            target_lang=tokenizer.target_lang,
+        )
+        self.processor.tokenizer = tokenizer
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -118,17 +133,36 @@ class LazyLoader:
 
         rand_int = random.randint(0, len(common_voice_split) - 1)
 
-        print("Target text:", common_voice_split[rand_int]["sentence"])
-        print(
-            "Input array shape:", common_voice_split[rand_int]["audio"]["array"].shape
-        )
-        print("Sampling rate:", common_voice_split[rand_int]["audio"]["sampling_rate"])
+        sentence = common_voice_split[rand_int]["sentence"]
 
+        print(common_voice_split.column_names)
         common_voice_split = common_voice_split.map(
-            self.prepare_dataset, remove_columns=common_voice_split.column_names
+            self.prepare_dataset,
+            remove_columns=[
+                c for c in common_voice_split.column_names if c != "sentence"
+            ],
         )
-        common_voice_split = common_voice_split.shuffle(seed=self.data_seed)
+        print(common_voice_split.column_names)
 
+        print("Target text:", sentence)
+        norm_sentence = common_voice_split[rand_int]["sentence"]
+        print("Norm Target text:", norm_sentence)
+        ids = self.processor.tokenizer.sp_model.encode(
+            norm_sentence,
+            out_type=int,
+            enable_sampling=False,
+            nbest_size=-1,
+        )
+        labels = [self.processor.tokenizer.sp_model.id_to_piece(id) for id in ids]
+        print("Target pcs:\t", labels)
+        print("Target ids:\t", ids)
+        for i in range(10):
+            ids = self.processor(
+                text=common_voice_split[rand_int]["sentence"]
+            ).input_ids
+            print(f"Processed Target ids [{i}]:\t", ids)
+
+        common_voice_split = common_voice_split.shuffle(seed=self.data_seed)
         return common_voice_split
 
     def load_meta_common_voice_for_wav2vec2(self) -> HFDataset:
@@ -154,6 +188,7 @@ def create_cached_common_voice_split(
     s3_client_v2: S3Client,
     split: str,
     sp_vocab_size: int,
+    sp_bpe_dropout: float,
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
     loader = LazyLoader(
@@ -164,6 +199,7 @@ def create_cached_common_voice_split(
         data_seed=data_seed,
         sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/spm",
         sp_vocab_size=sp_vocab_size,
+        sp_bpe_dropout=sp_bpe_dropout,
     )
 
     common_voice_split = LazyDataset(

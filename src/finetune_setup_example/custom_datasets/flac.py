@@ -48,6 +48,7 @@ class FlacDataset(TorchDataset):
             )
             traceback.print_stack()
             try:
+                self.validate_item(0)
                 with concurrent.futures.ThreadPoolExecutor(
                     max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
                 ) as executor:

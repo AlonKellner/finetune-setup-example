@@ -22,7 +22,8 @@ class LazyDataset(TorchDataset):
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
-        print("WARNING: LazyDataset __getattr__ called for", name)
+        if self._inner_dataset is None:
+            print("WARNING: LazyDataset __getattr__ called for", name)
         _inner_dataset = self._get_inner_dataset()
 
         return getattr(_inner_dataset, name)
@@ -48,7 +49,8 @@ class LazyDataset(TorchDataset):
 
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
-        print("WARNING: LazyDataset __getitem__ called for", index)
+        if self._inner_dataset is None:
+            print("WARNING: LazyDataset __getitem__ called for", index)
         _inner_dataset = self._get_inner_dataset()
 
         return _inner_dataset[index]

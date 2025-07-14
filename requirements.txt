@@ -57,7 +57,7 @@ cachetools==5.5.2
     # via
     #   google-auth
     #   skypilot
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   httpcore
     #   httpx
@@ -480,7 +480,7 @@ rich-toolkit==0.14.8
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-rignore==0.5.1
+rignore==0.6.2
     # via fastapi-cloud-cli
 rpds-py==0.26.0
     # via
