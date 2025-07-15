@@ -192,19 +192,18 @@ class TarS3Dataset(TorchDataset):
         self.sync_multiple_groups(list(range(len(self.grouped_indices))))
 
     def sync_multiple_groups(self, groups: list[int]) -> None:
-        """Sync all groups."""
-        if any((not self.group_exists(i)) for i in groups):
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
-            ) as executor:
-                for _ in tqdm(
-                    executor.map(
-                        self.sync_group,
-                        groups,
-                    ),
-                    total=len(groups),
-                ):
-                    pass
+        """Sync multiple groups."""
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+        ) as executor:
+            for _ in tqdm(
+                executor.map(
+                    self.sync_group,
+                    groups,
+                ),
+                total=len(groups),
+            ):
+                pass
 
     def sync_metadata(self) -> Path:
         """Sync the metadata file with s3."""
