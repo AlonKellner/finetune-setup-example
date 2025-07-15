@@ -2,19 +2,16 @@
 
 import concurrent.futures
 import os
-import tarfile
-import tempfile
 import threading
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from botocore.exceptions import ClientError
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 from tqdm.auto import tqdm
-from types_boto3_s3.client import S3Client
 
+from ..tar_s3 import TarS3Syncer
 from .flac import FlacDataset
 
 
@@ -25,8 +22,7 @@ class TarS3Dataset(TorchDataset):
         self,
         inner_dataset: FlacDataset,
         cache_path: str | Path,
-        s3_client: S3Client,
-        s3_client_v2: S3Client,
+        syncer: TarS3Syncer,
         cache_bucket: str,
         indices_order: list[int],
         max_tar_bytes: int,
@@ -38,8 +34,7 @@ class TarS3Dataset(TorchDataset):
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = Path(cache_path)
-        self.s3_client = s3_client
-        self.s3_client_v2 = s3_client_v2
+        self.syncer = syncer
         self.cache_bucket = cache_bucket
         self.max_tar_bytes = max_tar_bytes
         self.sync_interval = sync_interval
@@ -48,8 +43,8 @@ class TarS3Dataset(TorchDataset):
         self.should_sync_previous = should_sync_previous
         self.sync_on_start = sync_on_start
 
-        if not self._bucket_exists(self.cache_bucket):
-            self._create_bucket(self.cache_bucket)
+        if not self.syncer._bucket_exists(self.cache_bucket):
+            self.syncer._create_bucket(self.cache_bucket)
 
         for _ in tqdm(list(range(1))):
             metadata_path = self.sync_metadata()
@@ -105,8 +100,7 @@ class TarS3Dataset(TorchDataset):
             result = TarS3Dataset(
                 result,
                 self.cache_path,
-                self.s3_client,
-                self.s3_client_v2,
+                self.syncer,
                 self.cache_bucket,
                 self._indices_order,
                 self.max_tar_bytes,
@@ -117,69 +111,12 @@ class TarS3Dataset(TorchDataset):
             )
         return result
 
-    def _bucket_exists(self, bucket: str) -> bool:
-        try:
-            head_metadata = self.s3_client.head_bucket(Bucket=bucket)[
-                "ResponseMetadata"
-            ]
-            return (
-                ("HTTPStatusCode" in head_metadata)
-                and (head_metadata["HTTPStatusCode"] == 200)
-                and ("HTTPHeaders" in head_metadata)
-                and ("content-length" in head_metadata["HTTPHeaders"])
-                and (int(head_metadata["HTTPHeaders"]["content-length"]) == 0)
-            )
-        except ClientError:
-            return False
-
-    def _create_bucket(self, bucket: str) -> None:
-        self.s3_client.create_bucket(Bucket=bucket)
-
-    def _exists(self, name: str) -> bool:
-        try:
-            head_metadata = self.s3_client.head_object(
-                Bucket=self.cache_bucket, Key=f"{name}.tar.gz"
-            )["ResponseMetadata"]
-            return (
-                ("HTTPStatusCode" in head_metadata)
-                and (head_metadata["HTTPStatusCode"] == 200)
-                and ("HTTPHeaders" in head_metadata)
-                and ("content-length" in head_metadata["HTTPHeaders"])
-                and (int(head_metadata["HTTPHeaders"]["content-length"]) > 0)
-            )
-        except ClientError:
-            return False
-
     def group_exists(self, group: int) -> bool:
         """Check whether a group exists in s3 cache or not."""
         padded_group = str(group % len(self.grouped_indices)).zfill(
             len(str(len(self.grouped_indices)))
         )  # type: ignore
-        return self._exists(padded_group)
-
-    def _upload(self, files: list[Path], name: str) -> None:
-        if self._exists(name):
-            return
-        with tempfile.TemporaryFile() as f:
-            with tarfile.open(fileobj=f, mode="w:gz") as tar:
-                for file in files:
-                    if file.exists():
-                        tar.add(str(file.absolute()), arcname=file.name)
-                    else:
-                        print(f"WARNING: {file} does not exist and will be skipped.")
-            f.seek(0)
-            self.s3_client_v2.upload_fileobj(
-                Fileobj=f, Bucket=self.cache_bucket, Key=f"{name}.tar.gz"
-            )
-
-    def _download(self, name: str) -> None:
-        with tempfile.TemporaryFile() as f:
-            self.s3_client.download_fileobj(
-                Bucket=self.cache_bucket, Key=f"{name}.tar.gz", Fileobj=f
-            )
-            f.seek(0)
-            with tarfile.open(fileobj=f, mode="r:gz") as tar:
-                tar.extractall(path=str(self.cache_path.absolute()), filter="data")
+        return self.syncer._exists(padded_group, self.cache_bucket)
 
     def __len__(self) -> int:
         """Propegates the length of the inner dataset."""
@@ -237,12 +174,9 @@ class TarS3Dataset(TorchDataset):
         group_flac_paths = [
             self._indices_flac_paths[i] for i in self.grouped_indices[group]
         ]
-        if all(p.exists() for p in group_flac_paths):
-            self._upload(group_flac_paths, padded_group)
-        elif self._exists(padded_group):
-            self._download(padded_group)
-        else:
-            print("WARNING: A group does not exist and cannot be synced:", padded_group)
+        self.syncer.sync_multiple_files(
+            group_flac_paths, padded_group, self.cache_bucket, self.cache_path
+        )
 
     def clean_group(self, group: int) -> None:
         """Sync the group of local files with s3 tar."""
@@ -274,14 +208,6 @@ class TarS3Dataset(TorchDataset):
 
     def sync_metadata(self) -> Path:
         """Sync the metadata file with s3."""
-        return self.sync_file(self.cache_path / "metadata.parquet")
-
-    def sync_file(self, file: Path) -> Path:
-        """Sync a single file."""
-        if file.exists():
-            self._upload([file], file.stem)
-        elif self._exists(file.stem):
-            self._download(file.stem)
-        else:
-            print(f"WARNING: A file does not exist and cannot be synced: {file}")
-        return file
+        return self.syncer.sync_file(
+            self.cache_path / "metadata.parquet", self.cache_bucket, self.cache_path
+        )

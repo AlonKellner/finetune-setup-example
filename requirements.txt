@@ -507,7 +507,7 @@ semantic-version==2.10.0
     # via comet-ml
 sentencepiece==0.2.0
     # via finetune-setup-example (pyproject.toml:dev)
-sentry-sdk==2.32.0
+sentry-sdk==2.33.0
     # via
     #   comet-ml
     #   fastapi-cloud-cli

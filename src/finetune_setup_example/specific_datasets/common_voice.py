@@ -10,12 +10,12 @@ import uroman
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
 from transformers.utils import PaddingStrategy
-from types_boto3_s3 import S3Client
 
 from ..custom_datasets import prepare_cached_dataset
 from ..custom_datasets.lazy import LazyDataset
 from ..custom_datasets.resized import ResizedDataset
 from ..custom_wav2vec2.processor import CustomWav2Vec2Processor
+from ..tar_s3 import TarS3Syncer
 
 Batch = dict[str, Any]
 
@@ -176,8 +176,7 @@ def create_cached_common_voice_split(
     split_size: int,
     split_limit: int,
     processor: CustomWav2Vec2Processor,
-    s3_client: S3Client,
-    s3_client_v2: S3Client,
+    syncer: TarS3Syncer,
     split: str,
     sp_vocab_size: int,
     sp_bpe_dropout: float,
@@ -215,8 +214,7 @@ def create_cached_common_voice_split(
         sample_rate,
         cache_path,
         cache_bucket,
-        s3_client,
-        s3_client_v2,
+        syncer,
         sync_on_start=sync_on_start,
     )
 

@@ -1,6 +1,6 @@
 """Code for "adaptuning" mms checkpoints with common voice."""
 
-import comet_ml  # type: ignore  # noqa: F401
+import torch
 
 from ..custom_hf.trainer import train
 from ..custom_hf.training_args import create_training_arguments
@@ -13,6 +13,7 @@ from ..specific_wav2vec2.hf_utils import demo_trained_model, hf_push_adapter
 from ..specific_wav2vec2.model import load_wav2vec2_for_adaptuning
 from ..specific_wav2vec2.processor import create_wav2vec2_processor
 from ..specific_wav2vec2.trainer import create_trainer
+from ..tar_s3 import TarS3Syncer
 
 
 def main(
@@ -92,6 +93,13 @@ def main(
         target_hf_repo=target_hf_repo,
     )
 
+    s3_client, s3_client_v2 = create_s3_client()
+
+    syncer = TarS3Syncer(
+        s3_client=s3_client,
+        s3_client_v2=s3_client_v2,
+    )
+
     training_args = create_training_arguments(
         seed=seed,
         data_seed=data_seed,
@@ -138,6 +146,7 @@ def main(
         sp_bpe_dropout=sp_bpe_dropout,
         max_batch_length=training_args.per_device_train_batch_total_length,
         padding_side=padding_side,
+        syncer=syncer,
     )
 
     if train_processor.can_create_bpe_tokenizer():
@@ -152,10 +161,9 @@ def main(
         sp_bpe_dropout=sp_bpe_dropout,
         max_batch_length=training_args.per_device_eval_batch_total_length,
         padding_side=padding_side,
+        syncer=syncer,
     )
     eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
-
-    s3_client, s3_client_v2 = create_s3_client()
 
     common_voice_train = create_cached_common_voice_split(
         data_seed,
@@ -166,8 +174,7 @@ def main(
         train_size,
         train_limit,
         train_processor,
-        s3_client,
-        s3_client_v2,
+        syncer,
         "train",
         sp_vocab_size,
         sp_bpe_dropout,
@@ -182,8 +189,7 @@ def main(
         eval_size,
         eval_limit,
         eval_processor,
-        s3_client,
-        s3_client_v2,
+        syncer,
         "test",
         sp_vocab_size,
         sp_bpe_dropout,
@@ -214,7 +220,12 @@ def main(
         eval_processor=eval_processor,
     )
 
-    if should_train:
+    accelerator_available = torch.accelerator.is_available()
+    if not accelerator_available:
+        print(
+            "WARNING: Torch accelerator is not available. Training will not be performed."
+        )
+    if should_train and accelerator_available:
         train(trainer)
 
     if should_push:
@@ -222,3 +233,5 @@ def main(
 
     if should_demo:
         demo_trained_model(target_lang, sample_rate, target_hf_repo, hf_user)
+
+    print("FINISHED!")

@@ -2,10 +2,9 @@
 
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
-from types_boto3_s3.client import S3Client
 
-from finetune_setup_example.specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
-
+from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
+from ..tar_s3 import TarS3Syncer
 from .flac import FlacDataset
 from .tar_s3 import TarS3Dataset
 
@@ -19,8 +18,7 @@ def prepare_cached_dataset(
     sample_rate: int,
     cache_path: str,
     cache_bucket: str,
-    s3_client: S3Client,
-    s3_client_v2: S3Client,
+    syncer: TarS3Syncer,
     tar_size_gb: float | int = 1,
     sync_interval: int = 2,
     groups_per_sync: int = 6,
@@ -32,8 +30,7 @@ def prepare_cached_dataset(
     dataset = TarS3Dataset(
         dataset,
         cache_path,
-        s3_client,
-        s3_client_v2,
+        syncer,
         cache_bucket,
         indices_order,
         max_tar_bytes=int(tar_size_gb * GB),

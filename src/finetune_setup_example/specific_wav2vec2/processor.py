@@ -11,6 +11,7 @@ from transformers import (
 
 from ..custom_wav2vec2.feature_extractor import CustomWav2Vec2FeatureExtractor
 from ..custom_wav2vec2.processor import CustomWav2Vec2Processor
+from ..tar_s3 import TarS3Syncer
 
 
 @runtime_checkable
@@ -28,6 +29,7 @@ def create_wav2vec2_processor(
     tokenizer_hf_repo: str,
     target_hf_repo: str,
     sp_bpe_dropout: float,
+    syncer: TarS3Syncer,
     max_batch_length: int | None = None,
     padding_side: str = "random",
 ) -> tuple[CustomWav2Vec2Processor, CustomWav2Vec2FeatureExtractor]:
@@ -69,6 +71,7 @@ def create_wav2vec2_processor(
         sp_bpe_dropout=sp_bpe_dropout,
         feature_extractor=feature_extractor,
         tokenizer=tokenizer,
+        syncer=syncer,
     )
     assert isinstance(processor, HasCustomFields) and isinstance(
         processor, CustomWav2Vec2Processor
