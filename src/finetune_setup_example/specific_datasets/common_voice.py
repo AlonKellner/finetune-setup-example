@@ -9,14 +9,13 @@ import sentencepiece as spm
 import uroman
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
-from transformers import Wav2Vec2Processor
 from transformers.utils import PaddingStrategy
 from types_boto3_s3 import S3Client
 
 from ..custom_datasets import prepare_cached_dataset
 from ..custom_datasets.lazy import LazyDataset
 from ..custom_datasets.resized import ResizedDataset
-from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
+from ..custom_wav2vec2.processor import CustomWav2Vec2Processor
 
 Batch = dict[str, Any]
 
@@ -26,7 +25,7 @@ class LazyLoader:
 
     def __init__(
         self,
-        processor: Wav2Vec2Processor,
+        processor: CustomWav2Vec2Processor,
         target_lang: str,
         sample_rate: int,
         split: str,
@@ -117,15 +116,8 @@ class LazyLoader:
             bos_id=2,
             eos_id=3,
         )
-
-        tokenizer = self.processor.tokenizer
-        tokenizer = BpeWav2Vec2CTCTokenizer(
-            sp_model_path=f"{self.sp_dir}/spm.model",
-            sp_bpe_dropout=self.sp_bpe_dropout,
-            word_delimiter_token=tokenizer.word_delimiter_token,
-            target_lang=tokenizer.target_lang,
-        )
-        self.processor.tokenizer = tokenizer
+        if self.processor.can_create_bpe_tokenizer():
+            self.processor.convert_tokenizer_to_bpe()
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -183,12 +175,13 @@ def create_cached_common_voice_split(
     raw_split_size: int,
     split_size: int,
     split_limit: int,
-    processor: Wav2Vec2Processor,
+    processor: CustomWav2Vec2Processor,
     s3_client: S3Client,
     s3_client_v2: S3Client,
     split: str,
     sp_vocab_size: int,
     sp_bpe_dropout: float,
+    sync_on_start: bool,
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
     loader = LazyLoader(
@@ -216,6 +209,7 @@ def create_cached_common_voice_split(
     Path(cache_path).mkdir(parents=True, exist_ok=True)
     cache_bucket = f"{target_hf_repo}-cache-{data_seed}-{split}-set"
     common_voice_split = prepare_cached_dataset(
+        processor.convert_tokenizer_to_bpe(),
         common_voice_split,
         meta_common_voice_split,
         sample_rate,
@@ -223,9 +217,16 @@ def create_cached_common_voice_split(
         cache_bucket,
         s3_client,
         s3_client_v2,
+        sync_on_start=sync_on_start,
     )
 
     common_voice_split = ResizedDataset(common_voice_split, split_limit)
-    common_voice_split[0]
-    raise Exception()
+    item = common_voice_split[0]
+    print("=== Index 0 ===")
+    print("Keys:", item.keys())
+    print("Sentence:", item["sentence"])
+    print("Labels:\t", item["labels"])
+    for i in range(10):
+        item = common_voice_split[0]
+        print(f"Labels [{i}]:\t", item["labels"])
     return common_voice_split

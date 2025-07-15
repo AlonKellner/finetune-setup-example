@@ -67,9 +67,11 @@ def main(
     final_dropout: float = 0.0,
     layerdrop: float = 0.0,
     padding_side: str = "random",
+    should_train: bool = True,
     should_push: bool = False,
     should_demo: bool = False,
     eval_on_start: bool = False,
+    sync_on_start: bool = False,
     should_freeze_base_model: bool = True,
     should_freeze_feature_encoder: bool = True,
     sp_vocab_size: int = 1000,
@@ -128,22 +130,30 @@ def main(
     )
 
     train_processor, _ = create_wav2vec2_processor(
+        split="train",
         target_lang=target_lang,
         sample_rate=sample_rate,
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
+        sp_bpe_dropout=sp_bpe_dropout,
         max_batch_length=training_args.per_device_train_batch_total_length,
         padding_side=padding_side,
     )
 
+    if train_processor.can_create_bpe_tokenizer():
+        train_processor.convert_tokenizer_to_bpe()
+
     eval_processor, _ = create_wav2vec2_processor(
+        split="test",
         target_lang=target_lang,
         sample_rate=sample_rate,
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
+        sp_bpe_dropout=sp_bpe_dropout,
         max_batch_length=training_args.per_device_eval_batch_total_length,
         padding_side=padding_side,
     )
+    eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
 
     s3_client, s3_client_v2 = create_s3_client()
 
@@ -161,6 +171,7 @@ def main(
         "train",
         sp_vocab_size,
         sp_bpe_dropout,
+        sync_on_start=sync_on_start,
     )
     common_voice_eval = create_cached_common_voice_split(
         data_seed,
@@ -176,6 +187,7 @@ def main(
         "test",
         sp_vocab_size,
         sp_bpe_dropout,
+        sync_on_start=sync_on_start,
     )
 
     model = load_wav2vec2_for_adaptuning(
@@ -201,7 +213,9 @@ def main(
         train_processor=train_processor,
         eval_processor=eval_processor,
     )
-    train(trainer)
+
+    if should_train:
+        train(trainer)
 
     if should_push:
         hf_push_adapter(target_lang, model, training_args.output_dir, trainer)

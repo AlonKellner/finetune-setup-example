@@ -839,17 +839,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dotenv"
-version = "0.9.9"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "python-dotenv" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/b7/545d2c10c1fc15e48653c91efde329a790f2eecfbbf2bd16003b5db2bab0/dotenv-0.9.9-py2.py3-none-any.whl", hash = "sha256:29cf74a087b31dafdb5a446b6d7e11cbce8ed2741540e2339c69fbef92c94ce9", size = 1892, upload-time = "2025-02-19T22:15:01.647Z" },
-]
-
-[[package]]
 name = "dulwich"
 version = "0.23.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1084,7 +1073,6 @@ dev = [
     { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extra = ["audio"] },
-    { name = "dotenv" },
     { name = "evaluate" },
     { name = "gitpython" },
     { name = "huggingface-hub" },
@@ -1095,6 +1083,7 @@ dev = [
     { name = "pandas" },
     { name = "polars" },
     { name = "pytest" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece" },
@@ -1109,8 +1098,8 @@ dev-tools = [
     { name = "pytest" },
 ]
 jobs = [
-    { name = "dotenv" },
     { name = "gitpython" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "types-pyyaml" },
 ]
@@ -1119,7 +1108,6 @@ mms-blog-post = [
     { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extra = ["audio"] },
-    { name = "dotenv" },
     { name = "evaluate" },
     { name = "gitpython" },
     { name = "huggingface-hub" },
@@ -1129,6 +1117,7 @@ mms-blog-post = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "polars" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece" },
@@ -1162,7 +1151,6 @@ dev = [
     { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extras = ["audio"], specifier = "<4" },
-    { name = "dotenv" },
     { name = "evaluate" },
     { name = "gitpython" },
     { name = "huggingface-hub" },
@@ -1173,6 +1161,7 @@ dev = [
     { name = "pandas" },
     { name = "polars" },
     { name = "pytest" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece", specifier = ">=0.2.0" },
@@ -1185,8 +1174,8 @@ dev = [
 ]
 dev-tools = [{ name = "pytest" }]
 jobs = [
-    { name = "dotenv" },
     { name = "gitpython" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "types-pyyaml" },
 ]
@@ -1195,7 +1184,6 @@ mms-blog-post = [
     { name = "boto3" },
     { name = "comet-ml" },
     { name = "datasets", extras = ["audio"], specifier = "<4" },
-    { name = "dotenv" },
     { name = "evaluate" },
     { name = "gitpython" },
     { name = "huggingface-hub" },
@@ -1205,6 +1193,7 @@ mms-blog-post = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "polars" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece", specifier = ">=0.2.0" },

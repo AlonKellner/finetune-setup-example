@@ -34,6 +34,7 @@ class TarS3Dataset(TorchDataset):
         groups_per_sync: int = 6,
         should_clean_groups: bool = False,
         should_sync_previous: bool = False,
+        sync_on_start: bool = False,
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = Path(cache_path)
@@ -45,6 +46,10 @@ class TarS3Dataset(TorchDataset):
         self.groups_per_sync = groups_per_sync
         self.should_clean_groups = should_clean_groups
         self.should_sync_previous = should_sync_previous
+        self.sync_on_start = sync_on_start
+
+        if not self._bucket_exists(self.cache_bucket):
+            self._create_bucket(self.cache_bucket)
 
         for _ in tqdm(list(range(1))):
             metadata_path = self.sync_metadata()
@@ -84,11 +89,12 @@ class TarS3Dataset(TorchDataset):
             group[0] for group in self.grouped_indices[::sync_interval]
         ]
 
-        if not self._bucket_exists(self.cache_bucket):
-            self._create_bucket(self.cache_bucket)
-
-        for i in tqdm(list(range(groups_per_sync))):
-            self.sync_group(i)
+        if sync_on_start:
+            self.sync_all_groups()
+        else:
+            self.sync_multiple_groups(
+                list(range(min(groups_per_sync, len(self.grouped_indices))))
+            )
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
@@ -249,16 +255,20 @@ class TarS3Dataset(TorchDataset):
 
     def sync_all_groups(self) -> None:
         """Sync all groups."""
-        if any((not self.group_exists(i)) for i in range(len(self.grouped_indices))):
+        self.sync_multiple_groups(list(range(len(self.grouped_indices))))
+
+    def sync_multiple_groups(self, groups: list[int]) -> None:
+        """Sync all groups."""
+        if any((not self.group_exists(i)) for i in groups):
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
             ) as executor:
                 for _ in tqdm(
                     executor.map(
                         self.sync_group,
-                        range(len(self.grouped_indices)),
+                        groups,
                     ),
-                    total=len(self.grouped_indices),
+                    total=len(groups),
                 ):
                     pass
 

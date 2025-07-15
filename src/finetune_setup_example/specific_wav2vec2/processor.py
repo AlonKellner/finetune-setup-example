@@ -7,10 +7,10 @@ from typing import Protocol, runtime_checkable
 from transformers import (
     Wav2Vec2CTCTokenizer,
     Wav2Vec2FeatureExtractor,
-    Wav2Vec2Processor,
 )
 
 from ..custom_wav2vec2.feature_extractor import CustomWav2Vec2FeatureExtractor
+from ..custom_wav2vec2.processor import CustomWav2Vec2Processor
 
 
 @runtime_checkable
@@ -22,13 +22,15 @@ class HasCustomFields(Protocol):
 
 
 def create_wav2vec2_processor(
+    split: str,
     target_lang: str,
     sample_rate: int,
     tokenizer_hf_repo: str,
     target_hf_repo: str,
+    sp_bpe_dropout: float,
     max_batch_length: int | None = None,
     padding_side: str = "random",
-) -> tuple[Wav2Vec2Processor, CustomWav2Vec2FeatureExtractor]:
+) -> tuple[CustomWav2Vec2Processor, CustomWav2Vec2FeatureExtractor]:
     """Create a wav2vec2 processor, ready for training a specific language."""
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
     vocab_dict = tokenizer.vocab
@@ -62,10 +64,13 @@ def create_wav2vec2_processor(
         padding_side=padding_side,
     )
 
-    processor: Wav2Vec2Processor = Wav2Vec2Processor(
-        feature_extractor=feature_extractor, tokenizer=tokenizer
+    processor: CustomWav2Vec2Processor = CustomWav2Vec2Processor(
+        sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/spm",
+        sp_bpe_dropout=sp_bpe_dropout,
+        feature_extractor=feature_extractor,
+        tokenizer=tokenizer,
     )
     assert isinstance(processor, HasCustomFields) and isinstance(
-        processor, Wav2Vec2Processor
+        processor, CustomWav2Vec2Processor
     )
     return processor, feature_extractor

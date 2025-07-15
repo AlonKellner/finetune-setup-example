@@ -17,6 +17,8 @@ from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 from tqdm.auto import tqdm
 
+from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
+
 
 class FlacDataset(TorchDataset):
     """A wrapping dataset for caching audio as local flac files."""
@@ -27,6 +29,7 @@ class FlacDataset(TorchDataset):
         inner_meta_dataset: HFDataset | TorchDataset,
         cache_path: str | Path,
         sample_rate: int,
+        tokenizer: BpeWav2Vec2CTCTokenizer,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self._inner_dataset = inner_dataset
@@ -37,6 +40,7 @@ class FlacDataset(TorchDataset):
             metadata = self.load_metadata()
         self.metadata = metadata
         self.sample_rate = sample_rate
+        self.tokenizer = tokenizer
 
     def complete_metadata(self) -> None:
         """Make sure that the metadata is complete."""
@@ -91,7 +95,12 @@ class FlacDataset(TorchDataset):
             type(result), TorchDataset
         ):
             result = FlacDataset(
-                result, meta_result, self.cache_path, self.sample_rate, self.metadata
+                inner_dataset=result,
+                inner_meta_dataset=meta_result,
+                cache_path=self.cache_path,
+                sample_rate=self.sample_rate,
+                tokenizer=self.tokenizer,
+                metadata=self.metadata,
             )
         return result
 
@@ -161,6 +170,8 @@ class FlacDataset(TorchDataset):
             item_metadata["file_sizes"] = flac_path.stat().st_size
             self.metadata[index] = item_metadata
 
+        item_metadata = item_metadata.copy()
+        item_metadata["labels"] = self.tokenizer(item_metadata["sentence"])
         item = dict(
             input_values=samples,
             **item_metadata,

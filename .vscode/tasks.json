@@ -17,7 +17,7 @@
 		{
 			"label": "Run HP Main (venv)",
 			"type": "shell",
-			"command": "python ${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
+			"command": "${workspaceFolder}/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.hp_main.py",
 			"hide": false,
 			"group": "none",
 			"presentation": {
@@ -67,7 +67,7 @@
 		{
 			"label": "Run Python (venv)",
 			"type": "shell",
-			"command": "python ${fileDirname}/${fileBasenameNoExtension}.py",
+			"command": "${workspaceFolder}/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.py",
 			"hide": false,
 			"group": "none",
 			"presentation": {

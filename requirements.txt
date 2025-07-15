@@ -107,8 +107,6 @@ dill==0.3.8
     #   multiprocess
 dnspython==2.7.0
     # via email-validator
-dotenv==0.9.9
-    # via finetune-setup-example (pyproject.toml:dev)
 dulwich==0.23.2
     # via comet-ml
 durationpy==0.10
@@ -414,7 +412,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.1.1
     # via
-    #   dotenv
+    #   finetune-setup-example (pyproject.toml:dev)
     #   pydantic-settings
     #   skypilot
     #   uvicorn

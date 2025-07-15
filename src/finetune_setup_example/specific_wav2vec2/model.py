@@ -22,6 +22,8 @@ def load_wav2vec2_for_adaptuning(
 ) -> CustomWav2Vec2ForCTC:
     """Load a wav2vec2 model, ready to train an adapter alone."""
     assert isinstance(processor, HasCustomFields)
+    vocab_size = len(processor.tokenizer.vocab_dict)
+    print(f"Vocab size: {vocab_size}")
     model = CustomWav2Vec2ForCTC.from_pretrained(
         base_hf_repo,
         hidden_dropout=hidden_dropout,
@@ -32,8 +34,8 @@ def load_wav2vec2_for_adaptuning(
         final_dropout=final_dropout,
         layerdrop=layerdrop,
         ctc_loss_reduction="sum",
-        vocab_size=len(processor.tokenizer),
-        adapter_attn_dim=len(processor.tokenizer),
+        vocab_size=vocab_size,
+        adapter_attn_dim=vocab_size,
         ignore_mismatched_sizes=True,
         attn_implementation=attn_implementation,
     )

@@ -89,7 +89,7 @@ flash-attn = ["flash-attn==2.8.0.post2"]
 [dependency-groups]
 dev_tools = ["pytest"]
 sky = ["skypilot[kubernetes,runpod,gcp]"]
-jobs = ["gitpython", "pyyaml", "types-PyYAML", "dotenv"]
+jobs = ["gitpython", "pyyaml", "types-PyYAML", "python-dotenv"]
 mms_blog_post = [
   "accelerate",
   "boto3",
