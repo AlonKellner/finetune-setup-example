@@ -43,7 +43,7 @@ class CustomWav2Vec2Processor(Wav2Vec2Processor):
     def can_create_bpe_tokenizer(self) -> bool:
         """Check if the tokenizer can be converted to BPE."""
         self.syncer.sync_multiple_files(
-            self.sp_files, str(self.sp_dir), self.bucket, self.sp_dir
+            self.sp_files, self.sp_dir, self.bucket, Path(self.sp_dir)
         )
         return self.sp_model_path.exists() and not self.is_converted
 

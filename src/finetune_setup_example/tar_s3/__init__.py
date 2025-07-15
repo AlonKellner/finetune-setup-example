@@ -69,6 +69,7 @@ class TarS3Syncer:
 
     def _download(self, name: str, bucket: str, outpath: Path) -> None:
         with tempfile.TemporaryFile() as f:
+            print(f"{name}.tar.gz")
             self.s3_client.download_fileobj(
                 Bucket=bucket, Key=f"{name}.tar.gz", Fileobj=f
             )
@@ -83,7 +84,7 @@ class TarS3Syncer:
         if all(p.exists() for p in files):
             self._upload(files, title, bucket)
         elif self._exists(title, bucket):
-            self._download(files, bucket, outpath)
+            self._download(title, bucket, outpath)
         else:
             print("WARNING: Files do not exist and cannot be synced:", title)
 
