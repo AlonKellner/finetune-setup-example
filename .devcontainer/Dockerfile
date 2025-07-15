@@ -18,8 +18,8 @@ RUN DEBIAN_FRONTEND=noninteractive echo uv-python && uv python install --preview
     echo general-clean && rm -rf /opt/conda && \
     echo conda-down && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh -O ~/miniconda.sh && \
     echo conda-setup && /bin/bash ~/miniconda.sh -b -p /opt/conda && rm ~/miniconda.sh && \
-    echo conda-tools && conda install -y -c conda-forge 'ffmpeg<7,>5' libstdcxx-ng libgcc ncurses && ffmpeg -version && \
-    echo apt-tools && apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg curl pkg-config cmake && \
+    echo conda-tools && conda install -y -c conda-forge 'ffmpeg<7,>5' libstdcxx-ng libgcc ncurses 'openssl=3.0.1' && ffmpeg -version && \
+    echo apt-tools && apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg curl pkg-config cmake openssl libssl-dev git && \
     echo gcloud && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
     apt-get update && apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin && \
