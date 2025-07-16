@@ -188,14 +188,20 @@ def create_cached_common_voice_split(
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])
 
-    common_voice_split._inner_dataset.tokenizer = processor.convert_tokenizer_to_bpe()
+    tokenizer = processor.convert_tokenizer_to_bpe()
+    common_voice_split._inner_dataset.tokenizer = tokenizer
 
     common_voice_split = ResizedDataset(common_voice_split, split_limit)
     item = common_voice_split[0]
     print("=== Index 0 ===")
-    print("Keys:", item.keys())
-    print("Sentence:", item["sentence"])
+    print("Keys:\t", item.keys())
+    print("Sentence:\t", item["sentence"])
     print("Labels:\t", item["labels"])
+    print("Decoded 1:\t", tokenizer.decode(item["labels"]["input_ids"]))
+    print(
+        "Decoded 2:\t",
+        tokenizer.decode([ii for i in item["labels"]["input_ids"] for ii in [i] * 3]),
+    )
     for i in range(10):
         item = common_voice_split[0]
         print(f"Labels [{i}]:\t", item["labels"])

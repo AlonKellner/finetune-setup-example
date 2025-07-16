@@ -75,7 +75,7 @@ def main(
     sync_on_start: bool = False,
     should_freeze_base_model: bool = False,
     should_freeze_feature_encoder: bool = True,
-    sp_vocab_size: int = 32,
+    sp_vocab_size: int = 128,
     sp_bpe_dropout: float = 0.1,
     job_path: str | None = None,
     job_stem: str | None = None,

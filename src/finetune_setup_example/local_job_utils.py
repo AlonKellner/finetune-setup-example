@@ -20,5 +20,6 @@ def run_local_job(job_func: Callable, env_file: Path | None = None) -> None:
     else:
         with open(hp_path) as f:
             hp_set = yaml.safe_load(f)
+    hp_set.update({k.lower(): v for k, v in os.environ.items() if k.startswith("JOB_")})
 
     job_func(**hp_set, hp_set=hp_set)
