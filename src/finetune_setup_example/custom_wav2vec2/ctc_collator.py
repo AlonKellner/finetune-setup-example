@@ -34,12 +34,10 @@ class DataCollatorCTCWithPadding:
         """Collates the features."""
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
-        print("features: ", features[0].keys())
         input_features = [
             {"input_values": feature["input_values"]} for feature in features
         ]
         label_features = [feature["labels"] for feature in features]
-        print("label_features: ", label_features[0])
 
         batch = self.processor.pad(
             input_features,
