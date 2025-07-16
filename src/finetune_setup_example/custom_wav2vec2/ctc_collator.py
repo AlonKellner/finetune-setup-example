@@ -34,10 +34,12 @@ class DataCollatorCTCWithPadding:
         """Collates the features."""
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
+        print("features: ", features[0].keys())
         input_features = [
             {"input_values": feature["input_values"]} for feature in features
         ]
-        label_features = [{"input_ids": feature["labels"]} for feature in features]
+        label_features = [feature["labels"] for feature in features]
+        print("label_features: ", label_features[0])
 
         batch = self.processor.pad(
             input_features,
@@ -57,7 +59,7 @@ class DataCollatorCTCWithPadding:
 
         batch["labels"] = labels
         batch["flat_labels"] = torch.cat(
-            [torch.tensor(feature["labels"]) for feature in features]
+            [torch.tensor(labels["input_ids"]) for labels in label_features]
         )  # type: ignore
 
         return batch

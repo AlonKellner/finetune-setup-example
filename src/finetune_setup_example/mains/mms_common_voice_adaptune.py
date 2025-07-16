@@ -52,7 +52,7 @@ def main(
     adapter_stable_ratio: float = 0.45,
     adapter_decay_ratio: float = 0.5,
     mega_batch_mult: int = 100,
-    dataloader_num_workers: int = 4,
+    dataloader_num_workers: int = 0,
     fp16: bool = False,
     save_steps: int = 100,
     eval_steps: int = 100,
@@ -83,8 +83,9 @@ def main(
     hp_set: dict | None = None,
 ) -> None:
     """Training a model."""
-    print(f"Running {job_stem} job of type {job_type}.")
-    print(f"Job path: {job_path}")
+    if job_path is not None:
+        print(f"Running {job_stem} job of type {job_type}.")
+        print(f"Job path: {job_path}")
 
     init_training(
         seed=seed,
@@ -225,6 +226,11 @@ def main(
         print(
             "WARNING: Torch accelerator is not available. Training will not be performed."
         )
+        train_dataloader = trainer.get_train_dataloader()
+        for item in train_dataloader:
+            print([k for k in item])
+            break
+
     if should_train and accelerator_available:
         train(trainer)
 

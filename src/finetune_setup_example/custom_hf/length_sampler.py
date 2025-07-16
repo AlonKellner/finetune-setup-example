@@ -1,12 +1,14 @@
 """A custom version of the `transformers` length grouped sampler."""
 
 from collections.abc import Iterator
+from datetime import datetime
 
 import numpy as np
 import torch
 from datasets import Dataset as HFDataset
 from torch import Generator
 from torch.utils.data import Dataset, Sampler
+from tqdm.auto import tqdm
 from transformers import BatchEncoding
 from transformers.utils import logging
 
@@ -41,18 +43,25 @@ def get_length_grouped_batches(
         if mega_batch_mult == 0:
             mega_batch_mult = 1
 
+    start_time = datetime.now()
+    print(datetime.now() - start_time, "shuffle_indices_in_groups")
     indices, grouped_indices = shuffle_indices_in_groups(
         lengths, generator, indices_order, grouped_indices
     )
+    print(datetime.now() - start_time, "generate_megabatches")
     megabatches = generate_megabatches(indices, batch_size, mega_batch_mult)
+    print(datetime.now() - start_time, "move_longest_item_to_first_megabatch")
     megabatches = move_longest_item_to_first_megabatch(megabatches, lengths)
+    print(datetime.now() - start_time, "sort_each_megabatch_by_length")
     megabatches = sort_each_megabatch_by_length(megabatches, lengths)
 
     indices = [i for megabatch in megabatches for i in megabatch]
 
+    print(datetime.now() - start_time, "generate_total_length_batches")
     batches = generate_total_length_batches(
         indices, lengths, batch_size, batch_total_length
     )
+    print(datetime.now() - start_time, "shuffle_batches_in_groups")
     batches = shuffle_batches_in_groups(batches, grouped_indices, generator)
 
     indices = [i for batch in batches for i in batch]
@@ -66,6 +75,8 @@ def get_length_grouped_batches(
         assert len(set(indices)) == len(lengths)
         assert max(indices) == len(lengths) - 1
     assert min(indices) == 0
+
+    print(datetime.now() - start_time, "done!")
     return batches
 
 
@@ -199,12 +210,13 @@ def shuffle_indices_in_groups(
     if grouped_indices is not None:
         indices = []
         if indices_order is not None:
+            indices_set = set(indices_order)
             grouped_indices = [
-                [item for item in group if item in indices_order]
-                for group in grouped_indices
+                [item for item in group if item in indices_set]
+                for group in tqdm(grouped_indices)
             ]
             grouped_indices = [group for group in grouped_indices if (len(group) > 0)]
-        for group in grouped_indices:
+        for group in tqdm(grouped_indices):
             group_perm = torch.randperm(len(group), generator=generator)
             group_indices = [group[i] for i in group_perm]
             indices.extend(group_indices)
@@ -266,6 +278,7 @@ class CustomLengthGroupedSampler(Sampler[list[int]]):
         self.grouped_indices = grouped_indices
         self.batch_total_length = batch_total_length
         self.epoch = self._generate_epoch()
+        self.epoch_used = False
 
     def _generate_epoch(self) -> list[list[int]]:
         """Generate a new epoch."""
@@ -300,5 +313,8 @@ utilization ratio: {utilization_ratio:.2%}"""
 
     def __iter__(self) -> Iterator[list[int]]:
         """Get iterator with shuffled indices."""
-        self.epoch = self._generate_epoch()
+        if self.epoch_used:
+            self.epoch = self._generate_epoch()
+        else:
+            self.epoch_used = True
         return iter(self.epoch)
