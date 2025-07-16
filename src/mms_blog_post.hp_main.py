@@ -15,18 +15,12 @@ def hp_main() -> None:
     default_hp_set["job_path"] = f"{name}.job.yaml"
     hp_sets = [
         dict(
+            base_hf_repo="facebook/mms-1b-all",
+            num_train_epochs=5,
+            dataloader_num_workers=16,
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,
             job_type=job_type,
-            base_hf_repo="facebook/mms-1b-all",
-            should_freeze_base_model=False,
-            fp16=True,
-            attn_implementation="flash_attention_2",
-            num_train_epochs=5,
-            dataloader_num_workers=16,
-            effective_batch_size=128,
-            per_device_train_batch_size=128,
-            per_device_eval_batch_size=256,
             per_device_train_batch_total_seconds=batch_total_seconds,
             per_device_eval_batch_total_seconds=batch_total_seconds,
             hidden_dropout=dropout,
@@ -34,10 +28,12 @@ def hp_main() -> None:
             attention_dropout=dropout,
             final_dropout=dropout,
             layerdrop=dropout,
+            sp_vocab_size=sp_vocab_size,
         )
         for batch_total_seconds in [2100.0]
         for job_type in ["a100"]
         for dropout in [0.0]
+        for sp_vocab_size in [30, 50, 100]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")

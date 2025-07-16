@@ -189,7 +189,7 @@ def create_cached_common_voice_split(
         sample_rate=sample_rate,
         split=split,
         data_seed=data_seed,
-        sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/spm",
+        sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
     )
