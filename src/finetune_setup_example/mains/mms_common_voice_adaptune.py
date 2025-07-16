@@ -78,9 +78,8 @@ def main(
     sp_vocab_size: int = 128,
     sp_bpe_dropout: float = 0.1,
     job_path: str | None = None,
-    job_stem: str | None = None,
-    job_type: str | None = None,
     hp_set: dict | None = None,
+    **kwargs: str,
 ) -> None:
     """Training a model."""
     accelerator_available = torch.accelerator.is_available()
@@ -89,8 +88,11 @@ def main(
         attn_implementation = "sdpa"
 
     if job_path is not None:
-        print(f"Running {job_stem} job of type {job_type}.")
         print(f"Job path: {job_path}")
+
+    kwargs = {k: v for k, v in kwargs.items() if "job" not in k}
+    if len(kwargs) > 0:
+        print("WARNING: Got unknown kwargs.\n", kwargs)
 
     init_training(
         seed=seed,
