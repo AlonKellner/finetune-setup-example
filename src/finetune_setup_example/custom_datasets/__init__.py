@@ -12,7 +12,7 @@ GB = 1_000_000_000
 
 
 def prepare_cached_dataset(
-    tokenizer: BpeWav2Vec2CTCTokenizer,
+    tokenizer: BpeWav2Vec2CTCTokenizer | None,
     dataset: TorchDataset | HFDataset,
     meta_dataset: TorchDataset | HFDataset,
     sample_rate: int,

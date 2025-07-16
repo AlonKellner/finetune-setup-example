@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-import sentencepiece as spm
 import uroman
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
@@ -30,20 +29,12 @@ class LazyLoader:
         sample_rate: int,
         split: str,
         data_seed: int,
-        sp_dir: str,
-        sp_vocab_size: int,
-        sp_bpe_dropout: float,
-        sp_extra_symbols: list[str] | None = None,
     ) -> None:
         self.processor = processor
         self.target_lang = target_lang
         self.sample_rate = sample_rate
         self.split = split
         self.data_seed = data_seed
-        self.sp_dir = sp_dir
-        self.sp_vocab_size = sp_vocab_size
-        self.sp_bpe_dropout = sp_bpe_dropout
-        self.sp_extra_symbols = [] if sp_extra_symbols is None else sp_extra_symbols
         self.common_voice_split = None
         self.meta_common_voice_split = None
         self.uroman = uroman.Uroman()
@@ -99,25 +90,6 @@ class LazyLoader:
         )
 
         common_voice_split = common_voice_split.map(self.uromanize)
-        train_text = "\n".join([s for s in common_voice_split["sentence"]])
-        train_text_path = f"{self.sp_dir}/train_text.txt"
-        Path(self.sp_dir).mkdir(parents=True, exist_ok=True)
-        with open(train_text_path, "w") as f:
-            f.write(train_text)
-        spm.SentencePieceTrainer.Train(
-            input=train_text_path,
-            model_prefix=f"{self.sp_dir}/spm",
-            character_coverage=1.0,
-            vocab_size=self.sp_vocab_size,
-            user_defined_symbols=self.sp_extra_symbols,
-            model_type="bpe",
-            unk_id=0,
-            pad_id=1,
-            bos_id=2,
-            eos_id=3,
-        )
-        if self.processor.can_create_bpe_tokenizer():
-            self.processor.convert_tokenizer_to_bpe()
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -178,8 +150,6 @@ def create_cached_common_voice_split(
     processor: CustomWav2Vec2Processor,
     syncer: TarS3Syncer,
     split: str,
-    sp_vocab_size: int,
-    sp_bpe_dropout: float,
     sync_on_start: bool,
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
@@ -189,9 +159,6 @@ def create_cached_common_voice_split(
         sample_rate=sample_rate,
         split=split,
         data_seed=data_seed,
-        sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",
-        sp_vocab_size=sp_vocab_size,
-        sp_bpe_dropout=sp_bpe_dropout,
     )
 
     common_voice_split = LazyDataset(
@@ -202,13 +169,14 @@ def create_cached_common_voice_split(
         loader.load_meta_common_voice_for_wav2vec2,
         raw_split_size,
     )
+
     common_voice_split = ResizedDataset(common_voice_split, split_size)
     meta_common_voice_split = ResizedDataset(meta_common_voice_split, split_size)
     cache_path = f"./.app_cache/{data_seed}/{split}_set/"
     Path(cache_path).mkdir(parents=True, exist_ok=True)
     cache_bucket = f"{target_hf_repo}-cache-{data_seed}-{split}-set"
     common_voice_split = prepare_cached_dataset(
-        processor.convert_tokenizer_to_bpe(),
+        None,
         common_voice_split,
         meta_common_voice_split,
         sample_rate,
@@ -217,6 +185,12 @@ def create_cached_common_voice_split(
         syncer,
         sync_on_start=sync_on_start,
     )
+    if not processor.can_create_bpe_tokenizer():
+        processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])
+    if processor.can_create_bpe_tokenizer():
+        common_voice_split._inner_dataset.tokenizer = (
+            processor.convert_tokenizer_to_bpe()
+        )
 
     common_voice_split = ResizedDataset(common_voice_split, split_limit)
     item = common_voice_split[0]

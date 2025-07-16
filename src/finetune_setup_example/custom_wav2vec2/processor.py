@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Any
 
+import sentencepiece as spm
 from transformers import (
     Wav2Vec2CTCTokenizer,
     Wav2Vec2Processor,
@@ -20,12 +21,14 @@ class CustomWav2Vec2Processor(Wav2Vec2Processor):
         *args: Any,
         sp_dir: str,
         sp_bpe_dropout: float,
+        sp_vocab_size: int,
         syncer: TarS3Syncer,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.sp_dir = sp_dir
         self.sp_bpe_dropout = sp_bpe_dropout
+        self.sp_vocab_size = sp_vocab_size
         self.syncer = syncer
         self.is_converted = False
         self.sp_model_path = Path(f"{self.sp_dir}/spm.model")
@@ -63,3 +66,23 @@ class CustomWav2Vec2Processor(Wav2Vec2Processor):
             )
             self.is_converted = True
         return self.tokenizer
+
+    def train_bpe_tokenizer(self, data: list[str]) -> None:
+        """Train BPE tokenizer."""
+        sp_dir = self.sp_dir
+        train_text = "\n".join(data)
+        train_text_path = f"{sp_dir}/raw.txt"
+        Path(sp_dir).mkdir(parents=True, exist_ok=True)
+        with open(train_text_path, "w") as f:
+            f.write(train_text)
+        spm.SentencePieceTrainer.Train(
+            input=train_text_path,
+            model_prefix=f"{sp_dir}/spm",
+            character_coverage=1.0,
+            vocab_size=self.sp_vocab_size,
+            model_type="bpe",
+            unk_id=0,
+            pad_id=1,
+            bos_id=2,
+            eos_id=3,
+        )

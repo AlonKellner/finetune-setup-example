@@ -75,7 +75,7 @@ def main(
     sync_on_start: bool = False,
     should_freeze_base_model: bool = False,
     should_freeze_feature_encoder: bool = True,
-    sp_vocab_size: int = 30,
+    sp_vocab_size: int = 32,
     sp_bpe_dropout: float = 0.1,
     job_path: str | None = None,
     job_stem: str | None = None,
@@ -83,6 +83,11 @@ def main(
     hp_set: dict | None = None,
 ) -> None:
     """Training a model."""
+    accelerator_available = torch.accelerator.is_available()
+    if not accelerator_available:
+        print("WARNING: Accelerator not available! using SDPA (not flash-attn)")
+        attn_implementation = "sdpa"
+
     if job_path is not None:
         print(f"Running {job_stem} job of type {job_type}.")
         print(f"Job path: {job_path}")
@@ -144,15 +149,12 @@ def main(
         sample_rate=sample_rate,
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
-        sp_bpe_dropout=sp_bpe_dropout,
         max_batch_length=training_args.per_device_train_batch_total_length,
         padding_side=padding_side,
         syncer=syncer,
         sp_vocab_size=sp_vocab_size,
+        sp_bpe_dropout=sp_bpe_dropout,
     )
-
-    if train_processor.can_create_bpe_tokenizer():
-        train_processor.convert_tokenizer_to_bpe()
 
     eval_processor, _ = create_wav2vec2_processor(
         split="test",
@@ -160,13 +162,15 @@ def main(
         sample_rate=sample_rate,
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
-        sp_bpe_dropout=sp_bpe_dropout,
         max_batch_length=training_args.per_device_eval_batch_total_length,
         padding_side=padding_side,
         syncer=syncer,
         sp_vocab_size=sp_vocab_size,
+        sp_bpe_dropout=sp_bpe_dropout,
     )
-    eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
+
+    if train_processor.can_create_bpe_tokenizer():
+        eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
 
     common_voice_train = create_cached_common_voice_split(
         data_seed=data_seed,
@@ -178,11 +182,13 @@ def main(
         split_limit=train_limit,
         processor=train_processor,
         syncer=syncer,
-        split="train",
-        sp_vocab_size=sp_vocab_size,
-        sp_bpe_dropout=sp_bpe_dropout,
         sync_on_start=sync_on_start,
+        split="train",
     )
+
+    if train_processor.can_create_bpe_tokenizer():
+        eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
+
     common_voice_eval = create_cached_common_voice_split(
         data_seed=data_seed,
         target_lang=target_lang,
@@ -193,10 +199,8 @@ def main(
         split_limit=eval_limit,
         processor=eval_processor,
         syncer=syncer,
-        split="test",
-        sp_vocab_size=sp_vocab_size,
-        sp_bpe_dropout=sp_bpe_dropout,
         sync_on_start=sync_on_start,
+        split="test",
     )
 
     model = load_wav2vec2_for_adaptuning(
@@ -223,7 +227,6 @@ def main(
         eval_processor=eval_processor,
     )
 
-    accelerator_available = torch.accelerator.is_available()
     if not accelerator_available:
         print(
             "WARNING: Torch accelerator is not available. Training will not be performed."

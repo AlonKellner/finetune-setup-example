@@ -29,7 +29,7 @@ class FlacDataset(TorchDataset):
         inner_meta_dataset: HFDataset | TorchDataset,
         cache_path: str | Path,
         sample_rate: int,
-        tokenizer: BpeWav2Vec2CTCTokenizer,
+        tokenizer: BpeWav2Vec2CTCTokenizer | None,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self._inner_dataset = inner_dataset

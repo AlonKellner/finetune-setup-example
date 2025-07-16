@@ -29,8 +29,8 @@ def create_wav2vec2_processor(
     tokenizer_hf_repo: str,
     target_hf_repo: str,
     sp_bpe_dropout: float,
-    syncer: TarS3Syncer,
     sp_vocab_size: int,
+    syncer: TarS3Syncer,
     max_batch_length: int | None = None,
     padding_side: str = "random",
 ) -> tuple[CustomWav2Vec2Processor, CustomWav2Vec2FeatureExtractor]:
@@ -70,6 +70,7 @@ def create_wav2vec2_processor(
     processor: CustomWav2Vec2Processor = CustomWav2Vec2Processor(
         sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",
         sp_bpe_dropout=sp_bpe_dropout,
+        sp_vocab_size=sp_vocab_size,
         feature_extractor=feature_extractor,
         tokenizer=tokenizer,
         syncer=syncer,
