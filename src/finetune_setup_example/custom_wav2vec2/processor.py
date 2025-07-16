@@ -35,7 +35,7 @@ class CustomWav2Vec2Processor(Wav2Vec2Processor):
         self.sp_files = [
             self.sp_model_path,
             Path(f"{self.sp_dir}/spm.vocab"),
-            Path(f"{self.sp_dir}/train_text.txt"),
+            Path(f"{self.sp_dir}/raw.txt"),
         ]
         self.bucket = "finetune-setup-example-sp"
         if not self.syncer._bucket_exists(self.bucket):

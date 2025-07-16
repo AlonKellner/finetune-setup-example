@@ -185,12 +185,10 @@ def create_cached_common_voice_split(
         syncer,
         sync_on_start=sync_on_start,
     )
-    if not processor.can_create_bpe_tokenizer():
+    if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])
-    if processor.can_create_bpe_tokenizer():
-        common_voice_split._inner_dataset.tokenizer = (
-            processor.convert_tokenizer_to_bpe()
-        )
+
+    common_voice_split._inner_dataset.tokenizer = processor.convert_tokenizer_to_bpe()
 
     common_voice_split = ResizedDataset(common_voice_split, split_limit)
     item = common_voice_split[0]
