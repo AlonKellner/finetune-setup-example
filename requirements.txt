@@ -247,7 +247,7 @@ joblib==1.5.1
     # via
     #   librosa
     #   scikit-learn
-jsonschema==4.24.0
+jsonschema==4.24.1
     # via
     #   comet-ml
     #   skypilot

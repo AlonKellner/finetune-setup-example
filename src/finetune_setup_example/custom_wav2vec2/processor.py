@@ -81,8 +81,8 @@ class CustomWav2Vec2Processor(Wav2Vec2Processor):
             character_coverage=1.0,
             vocab_size=self.sp_vocab_size,
             model_type="bpe",
-            unk_id=0,
-            pad_id=1,
+            pad_id=0,
+            unk_id=1,
             bos_id=2,
             eos_id=3,
         )
