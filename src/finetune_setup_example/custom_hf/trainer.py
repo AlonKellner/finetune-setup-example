@@ -432,10 +432,6 @@ class CustomTrainer(Trainer):  # type: ignore
                 for group in self.eval_grouped_indices
             ]
             grouped_indices = [group for group in grouped_indices if len(group) > 0]
-            print(len(eval_dataset))
-            print(len(self.eval_dataset))
-            print(len(self.eval_grouped_indices))
-            print(len(grouped_indices))
             self.eval_sampler = CustomLengthGroupedSampler(
                 self.args.eval_batch_size,
                 dataset=eval_dataset,

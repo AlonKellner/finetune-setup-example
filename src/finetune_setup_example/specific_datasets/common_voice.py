@@ -196,7 +196,10 @@ def create_cached_common_voice_split(
     print("=== Index 0 ===")
     print("Keys:\t", item.keys())
     print("Sentence:\t", item["sentence"])
-    print("Labels:\t", item["labels"])
+    print(
+        "Labels:\t",
+        [tokenizer._convert_id_to_token(li) for li in item["labels"]["input_ids"]],
+    )
     print("Decoded 1:\t", tokenizer.decode(item["labels"]["input_ids"]))
     print(
         "Decoded 2:\t",
@@ -204,5 +207,8 @@ def create_cached_common_voice_split(
     )
     for i in range(10):
         item = common_voice_split[0]
-        print(f"Labels [{i}]:\t", item["labels"])
+        print(
+            f"Labels [{i}]:\t",
+            [tokenizer._convert_id_to_token(li) for li in item["labels"]["input_ids"]],
+        )
     return common_voice_split
