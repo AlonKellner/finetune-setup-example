@@ -165,6 +165,8 @@ def shuffle_batches_in_groups(
     generator: Generator | None,
 ) -> list[list[int]]:
     """Shuffle batches."""
+    if len(batches) <= 1:
+        return batches
     first_batch = batches[0]
     batches = batches[1:]
 

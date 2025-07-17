@@ -140,6 +140,10 @@ class BpeWav2Vec2CTCTokenizer(Wav2Vec2CTCTokenizer):
 
         # join to string
         string = self.sp_model.decode_pieces(processed_chars)
+        if "⁇" in string:
+            print("WARNING: unknown token")
+            print("string:\t", string)
+            print("processed_chars:\t", processed_chars)
 
         if self.do_lower_case:
             string = string.lower()

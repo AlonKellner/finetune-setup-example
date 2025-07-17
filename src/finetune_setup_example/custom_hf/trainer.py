@@ -9,7 +9,6 @@ from typing import Any
 import comet_ml
 import datasets
 import torch
-import wandb
 from datasets import Dataset as HFDataset
 from torch import nn
 from torch.optim import AdamW
@@ -35,6 +34,8 @@ from transformers.processing_utils import ProcessorMixin
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 from transformers.trainer_utils import SaveStrategy, has_length, seed_worker
 from transformers.utils import is_datasets_available
+
+import wandb
 
 from .length_sampler import CustomLengthGroupedSampler
 from .training_args import CustomTrainingArguments
@@ -93,9 +94,7 @@ class CustomTrainer(Trainer):  # type: ignore
         model: PreTrainedModel | nn.Module | None = None,
         args: CustomTrainingArguments | None = None,
         *arguments: Any,
-        train_indices_order: list[int] | None = None,
         train_grouped_indices: list[list[int]] | None = None,
-        eval_indices_order: list[int] | None = None,
         eval_grouped_indices: list[list[int]] | None = None,
         eval_data_collator: DataCollator | None = None,  # type: ignore
         eval_processing_class: PreTrainedTokenizerBase
@@ -108,9 +107,6 @@ class CustomTrainer(Trainer):  # type: ignore
         super().__init__(model, args, *arguments, **kwargs)  # type: ignore
         assert args is not None
         self.args = args
-
-        self.eval_indices_order = eval_indices_order
-        self.train_indices_order = train_indices_order
 
         self.eval_grouped_indices = eval_grouped_indices
         self.train_grouped_indices = train_grouped_indices
@@ -390,14 +386,19 @@ class CustomTrainer(Trainer):  # type: ignore
                 if self.processing_class is not None
                 else None
             )
+            grouped_indices = [
+                [i for i in group if (i < len(train_dataset))]  # type: ignore
+                for group in self.train_grouped_indices
+            ]
+            grouped_indices = [group for group in grouped_indices if len(group) > 0]
             self.train_sampler = CustomLengthGroupedSampler(
                 self.args.train_batch_size * self.args.gradient_accumulation_steps,
                 dataset=train_dataset,  # type: ignore
                 lengths=lengths,
                 model_input_name=model_input_name,
                 mega_batch_mult=self.args.mega_batch_mult,
-                indices_order=self.train_indices_order,
-                grouped_indices=self.train_grouped_indices,
+                indices_order=list(range(len(train_dataset))),  # type: ignore
+                grouped_indices=grouped_indices,
                 batch_total_length=self.args.per_device_train_batch_total_length,
             )
             return self.train_sampler
@@ -426,13 +427,22 @@ class CustomTrainer(Trainer):  # type: ignore
                 if self.eval_processing_class is not None
                 else None
             )
+            grouped_indices = [
+                [i for i in group if (i < len(eval_dataset))]
+                for group in self.eval_grouped_indices
+            ]
+            grouped_indices = [group for group in grouped_indices if len(group) > 0]
+            print(len(eval_dataset))
+            print(len(self.eval_dataset))
+            print(len(self.eval_grouped_indices))
+            print(len(grouped_indices))
             self.eval_sampler = CustomLengthGroupedSampler(
                 self.args.eval_batch_size,
                 dataset=eval_dataset,
                 lengths=lengths,
                 model_input_name=model_input_name,
-                indices_order=self.eval_indices_order,
-                grouped_indices=self.eval_grouped_indices,
+                indices_order=list(range(len(eval_dataset))),
+                grouped_indices=grouped_indices,
                 batch_total_length=self.args.per_device_eval_batch_total_length,
             )
             return self.eval_sampler

@@ -25,8 +25,6 @@ def create_trainer(
     """Create a wav2vec2 common voice trainer."""
     assert isinstance(train_processor, HasCustomFields)
     assert isinstance(eval_processor, HasCustomFields)
-    eval_indices_order = list(range(len(common_voice_eval)))
-    train_indices_order = list(range(len(common_voice_train)))
     wav2vec2_asr = Wav2Vec2ASR(processor=eval_processor)
     train_data_collator = DataCollatorCTCWithPadding(
         processor=train_processor, padding=True
@@ -44,8 +42,6 @@ def create_trainer(
         train_dataset=common_voice_train,
         processing_class=train_processor.feature_extractor,
         eval_processing_class=eval_processor.feature_extractor,
-        eval_indices_order=eval_indices_order,
-        train_indices_order=train_indices_order,
         eval_grouped_indices=common_voice_eval.grouped_indices,
         train_grouped_indices=common_voice_train.grouped_indices,
     )

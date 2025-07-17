@@ -2,6 +2,7 @@
 
 import torch
 
+from ..custom_datasets.resized import ResizedDataset
 from ..custom_hf.trainer import train
 from ..custom_hf.training_args import create_training_arguments
 from ..init_utils import init_training
@@ -237,6 +238,9 @@ def main(
         for item in train_dataloader:
             print([k for k in item])
             break
+
+        metrics = trainer.evaluate(ResizedDataset(common_voice_eval, size=10))
+        print(metrics)
 
     if should_train and accelerator_available:
         train(trainer)
