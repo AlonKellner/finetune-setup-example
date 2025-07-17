@@ -85,7 +85,7 @@ colorama==0.4.6
     # via
     #   runpod
     #   skypilot
-comet-ml==3.49.11
+comet-ml==3.49.12
     # via finetune-setup-example (pyproject.toml:dev)
 configobj==5.0.9
     # via everett

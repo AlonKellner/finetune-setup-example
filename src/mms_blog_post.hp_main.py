@@ -33,7 +33,7 @@ def hp_main() -> None:
         for batch_total_seconds in [2100.0]
         for job_type in ["a100"]
         for dropout in [0.0]
-        for sp_vocab_size in [64]
+        for sp_vocab_size in [32]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
