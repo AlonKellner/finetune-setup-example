@@ -35,11 +35,9 @@ def hp_main() -> None:
         for job_type in ["a100"]
         for dropout in [0.0]
         for sp_vocab_size, sp_bpe_dropout in [
-            (32, 0.0),
-            (64, 0.0),
-            (64, 0.1),
-            (128, 0.1),
-            (256, 0.1),
+            (128, 0.2),
+            (256, 0.2),
+            (256, 0.5),
         ]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
