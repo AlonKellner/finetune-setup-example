@@ -50,8 +50,8 @@ should_freeze_base_model: false
 should_freeze_feature_encoder: true
 should_push: false
 should_train: true
-sp_bpe_dropout: 0.0
-sp_vocab_size: 32
+sp_bpe_dropout: 0.1
+sp_vocab_size: 64
 sync_on_start: false
 target_hf_repo: mms-300m-turkish
 target_lang: tur

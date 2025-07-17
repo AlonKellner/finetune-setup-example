@@ -11,5 +11,5 @@ layerdrop: 0.0
 num_train_epochs: 10
 per_device_eval_batch_total_seconds: 1200.0
 per_device_train_batch_total_seconds: 1200.0
-sp_bpe_dropout: 0.0
-sp_vocab_size: 32
+sp_bpe_dropout: 0.1
+sp_vocab_size: 256
