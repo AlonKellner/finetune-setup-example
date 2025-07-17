@@ -29,11 +29,13 @@ def hp_main() -> None:
             final_dropout=dropout,
             layerdrop=dropout,
             sp_vocab_size=sp_vocab_size,
+            sp_bpe_dropout=sp_bpe_dropout,
         )
         for batch_total_seconds in [2100.0]
         for job_type in ["a100"]
         for dropout in [0.0]
-        for sp_vocab_size in [32]
+        for sp_bpe_dropout in [0.0]
+        for sp_vocab_size in [64]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
