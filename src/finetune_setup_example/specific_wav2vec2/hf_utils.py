@@ -27,8 +27,10 @@ def demo_trained_model(
 
     if architecture == "wav2vec2":
         ctc_model_type = CustomWav2Vec2ForCTC
+        features_name = "input_values"
     elif architecture == "w2v-bert2":
         ctc_model_type = CustomWav2Vec2BertForCTC
+        features_name = "input_features"
     else:
         raise ValueError(f"Unknown architecture: {architecture}")
 
@@ -64,7 +66,7 @@ def demo_trained_model(
         padding=True,
     )
 
-    logits = model(input_dict.input_values.to("cuda")).logits
+    logits = model(input_dict[features_name].to("cuda")).logits
 
     pred_ids = torch.argmax(logits, dim=-1)[0]
 

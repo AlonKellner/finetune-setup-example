@@ -31,6 +31,7 @@ class DataCollatorCTCWithPadding:
 
     processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor
     padding: bool | str = True
+    features_name: str
 
     def __call__(
         self, features: list[dict[str, list[int] | torch.Tensor]]
@@ -39,7 +40,7 @@ class DataCollatorCTCWithPadding:
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
         input_features = [
-            {"input_values": feature["input_values"]} for feature in features
+            {self.features_name: feature[self.features_name]} for feature in features
         ]
         label_features = [feature["labels"] for feature in features]
 

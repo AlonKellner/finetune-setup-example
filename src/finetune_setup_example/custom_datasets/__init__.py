@@ -19,13 +19,21 @@ def prepare_cached_dataset(
     cache_path: str,
     cache_bucket: str,
     syncer: TarS3Syncer,
+    features_name: str,
     tar_size_gb: float | int = 1,
     sync_interval: int = 2,
     groups_per_sync: int = 6,
     sync_on_start: bool = False,
 ) -> TarS3Dataset:
     """Wrap a dataset with S3 caching and prepare for the first training."""
-    dataset = FlacDataset(dataset, meta_dataset, cache_path, sample_rate, tokenizer)
+    dataset = FlacDataset(
+        inner_dataset=dataset,
+        inner_meta_dataset=meta_dataset,
+        cache_path=cache_path,
+        sample_rate=sample_rate,
+        tokenizer=tokenizer,
+        features_name=features_name,
+    )
     indices_order = list(range(len(dataset)))
     dataset = TarS3Dataset(
         dataset,

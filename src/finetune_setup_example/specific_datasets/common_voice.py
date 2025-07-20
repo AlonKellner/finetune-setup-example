@@ -29,12 +29,14 @@ class LazyLoader:
         sample_rate: int,
         split: str,
         data_seed: int,
+        features_name: str,
     ) -> None:
         self.processor = processor
         self.target_lang = target_lang
         self.sample_rate = sample_rate
         self.split = split
         self.data_seed = data_seed
+        self.features_name = features_name
         self.common_voice_split = None
         self.meta_common_voice_split = None
         self.uroman = uroman.Uroman()
@@ -57,12 +59,12 @@ class LazyLoader:
     def prepare_dataset(self, batch: Batch) -> Batch:
         """Prepare dataset."""
         audio = batch["audio"]
-        batch["input_values"] = self.processor(
+        batch[self.features_name] = self.processor(
             audio["array"],
             sampling_rate=audio["sampling_rate"],
             padding=PaddingStrategy.DO_NOT_PAD,
-        ).input_values[0]
-        batch["length"] = len(batch["input_values"])
+        )[self.features_name][0]
+        batch["length"] = len(batch[self.features_name])
         return batch
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
@@ -134,7 +136,7 @@ class LazyLoader:
         if self.meta_common_voice_split is None:
             common_voice_split = self.load_common_voice_for_wav2vec2()
             self.meta_common_voice_split = common_voice_split.select_columns(
-                [c for c in common_voice_split.column_names if c != "input_values"]  # type: ignore
+                [c for c in common_voice_split.column_names if c != self.features_name]  # type: ignore
             )
         return self.meta_common_voice_split
 
@@ -151,6 +153,7 @@ def create_cached_common_voice_split(
     syncer: TarS3Syncer,
     split: str,
     sync_on_start: bool,
+    features_name: str,
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
@@ -160,6 +163,7 @@ def create_cached_common_voice_split(
         sample_rate=sample_rate,
         split=split,
         data_seed=data_seed,
+        features_name=features_name,
     )
 
     common_voice_split = LazyDataset(
@@ -185,6 +189,7 @@ def create_cached_common_voice_split(
         cache_bucket,
         syncer,
         sync_on_start=sync_on_start,
+        features_name=features_name,
     )
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])

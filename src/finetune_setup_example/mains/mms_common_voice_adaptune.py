@@ -180,6 +180,8 @@ def main(
     if train_processor.can_create_bpe_tokenizer():
         eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
 
+    features_name = infer_features_name(architecture)
+
     common_voice_train = create_cached_common_voice_split(
         data_seed=data_seed,
         target_lang=target_lang,
@@ -192,6 +194,7 @@ def main(
         syncer=syncer,
         sync_on_start=sync_on_start,
         split="train",
+        features_name=features_name,
         architecture=architecture,
     )
 
@@ -210,6 +213,7 @@ def main(
         syncer=syncer,
         sync_on_start=sync_on_start,
         split="test",
+        features_name=features_name,
         architecture=architecture,
     )
 
@@ -226,6 +230,7 @@ def main(
         layerdrop=layerdrop,
         should_freeze_base_model=should_freeze_base_model,
         should_freeze_feature_encoder=should_freeze_feature_encoder,
+        architecture=architecture,
     )
 
     trainer = create_trainer(
@@ -235,6 +240,7 @@ def main(
         common_voice_train=common_voice_train,
         train_processor=train_processor,
         eval_processor=eval_processor,
+        features_name=features_name,
     )
 
     if not accelerator_available:
@@ -256,6 +262,21 @@ def main(
         hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
 
     if should_demo:
-        demo_trained_model(target_lang, sample_rate, target_hf_repo, hf_user)
+        demo_trained_model(
+            target_lang, sample_rate, target_hf_repo, hf_user, architecture=architecture
+        )
 
     print("FINISHED!")
+
+
+def infer_features_name(
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
+) -> str:
+    """Infer features name."""
+    if architecture == "wav2vec2":
+        features_name = "input_values"
+    elif architecture == "w2v-bert2":
+        features_name = "input_features"
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+    return features_name

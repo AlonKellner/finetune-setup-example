@@ -29,6 +29,7 @@ class FlacDataset(TorchDataset):
         inner_meta_dataset: HFDataset | TorchDataset,
         cache_path: str | Path,
         sample_rate: int,
+        features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
@@ -41,6 +42,7 @@ class FlacDataset(TorchDataset):
         self.metadata = metadata
         self.sample_rate = sample_rate
         self.tokenizer = tokenizer
+        self.features_name = features_name
 
     def complete_metadata(self) -> None:
         """Make sure that the metadata is complete."""
@@ -68,12 +70,12 @@ class FlacDataset(TorchDataset):
         """Validate item."""
         item = self[index]
         for _ in range(3):
-            if len(item["input_values"]) == item["length"]:
+            if len(item[self.features_name]) == item["length"]:
                 return
 
             Path(item["file_path"]).unlink(missing_ok=True)
             item = self[index]
-        assert len(item["input_values"]) == item["length"], (
+        assert len(item[self.features_name]) == item["length"], (
             f"Length mismatch with index [{index}]"
         )
 
@@ -101,6 +103,7 @@ class FlacDataset(TorchDataset):
                 sample_rate=self.sample_rate,
                 tokenizer=self.tokenizer,
                 metadata=self.metadata,
+                features_name=self.features_name,
             )
         return result
 
@@ -127,7 +130,7 @@ class FlacDataset(TorchDataset):
         """A property supported by HF datasets."""
         if len(self.metadata) == 0:
             self[0]
-        return [*next(iter(self.metadata.values())).keys(), "input_values"]
+        return [*next(iter(self.metadata.values())).keys(), self.features_name]
 
     def __len__(self) -> int:
         """Propegates the length of the inner dataset."""
@@ -154,7 +157,7 @@ class FlacDataset(TorchDataset):
         if not flac_path.exists():
             if item is None:
                 item = self._inner_dataset[index]  # type: ignore
-            samples = item["input_values"]
+            samples = item[self.features_name]
             self._save_flac(flac_path, samples)
 
         samples = self._load_flac(flac_path)
@@ -164,7 +167,7 @@ class FlacDataset(TorchDataset):
         else:
             if item is None:
                 item = self._inner_meta_dataset[index]
-            item_metadata = {k: v for k, v in item.items() if k != "input_values"}
+            item_metadata = {k: v for k, v in item.items() if k != self.features_name}
             item_metadata["indices"] = index
             item_metadata["file_paths"] = str(flac_path)
             item_metadata["file_sizes"] = flac_path.stat().st_size
@@ -172,10 +175,10 @@ class FlacDataset(TorchDataset):
 
         item_metadata = item_metadata.copy()
         item_metadata["labels"] = self.tokenizer(item_metadata["sentence"])
-        item = dict(
-            input_values=samples,
+        item = {
+            self.features_name: samples,
             **item_metadata,
-        )
+        }
         return item
 
     def _save_flac(self, flac_path: Path, samples: list[int]) -> None:

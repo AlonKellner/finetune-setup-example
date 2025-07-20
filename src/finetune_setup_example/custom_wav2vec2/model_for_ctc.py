@@ -50,6 +50,7 @@ class CustomModelMixin:
     def forward(
         self,
         input_values: torch.Tensor | None,
+        input_features: torch.Tensor | None,
         attention_mask: torch.Tensor | None = None,
         output_attentions: bool | None = None,
         output_hidden_states: bool | None = None,
@@ -61,6 +62,8 @@ class CustomModelMixin:
         return_dict = (
             return_dict if return_dict is not None else self.config.use_return_dict
         )
+        if input_values is None:
+            input_values = input_features
 
         if labels is not None and labels.max() >= self.config.vocab_size:
             raise ValueError(

@@ -26,16 +26,17 @@ def create_trainer(
     common_voice_train: TarS3Dataset | ResizedDataset,
     train_processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
     eval_processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
+    features_name: str,
 ) -> CustomTrainer:
     """Create a wav2vec2 common voice trainer."""
     assert isinstance(train_processor, HasCustomFields)
     assert isinstance(eval_processor, HasCustomFields)
     wav2vec2_asr = Wav2Vec2ASR(processor=eval_processor)
     train_data_collator = DataCollatorCTCWithPadding(
-        processor=train_processor, padding=True
+        processor=train_processor, padding=True, features_name=features_name
     )
     eval_data_collator = DataCollatorCTCWithPadding(
-        processor=eval_processor, padding=True
+        processor=eval_processor, padding=True, features_name=features_name
     )
     trainer = CustomTrainer(
         model=model,  # type: ignore
