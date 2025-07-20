@@ -26,7 +26,7 @@ def main(
     sample_rate: int = 16_000,
     base_hf_repo: str = "facebook/mms-1b-all",
     tokenizer_hf_repo: str = "mms-meta/mms-zeroshot-300m",
-    target_hf_repo: str = "mms-300m-turkish",
+    target_hf_repo: str = "finetune-setup-example",
     hf_user: str = "Kellner",
     raw_train_size: int = 35147,
     raw_eval_size: int = 11290,
