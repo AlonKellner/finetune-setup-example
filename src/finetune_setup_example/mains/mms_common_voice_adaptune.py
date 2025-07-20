@@ -1,5 +1,7 @@
 """Code for "adaptuning" mms checkpoints with common voice."""
 
+from typing import Literal
+
 import torch
 
 from ..custom_datasets.resized import ResizedDataset
@@ -12,7 +14,7 @@ from ..specific_datasets.common_voice import (
 )
 from ..specific_wav2vec2.hf_utils import demo_trained_model, hf_push_adapter
 from ..specific_wav2vec2.model import load_wav2vec2_for_adaptuning
-from ..specific_wav2vec2.processor import create_wav2vec2_processor
+from ..specific_wav2vec2.processor import create_processor
 from ..specific_wav2vec2.trainer import create_trainer
 from ..tar_s3 import TarS3Syncer
 
@@ -78,6 +80,7 @@ def main(
     should_freeze_feature_encoder: bool = True,
     sp_vocab_size: int = 64,
     sp_bpe_dropout: float = 0.1,
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
     job_path: str | None = None,
     hp_set: dict | None = None,
     **kwargs: str,
@@ -146,7 +149,7 @@ def main(
         hp_set=hp_set,
     )
 
-    train_processor, _ = create_wav2vec2_processor(
+    train_processor, _ = create_processor(
         split="train",
         target_lang=target_lang,
         sample_rate=sample_rate,
@@ -157,9 +160,10 @@ def main(
         syncer=syncer,
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
+        architecture=architecture,
     )
 
-    eval_processor, _ = create_wav2vec2_processor(
+    eval_processor, _ = create_processor(
         split="test",
         target_lang=target_lang,
         sample_rate=sample_rate,
@@ -170,6 +174,7 @@ def main(
         syncer=syncer,
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
+        architecture=architecture,
     )
 
     if train_processor.can_create_bpe_tokenizer():

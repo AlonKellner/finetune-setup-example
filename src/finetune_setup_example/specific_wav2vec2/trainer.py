@@ -1,7 +1,5 @@
 """Utilities for creating wav2vec2 trainers."""
 
-from transformers import Wav2Vec2Processor
-
 from ..custom_datasets.resized import ResizedDataset
 from ..custom_datasets.tar_s3 import TarS3Dataset
 from ..custom_hf.trainer import CustomTrainer
@@ -9,18 +7,25 @@ from ..custom_hf.training_args import CustomTrainingArguments
 from ..custom_wav2vec2.ctc_collator import (
     DataCollatorCTCWithPadding,
 )
-from ..custom_wav2vec2.model_for_ctc import CustomWav2Vec2ForCTC
+from ..custom_wav2vec2.model_for_ctc import (
+    CustomWav2Vec2BertForCTC,
+    CustomWav2Vec2ForCTC,
+)
+from ..custom_wav2vec2.processor import (
+    CustomWav2Vec2BertProcessor,
+    CustomWav2Vec2Processor,
+)
 from ..specific_metrics.asr import Wav2Vec2ASR
 from ..specific_wav2vec2.processor import HasCustomFields
 
 
 def create_trainer(
-    model: CustomWav2Vec2ForCTC,
+    model: CustomWav2Vec2ForCTC | CustomWav2Vec2BertForCTC,
     training_args: CustomTrainingArguments,
     common_voice_eval: TarS3Dataset | ResizedDataset,
     common_voice_train: TarS3Dataset | ResizedDataset,
-    train_processor: Wav2Vec2Processor,
-    eval_processor: Wav2Vec2Processor,
+    train_processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
+    eval_processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
 ) -> CustomTrainer:
     """Create a wav2vec2 common voice trainer."""
     assert isinstance(train_processor, HasCustomFields)

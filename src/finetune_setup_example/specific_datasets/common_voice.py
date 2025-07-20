@@ -13,7 +13,7 @@ from transformers.utils import PaddingStrategy
 from ..custom_datasets import prepare_cached_dataset
 from ..custom_datasets.lazy import LazyDataset
 from ..custom_datasets.resized import ResizedDataset
-from ..custom_wav2vec2.processor import CustomWav2Vec2Processor
+from ..custom_wav2vec2.processor import CustomProcessorMixin
 from ..tar_s3 import TarS3Syncer
 
 Batch = dict[str, Any]
@@ -24,7 +24,7 @@ class LazyLoader:
 
     def __init__(
         self,
-        processor: CustomWav2Vec2Processor,
+        processor: CustomProcessorMixin,
         target_lang: str,
         sample_rate: int,
         split: str,
@@ -147,7 +147,7 @@ def create_cached_common_voice_split(
     raw_split_size: int,
     split_size: int,
     split_limit: int,
-    processor: CustomWav2Vec2Processor,
+    processor: CustomProcessorMixin,
     syncer: TarS3Syncer,
     split: str,
     sync_on_start: bool,

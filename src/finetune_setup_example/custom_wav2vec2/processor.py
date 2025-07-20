@@ -4,16 +4,13 @@ from pathlib import Path
 from typing import Any
 
 import sentencepiece as spm
-from transformers import (
-    Wav2Vec2CTCTokenizer,
-    Wav2Vec2Processor,
-)
+from transformers import Wav2Vec2BertProcessor, Wav2Vec2CTCTokenizer, Wav2Vec2Processor
 
 from ..tar_s3 import TarS3Syncer
 from .tokenizer import BpeWav2Vec2CTCTokenizer
 
 
-class CustomWav2Vec2Processor(Wav2Vec2Processor):
+class CustomProcessorMixin:
     """Custom Wav2Vec2Processor."""
 
     def __init__(
@@ -86,3 +83,17 @@ class CustomWav2Vec2Processor(Wav2Vec2Processor):
             bos_id=2,
             eos_id=3,
         )
+
+
+class CustomWav2Vec2Processor(CustomProcessorMixin, Wav2Vec2Processor):
+    """Wav2Vec2 processor with custom mixin."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+
+class CustomWav2Vec2BertProcessor(CustomProcessorMixin, Wav2Vec2BertProcessor):
+    """Wav2Vec2-Bert processor with custom mixin."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)

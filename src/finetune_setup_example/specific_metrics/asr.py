@@ -6,9 +6,12 @@ import numpy as np
 from evaluate import load
 from transformers import (
     EvalPrediction,
-    Wav2Vec2Processor,
 )
 
+from ..custom_wav2vec2.processor import (
+    CustomWav2Vec2BertProcessor,
+    CustomWav2Vec2Processor,
+)
 from ..specific_wav2vec2.processor import HasCustomFields
 
 Metrics = dict[str, Any]
@@ -17,7 +20,9 @@ Metrics = dict[str, Any]
 class Wav2Vec2ASR:
     """A wrapper for ASR metric with a wav2vec2 processor."""
 
-    def __init__(self, processor: Wav2Vec2Processor) -> None:
+    def __init__(
+        self, processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor
+    ) -> None:
         self.processor = processor
         self.wer_metric = load("wer")
         self.cer_metric = load("cer")

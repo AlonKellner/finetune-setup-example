@@ -1,25 +1,38 @@
 """Wav2Vec2 HF utils."""
 
-import os
+from typing import Literal
 
 import torch
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
 from safetensors.torch import save_file as safe_save_file
 from transformers import Trainer, Wav2Vec2Processor
-from transformers.models.wav2vec2.modeling_wav2vec2 import WAV2VEC2_ADAPTER_SAFE_FILE
 
-from ..custom_wav2vec2.model_for_ctc import CustomWav2Vec2ForCTC
+from ..custom_wav2vec2.model_for_ctc import (
+    CustomWav2Vec2BertForCTC,
+    CustomWav2Vec2ForCTC,
+)
 from .processor import HasCustomFields
 
 
 def demo_trained_model(
-    target_lang: str, sample_rate: int, target_hf_repo: str, hf_user: str
+    target_lang: str,
+    sample_rate: int,
+    target_hf_repo: str,
+    hf_user: str,
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
 ) -> None:
     """Demo trained model."""
     model_id = f"{hf_user}/{target_hf_repo}"
 
-    model = CustomWav2Vec2ForCTC.from_pretrained(
+    if architecture == "wav2vec2":
+        ctc_model_type = CustomWav2Vec2ForCTC
+    elif architecture == "w2v-bert2":
+        ctc_model_type = CustomWav2Vec2BertForCTC
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+
+    model = ctc_model_type.from_pretrained(
         model_id, target_lang=target_lang, ignore_mismatched_sizes=True
     ).to(
         "cuda"  # type: ignore
@@ -64,15 +77,15 @@ def demo_trained_model(
 
 def hf_push_adapter(
     target_lang: str,
-    model: CustomWav2Vec2ForCTC,
+    model: CustomWav2Vec2ForCTC | CustomWav2Vec2BertForCTC,
     output_dir: str | None,
     trainer: Trainer,
 ) -> None:
     """Push adapter to hf."""
-    adapter_file = WAV2VEC2_ADAPTER_SAFE_FILE.format(target_lang)
     assert output_dir is not None
-    adapter_file = os.path.join(output_dir, adapter_file)
 
-    safe_save_file(model._get_adapters(), adapter_file, metadata={"format": "pt"})
+    safe_save_file(
+        model.state_dict(), f"{target_lang}.safetensors", metadata={"format": "pt"}
+    )
 
     trainer.push_to_hub()  # type: ignore

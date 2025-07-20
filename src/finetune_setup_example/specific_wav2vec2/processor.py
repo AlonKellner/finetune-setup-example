@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from transformers import (
     Wav2Vec2CTCTokenizer,
@@ -10,7 +10,11 @@ from transformers import (
 )
 
 from ..custom_wav2vec2.feature_extractor import CustomWav2Vec2FeatureExtractor
-from ..custom_wav2vec2.processor import CustomWav2Vec2Processor
+from ..custom_wav2vec2.processor import (
+    CustomProcessorMixin,
+    CustomWav2Vec2BertProcessor,
+    CustomWav2Vec2Processor,
+)
 from ..tar_s3 import TarS3Syncer
 
 
@@ -22,7 +26,7 @@ class HasCustomFields(Protocol):
     feature_extractor: Wav2Vec2FeatureExtractor
 
 
-def create_wav2vec2_processor(
+def create_processor(
     split: str,
     target_lang: str,
     sample_rate: int,
@@ -33,7 +37,11 @@ def create_wav2vec2_processor(
     syncer: TarS3Syncer,
     max_batch_length: int | None = None,
     padding_side: str = "random",
-) -> tuple[CustomWav2Vec2Processor, CustomWav2Vec2FeatureExtractor]:
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
+) -> tuple[
+    CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
+    CustomWav2Vec2FeatureExtractor,
+]:
     """Create a wav2vec2 processor, ready for training a specific language."""
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
     vocab_dict = tokenizer.vocab
@@ -67,7 +75,14 @@ def create_wav2vec2_processor(
         padding_side=padding_side,
     )
 
-    processor: CustomWav2Vec2Processor = CustomWav2Vec2Processor(
+    if architecture == "wav2vec2":
+        processor_type = CustomWav2Vec2Processor
+    elif architecture == "w2v-bert2":
+        processor_type = CustomWav2Vec2BertProcessor
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+
+    processor: CustomProcessorMixin = processor_type(
         sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",
         sp_bpe_dropout=sp_bpe_dropout,
         sp_vocab_size=sp_vocab_size,
@@ -76,6 +91,6 @@ def create_wav2vec2_processor(
         syncer=syncer,
     )
     assert isinstance(processor, HasCustomFields) and isinstance(
-        processor, CustomWav2Vec2Processor
+        processor, CustomProcessorMixin
     )
     return processor, feature_extractor

@@ -9,7 +9,7 @@ import sentencepiece as spm
 from transformers import Wav2Vec2CTCTokenizer
 
 
-class BpeWav2Vec2CTCTokenizer(Wav2Vec2CTCTokenizer):
+class BpeTokenizerMixin:
     """Custom BPE tokenizer for Wav2Vec2 using SentencePiece."""
 
     def __init__(
@@ -149,3 +149,10 @@ class BpeWav2Vec2CTCTokenizer(Wav2Vec2CTCTokenizer):
             "char_offsets": char_offsets,
             "word_offsets": word_offsets,
         }
+
+
+class BpeWav2Vec2CTCTokenizer(BpeTokenizerMixin, Wav2Vec2CTCTokenizer):
+    """Wav2Vec2 tokenizer with BPE tokenzier."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)

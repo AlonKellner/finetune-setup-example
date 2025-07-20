@@ -547,7 +547,7 @@ standard-chunk==3.13.0
     # via standard-aifc
 standard-sunau==3.13.0
     # via librosa
-starlette==0.47.1
+starlette==0.47.2
     # via fastapi
 sympy==1.14.0
     # via torch

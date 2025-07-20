@@ -3,7 +3,11 @@
 from dataclasses import dataclass
 
 import torch
-from transformers import Wav2Vec2Processor
+
+from ..custom_wav2vec2.processor import (
+    CustomWav2Vec2BertProcessor,
+    CustomWav2Vec2Processor,
+)
 
 
 @dataclass
@@ -25,7 +29,7 @@ class DataCollatorCTCWithPadding:
               different lengths).
     """
 
-    processor: Wav2Vec2Processor
+    processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor
     padding: bool | str = True
 
     def __call__(

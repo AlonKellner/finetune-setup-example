@@ -1,14 +1,19 @@
 """Utilities for loading wav2vec2 models."""
 
-from transformers import Wav2Vec2Processor
+from typing import Literal
 
-from ..custom_wav2vec2.model_for_ctc import CustomWav2Vec2ForCTC
+from transformers import Wav2Vec2BertProcessor, Wav2Vec2Processor
+
+from ..custom_wav2vec2.model_for_ctc import (
+    CustomWav2Vec2BertForCTC,
+    CustomWav2Vec2ForCTC,
+)
 from ..specific_wav2vec2.processor import HasCustomFields
 
 
 def load_wav2vec2_for_adaptuning(
     base_hf_repo: str,
-    processor: Wav2Vec2Processor,
+    processor: Wav2Vec2Processor | Wav2Vec2BertProcessor,
     attn_implementation: str,
     hidden_dropout: float = 0.0,
     activation_dropout: float = 0.0,
@@ -19,12 +24,21 @@ def load_wav2vec2_for_adaptuning(
     layerdrop: float = 0.0,
     should_freeze_base_model: bool = True,
     should_freeze_feature_encoder: bool = True,
-) -> CustomWav2Vec2ForCTC:
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
+) -> CustomWav2Vec2ForCTC | CustomWav2Vec2BertForCTC:
     """Load a wav2vec2 model, ready to train an adapter alone."""
     assert isinstance(processor, HasCustomFields)
     vocab_size = len(processor.tokenizer.vocab_dict)
     print(f"Vocab size: {vocab_size}")
-    model = CustomWav2Vec2ForCTC.from_pretrained(
+
+    if architecture == "wav2vec2":
+        model_type = CustomWav2Vec2ForCTC
+    elif architecture == "w2v-bert2":
+        model_type = CustomWav2Vec2BertForCTC
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+
+    model = model_type.from_pretrained(
         base_hf_repo,
         hidden_dropout=hidden_dropout,
         activation_dropout=activation_dropout,

@@ -13,7 +13,7 @@ from transformers.utils import (
 )
 
 
-class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
+class CustomFeatureExtractorMixin:
     """Custom Wav2Vec2 feature extractor to add custom padding logic."""
 
     def __init__(
@@ -389,3 +389,12 @@ class CustomWav2Vec2FeatureExtractor(Wav2Vec2FeatureExtractor):
                 raise ValueError("Invalid padding strategy:" + str(self.padding_side))
 
         return processed_features  # type: ignore
+
+
+class CustomWav2Vec2FeatureExtractor(
+    CustomFeatureExtractorMixin, Wav2Vec2FeatureExtractor
+):
+    """Wav2Vec2 feature extracture with a custom mixin."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
