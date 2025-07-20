@@ -9,8 +9,8 @@ from transformers import (
     Wav2Vec2Processor,
 )
 
-from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
 from ..tar_s3 import TarS3Syncer
+from .tokenizer import BpeWav2Vec2CTCTokenizer
 
 
 class CustomWav2Vec2Processor(Wav2Vec2Processor):

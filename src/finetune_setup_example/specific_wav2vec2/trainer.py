@@ -9,7 +9,7 @@ from ..custom_hf.training_args import CustomTrainingArguments
 from ..custom_wav2vec2.ctc_collator import (
     DataCollatorCTCWithPadding,
 )
-from ..custom_wav2vec2.wav2vec2_for_ctc import CustomWav2Vec2ForCTC
+from ..custom_wav2vec2.model_for_ctc import CustomWav2Vec2ForCTC
 from ..specific_metrics.asr import Wav2Vec2ASR
 from ..specific_wav2vec2.processor import HasCustomFields
 

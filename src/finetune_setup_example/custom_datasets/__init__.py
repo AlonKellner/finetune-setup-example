@@ -3,7 +3,7 @@
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 
-from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
+from ..custom_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
 from ..tar_s3 import TarS3Syncer
 from .flac import FlacDataset
 from .tar_s3 import TarS3Dataset

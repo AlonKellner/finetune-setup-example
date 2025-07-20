@@ -41,11 +41,11 @@ bcrypt==4.3.0
     # via paramiko
 blessed==1.21.0
     # via inquirer
-boto3==1.39.8
+boto3==1.39.9
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   runpod
-botocore==1.39.8
+botocore==1.39.9
     # via
     #   boto3
     #   s3transfer
@@ -247,7 +247,7 @@ joblib==1.5.1
     # via
     #   librosa
     #   scikit-learn
-jsonschema==4.24.1
+jsonschema==4.25.0
     # via
     #   comet-ml
     #   skypilot
@@ -368,7 +368,7 @@ pulp==3.2.1
     # via skypilot
 py-cpuinfo==9.0.0
     # via runpod
-pyarrow==20.0.0
+pyarrow==21.0.0
     # via datasets
 pyasn1==0.6.1
     # via
@@ -479,7 +479,7 @@ rich-toolkit==0.14.8
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-rignore==0.6.2
+rignore==0.6.4
     # via fastapi-cloud-cli
 rpds-py==0.26.0
     # via
@@ -491,14 +491,14 @@ runpod==1.7.13
     # via skypilot
 runs==1.2.2
     # via editor
-s3transfer==0.13.0
+s3transfer==0.13.1
     # via boto3
 safetensors==0.5.3
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   accelerate
     #   transformers
-scikit-learn==1.7.0
+scikit-learn==1.7.1
     # via librosa
 scipy==1.16.0
     # via
@@ -585,7 +585,7 @@ typer==0.16.0
     #   fastapi-cloud-cli
 types-awscrt==0.27.4
     # via botocore-stubs
-types-boto3-lite==1.39.8
+types-boto3-lite==1.39.9
     # via finetune-setup-example (pyproject.toml:dev)
 types-boto3-s3==1.39.5
     # via types-boto3-lite

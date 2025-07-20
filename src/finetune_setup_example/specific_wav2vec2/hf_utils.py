@@ -9,7 +9,7 @@ from safetensors.torch import save_file as safe_save_file
 from transformers import Trainer, Wav2Vec2Processor
 from transformers.models.wav2vec2.modeling_wav2vec2 import WAV2VEC2_ADAPTER_SAFE_FILE
 
-from ..custom_wav2vec2.wav2vec2_for_ctc import CustomWav2Vec2ForCTC
+from ..custom_wav2vec2.model_for_ctc import CustomWav2Vec2ForCTC
 from .processor import HasCustomFields
 
 

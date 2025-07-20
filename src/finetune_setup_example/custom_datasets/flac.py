@@ -17,7 +17,7 @@ from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 from tqdm.auto import tqdm
 
-from ..specific_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
+from ..custom_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
 
 
 class FlacDataset(TorchDataset):
