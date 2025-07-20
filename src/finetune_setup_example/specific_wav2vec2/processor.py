@@ -9,7 +9,10 @@ from transformers import (
     Wav2Vec2FeatureExtractor,
 )
 
-from ..custom_wav2vec2.feature_extractor import CustomWav2Vec2FeatureExtractor
+from ..custom_wav2vec2.feature_extractor import (
+    CustomSeamlessM4TFeatureExtractor,
+    CustomWav2Vec2FeatureExtractor,
+)
 from ..custom_wav2vec2.processor import (
     CustomProcessorMixin,
     CustomWav2Vec2BertProcessor,
@@ -40,7 +43,7 @@ def create_processor(
     architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
 ) -> tuple[
     CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
-    CustomWav2Vec2FeatureExtractor,
+    CustomWav2Vec2FeatureExtractor | CustomSeamlessM4TFeatureExtractor,
 ]:
     """Create a wav2vec2 processor, ready for training a specific language."""
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
@@ -65,7 +68,16 @@ def create_processor(
 
     tokenizer.push_to_hub(target_hf_repo)  # type: ignore
 
-    feature_extractor = CustomWav2Vec2FeatureExtractor(
+    if architecture == "wav2vec2":
+        processor_type = CustomWav2Vec2Processor
+        feature_extractor_type = CustomWav2Vec2FeatureExtractor
+    elif architecture == "w2v-bert2":
+        processor_type = CustomWav2Vec2BertProcessor
+        feature_extractor_type = CustomSeamlessM4TFeatureExtractor
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+
+    feature_extractor = feature_extractor_type(
         feature_size=1,
         sampling_rate=sample_rate,
         padding_value=0.0,
@@ -74,13 +86,6 @@ def create_processor(
         max_batch_length=max_batch_length,
         padding_side=padding_side,
     )
-
-    if architecture == "wav2vec2":
-        processor_type = CustomWav2Vec2Processor
-    elif architecture == "w2v-bert2":
-        processor_type = CustomWav2Vec2BertProcessor
-    else:
-        raise ValueError(f"Unknown architecture: {architecture}")
 
     processor: CustomProcessorMixin = processor_type(
         sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",

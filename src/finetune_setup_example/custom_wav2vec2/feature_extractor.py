@@ -3,7 +3,11 @@
 from typing import Any
 
 import numpy as np
-from transformers import BatchFeature, Wav2Vec2FeatureExtractor
+from transformers import (
+    BatchFeature,
+    SeamlessM4TFeatureExtractor,
+    Wav2Vec2FeatureExtractor,
+)
 from transformers.utils import (
     PaddingStrategy,
     TensorType,
@@ -393,6 +397,15 @@ class CustomFeatureExtractorMixin:
 
 class CustomWav2Vec2FeatureExtractor(
     CustomFeatureExtractorMixin, Wav2Vec2FeatureExtractor
+):
+    """Wav2Vec2 feature extracture with a custom mixin."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+
+class CustomSeamlessM4TFeatureExtractor(
+    CustomFeatureExtractorMixin, SeamlessM4TFeatureExtractor
 ):
     """Wav2Vec2 feature extracture with a custom mixin."""
 

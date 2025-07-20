@@ -3,7 +3,7 @@
 import random
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import uroman
 from datasets import Audio, load_dataset
@@ -151,6 +151,7 @@ def create_cached_common_voice_split(
     syncer: TarS3Syncer,
     split: str,
     sync_on_start: bool,
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
     loader = LazyLoader(
@@ -172,9 +173,9 @@ def create_cached_common_voice_split(
 
     common_voice_split = ResizedDataset(common_voice_split, split_size)
     meta_common_voice_split = ResizedDataset(meta_common_voice_split, split_size)
-    cache_path = f"./.app_cache/{data_seed}/{split}_set/"
+    cache_path = f"./.app_cache/{data_seed}/{architecture}/{split}_set/"
     Path(cache_path).mkdir(parents=True, exist_ok=True)
-    cache_bucket = f"{target_hf_repo}-cache-{data_seed}-{split}-set"
+    cache_bucket = f"{target_hf_repo}-cache-{data_seed}-{architecture}-{split}-set"
     common_voice_split = prepare_cached_dataset(
         None,
         common_voice_split,

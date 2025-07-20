@@ -24,7 +24,7 @@ def main(
     data_seed: int = 44,
     target_lang: str = "tur",
     sample_rate: int = 16_000,
-    base_hf_repo: str = "facebook/mms-1b-all",
+    base_hf_repo: str = "facebook/w2v-bert-2.0",
     tokenizer_hf_repo: str = "mms-meta/mms-zeroshot-300m",
     target_hf_repo: str = "finetune-setup-example",
     hf_user: str = "Kellner",
@@ -80,7 +80,7 @@ def main(
     should_freeze_feature_encoder: bool = True,
     sp_vocab_size: int = 64,
     sp_bpe_dropout: float = 0.1,
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     job_path: str | None = None,
     hp_set: dict | None = None,
     **kwargs: str,
@@ -192,6 +192,7 @@ def main(
         syncer=syncer,
         sync_on_start=sync_on_start,
         split="train",
+        architecture=architecture,
     )
 
     if train_processor.can_create_bpe_tokenizer():
@@ -209,6 +210,7 @@ def main(
         syncer=syncer,
         sync_on_start=sync_on_start,
         split="test",
+        architecture=architecture,
     )
 
     model = load_wav2vec2_for_adaptuning(
