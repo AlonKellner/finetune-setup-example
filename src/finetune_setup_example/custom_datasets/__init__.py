@@ -1,11 +1,13 @@
 """Custom torch dataset wrappers."""
 
+from typing import Literal
+
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 
 from ..custom_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
 from ..tar_s3 import TarS3Syncer
-from .flac import FlacDataset
+from .compressed import FlacDataset, PngDataset
 from .tar_s3 import TarS3Dataset
 
 GB = 1_000_000_000
@@ -24,16 +26,28 @@ def prepare_cached_dataset(
     sync_interval: int = 2,
     groups_per_sync: int = 6,
     sync_on_start: bool = False,
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
 ) -> TarS3Dataset:
     """Wrap a dataset with S3 caching and prepare for the first training."""
-    dataset = FlacDataset(
-        inner_dataset=dataset,
-        inner_meta_dataset=meta_dataset,
-        cache_path=cache_path,
-        sample_rate=sample_rate,
-        tokenizer=tokenizer,
-        features_name=features_name,
-    )
+    if architecture == "wav2vec2":
+        dataset = FlacDataset(
+            sample_rate=sample_rate,
+            inner_dataset=dataset,
+            inner_meta_dataset=meta_dataset,
+            cache_path=cache_path,
+            tokenizer=tokenizer,
+            features_name=features_name,
+        )
+    elif architecture == "w2v-bert2":
+        dataset = PngDataset(  # Change to PngDataset
+            inner_dataset=dataset,
+            inner_meta_dataset=meta_dataset,
+            cache_path=cache_path,
+            tokenizer=tokenizer,
+            features_name=features_name,
+        )
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
     indices_order = list(range(len(dataset)))
     dataset = TarS3Dataset(
         dataset,

@@ -30,8 +30,8 @@ class DataCollatorCTCWithPadding:
     """
 
     processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor
-    padding: bool | str = True
     features_name: str
+    padding: bool | str = True
 
     def __call__(
         self, features: list[dict[str, list[int] | torch.Tensor]]

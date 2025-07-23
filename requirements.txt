@@ -41,11 +41,11 @@ bcrypt==4.3.0
     # via paramiko
 blessed==1.21.0
     # via inquirer
-boto3==1.39.9
+boto3==1.39.11
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   runpod
-botocore==1.39.9
+botocore==1.39.11
     # via
     #   boto3
     #   s3transfer
@@ -302,6 +302,7 @@ numpy==2.2.6
     #   scipy
     #   soundfile
     #   soxr
+    #   torchvision
     #   transformers
 oauthlib==3.3.1
     # via
@@ -331,6 +332,8 @@ paramiko==3.5.1
     # via runpod
 pfzy==0.3.4
     # via inquirerpy
+pillow==11.3.0
+    # via torchvision
 platformdirs==4.3.8
     # via
     #   pooch
@@ -508,7 +511,7 @@ semantic-version==2.10.0
     # via comet-ml
 sentencepiece==0.2.0
     # via finetune-setup-example (pyproject.toml:dev)
-sentry-sdk==2.33.0
+sentry-sdk==2.33.2
     # via
     #   comet-ml
     #   fastapi-cloud-cli
@@ -566,7 +569,10 @@ torch==2.7.1+cpu
     #   finetune-setup-example (pyproject.toml)
     #   accelerate
     #   torchaudio
+    #   torchvision
 torchaudio==2.7.1
+    # via finetune-setup-example (pyproject.toml)
+torchvision==0.22.1
     # via finetune-setup-example (pyproject.toml)
 tqdm==4.67.1
     # via
@@ -577,7 +583,7 @@ tqdm==4.67.1
     #   transformers
 tqdm-loggable==0.2
     # via runpod
-transformers==4.53.2
+transformers==4.53.3
     # via finetune-setup-example (pyproject.toml:dev)
 typer==0.16.0
     # via
@@ -585,7 +591,7 @@ typer==0.16.0
     #   fastapi-cloud-cli
 types-awscrt==0.27.4
     # via botocore-stubs
-types-boto3-lite==1.39.9
+types-boto3-lite==1.39.11
     # via finetune-setup-example (pyproject.toml:dev)
 types-boto3-s3==1.39.5
     # via types-boto3-lite

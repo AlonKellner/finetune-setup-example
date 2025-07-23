@@ -12,7 +12,7 @@ from torch.utils.data import Dataset as TorchDataset
 from tqdm.auto import tqdm
 
 from ..tar_s3 import TarS3Syncer
-from .flac import FlacDataset
+from .compressed import FileDataset
 
 
 class TarS3Dataset(TorchDataset):
@@ -20,7 +20,7 @@ class TarS3Dataset(TorchDataset):
 
     def __init__(
         self,
-        inner_dataset: FlacDataset,
+        inner_dataset: FileDataset,
         cache_path: str | Path,
         syncer: TarS3Syncer,
         cache_bucket: str,

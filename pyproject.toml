@@ -76,11 +76,12 @@ classifiers = [
 dependencies = ["inquirer"]
 
 [project.optional-dependencies]
-cpu = ["torch", "torchaudio"]
-cuda = ["torch", "torchaudio"]
+cpu = ["torch", "torchaudio", "torchvision"]
+cuda = ["torch", "torchaudio", "torchvision"]
 rocm = [
   "torch",
   "torchaudio",
+  "torchvision",
   "pytorch-triton-rocm>=3.3.0 ; sys_platform == 'linux'",
 ]
 flash-attn = ["flash-attn==2.8.0.post2"]
@@ -143,6 +144,11 @@ torch = [
   { index = "pytorch-rocm", extra = "rocm" },
 ]
 torchaudio = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "cuda" },
+  { index = "pytorch-rocm", extra = "rocm" },
+]
+torchvision = [
   { index = "pytorch-cpu", extra = "cpu" },
   { index = "pytorch-cu128", extra = "cuda" },
   { index = "pytorch-rocm", extra = "rocm" },
