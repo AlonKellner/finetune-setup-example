@@ -20,7 +20,7 @@ def demo_trained_model(
     sample_rate: int,
     target_hf_repo: str,
     hf_user: str,
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
+    architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> None:
     """Demo trained model."""
     model_id = f"{hf_user}/{target_hf_repo}"

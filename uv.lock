@@ -411,30 +411,30 @@ wheels = [
 
 [[package]]
 name = "boto3"
-version = "1.39.12"
+version = "1.39.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore" },
     { name = "jmespath" },
     { name = "s3transfer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a2/f6/9021213a36aefc43dc300c89882a52d348f3a7a344fefda145f1b741d0a5/boto3-1.39.12.tar.gz", hash = "sha256:1a715cb40ea9df6b666148b243b5b9adbfa5be50d28e2f660330c0581d94b639", size = 111834, upload-time = "2025-07-23T19:21:22.639Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/cc/5ebce7eeba468c0bf5092c94684039e8484ca00329e62f0627662c930959/boto3-1.39.13.tar.gz", hash = "sha256:ace50ccfc4caba235b020e7d36f0191aa399771cb6fe6e34b4359b671aab1a4b", size = 111862, upload-time = "2025-07-24T19:18:27.416Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/b6/c717416e67b1bef84be9c05f2686d353544eda2af5b43af06996a43f6481/boto3-1.39.12-py3-none-any.whl", hash = "sha256:bbf7a8d374b513975c305883ae40e623cc261dbdc25ea86ae435647cae837a15", size = 139899, upload-time = "2025-07-23T19:21:19.552Z" },
+    { url = "https://files.pythonhosted.org/packages/08/bf/a6a73de65e3347305fc0aed129c63897e047042f55152414295a930700d6/boto3-1.39.13-py3-none-any.whl", hash = "sha256:8e62c5724dc06a1934fde155a2eb48cb851cc17ad0b5142da9eb9e46fe0355d3", size = 139899, upload-time = "2025-07-24T19:18:25.388Z" },
 ]
 
 [[package]]
 name = "botocore"
-version = "1.39.12"
+version = "1.39.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jmespath" },
     { name = "python-dateutil" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/16/de/136cb340bc7edc2709e0b4f1b422a101f1756982d774384c5cfb0eb27987/botocore-1.39.12.tar.gz", hash = "sha256:d20b53a196af32ff153cbdbef3cb89e6a9065dc5e90ce23d009e03364601a266", size = 14219106, upload-time = "2025-07-23T19:21:11.155Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/39/eb875fff1c1d3299da660ed6cb00dd9b313e831ef7d18cb3c0f346a39578/botocore-1.39.13.tar.gz", hash = "sha256:ee8053f34e425a40843daccfa78820d6891f0d4f85fc647ab98f9ba28c36f9e7", size = 14222597, upload-time = "2025-07-24T19:18:16.023Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/af/3b82594c5fa26464b548da35a6affe27a44993f65c4149ed8cf8a5df8387/botocore-1.39.12-py3-none-any.whl", hash = "sha256:60bfa0f1e0eb03997e22254e2e6a0e3f7e02b8f845253a4bb235d9240d195c72", size = 13876938, upload-time = "2025-07-23T19:21:05.944Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/ce/8bb5626b0313c3f203215124f432d04ef46de611a9377b0791386e7355b2/botocore-1.39.13-py3-none-any.whl", hash = "sha256:6318ae28984d05aaabe92160446d37a2c498951b34a4d5431bc1ec7eb0376417", size = 13882999, upload-time = "2025-07-24T19:18:11.103Z" },
 ]
 
 [[package]]
@@ -1093,6 +1093,8 @@ dev = [
     { name = "safetensors" },
     { name = "sentencepiece" },
     { name = "skypilot", extra = ["gcp", "kubernetes", "runpod"] },
+    { name = "tifffile", version = "2025.5.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+    { name = "tifffile", version = "2025.6.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "transformers" },
     { name = "types-boto3-lite", extra = ["s3"] },
     { name = "types-pyyaml" },
@@ -1126,6 +1128,8 @@ mms-blog-post = [
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece" },
+    { name = "tifffile", version = "2025.5.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+    { name = "tifffile", version = "2025.6.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "transformers" },
     { name = "types-boto3-lite", extra = ["s3"] },
     { name = "types-pyyaml" },
@@ -1174,6 +1178,7 @@ dev = [
     { name = "safetensors" },
     { name = "sentencepiece", specifier = ">=0.2.0" },
     { name = "skypilot", extras = ["kubernetes", "runpod", "gcp"], git = "https://github.com/AlonKellner/skypilot-beta.git?rev=custom-stable" },
+    { name = "tifffile" },
     { name = "transformers" },
     { name = "types-boto3-lite", extras = ["s3"] },
     { name = "types-pyyaml" },
@@ -1205,6 +1210,7 @@ mms-blog-post = [
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece", specifier = ">=0.2.0" },
+    { name = "tifffile" },
     { name = "transformers" },
     { name = "types-boto3-lite", extras = ["s3"] },
     { name = "types-pyyaml" },
@@ -1622,7 +1628,7 @@ wheels = [
 
 [[package]]
 name = "huggingface-hub"
-version = "0.33.4"
+version = "0.33.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
@@ -1634,9 +1640,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/9e/9366b7349fc125dd68b9d384a0fea84d67b7497753fe92c71b67e13f47c4/huggingface_hub-0.33.4.tar.gz", hash = "sha256:6af13478deae120e765bfd92adad0ae1aec1ad8c439b46f23058ad5956cbca0a", size = 426674, upload-time = "2025-07-11T12:32:48.694Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/16/5716d03e2b48bcc8e32d9b18ed7e55d2ae52e3d5df146cced9fe0581b5ff/huggingface_hub-0.33.5.tar.gz", hash = "sha256:814097e475646d170c44be4c38f7d381ccc4539156a5ac62a54f53aaf1602ed8", size = 427075, upload-time = "2025-07-24T12:30:31.449Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/7b/98daa50a2db034cab6cd23a3de04fa2358cb691593d28e9130203eb7a805/huggingface_hub-0.33.4-py3-none-any.whl", hash = "sha256:09f9f4e7ca62547c70f8b82767eefadd2667f4e116acba2e3e62a5a81815a7bb", size = 515339, upload-time = "2025-07-11T12:32:46.346Z" },
+    { url = "https://files.pythonhosted.org/packages/33/d5/d9e9b75d8dc9cf125fff16fb0cd51d864a29e8b46b6880d8808940989405/huggingface_hub-0.33.5-py3-none-any.whl", hash = "sha256:29b4e64982c2064006021af297e1b17d44c85a8aaf90a0d7efeff7e7d2426296", size = 515705, upload-time = "2025-07-24T12:30:29.55Z" },
 ]
 
 [[package]]
@@ -4509,6 +4515,78 @@ wheels = [
 ]
 
 [[package]]
+name = "tifffile"
+version = "2025.5.10"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+]
+dependencies = [
+    { name = "numpy", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/d0/18fed0fc0916578a4463f775b0fbd9c5fed2392152d039df2fb533bfdd5d/tifffile-2025.5.10.tar.gz", hash = "sha256:018335d34283aa3fd8c263bae5c3c2b661ebc45548fde31504016fcae7bf1103", size = 365290, upload-time = "2025-05-10T19:22:34.386Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5d/06/bd0a6097da704a7a7c34a94cfd771c3ea3c2f405dd214e790d22c93f6be1/tifffile-2025.5.10-py3-none-any.whl", hash = "sha256:e37147123c0542d67bc37ba5cdd67e12ea6fbe6e86c52bee037a9eb6a064e5ad", size = 226533, upload-time = "2025-05-10T19:22:27.279Z" },
+]
+
+[[package]]
+name = "tifffile"
+version = "2025.6.11"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+]
+dependencies = [
+    { name = "numpy", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/11/9e/636e3e433c24da41dd639e0520db60750dbf5e938d023b83af8097382ea3/tifffile-2025.6.11.tar.gz", hash = "sha256:0ece4c2e7a10656957d568a093b07513c0728d30c1bd8cc12725901fffdb7143", size = 370125, upload-time = "2025-06-12T04:49:38.839Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/d8/1ba8f32bfc9cb69e37edeca93738e883f478fbe84ae401f72c0d8d507841/tifffile-2025.6.11-py3-none-any.whl", hash = "sha256:32effb78b10b3a283eb92d4ebf844ae7e93e151458b0412f38518b4e6d2d7542", size = 230800, upload-time = "2025-06-12T04:49:37.458Z" },
+]
+
+[[package]]
 name = "tokenizers"
 version = "0.21.2"
 source = { registry = "https://pypi.org/simple" }
@@ -5167,16 +5245,16 @@ wheels = [
 
 [[package]]
 name = "types-boto3-lite"
-version = "1.39.12"
+version = "1.39.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore-stubs" },
     { name = "types-s3transfer" },
     { name = "typing-extensions", marker = "python_full_version < '3.12' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1e/86/8495554c934fc591dfde5ab54452c55060fd639dfab69a69f3f8a09a4850/types_boto3_lite-1.39.12.tar.gz", hash = "sha256:1030360a2dc7361ffcb61f0339b56d5adb3221ab6a7fae17e2fa6b64cdca6067", size = 72947, upload-time = "2025-07-23T19:30:58.979Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/42/e53e91ccb7b97663eb0b137c577830cf1265338f1c2b4e3efe32f4c96c26/types_boto3_lite-1.39.13.tar.gz", hash = "sha256:f61c544ed91d152ea251dfa81483b70beb627c2f22cf2fba42b4bb62f495d18b", size = 72973, upload-time = "2025-07-24T19:29:56.987Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/47/0f6b9a2b2eb05efd0c0ae6a8f2e46b75b45b9c3d00a4183da3511e2a57b7/types_boto3_lite-1.39.12-py3-none-any.whl", hash = "sha256:719bbf6387dd348a5edb359ab00ab5e97ca72c20da63c8552b4d7f3a83df81b8", size = 42588, upload-time = "2025-07-23T19:30:50.069Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/24/cb426d46f10d0418760d19e6ee2161e7c78886db09cf9d39e1db18c4763c/types_boto3_lite-1.39.13-py3-none-any.whl", hash = "sha256:427abe5ac1d93709285c35752183cae74f238e564ffb4a27b10f4fccb33ea934", size = 42588, upload-time = "2025-07-24T19:29:52.18Z" },
 ]
 
 [package.optional-dependencies]

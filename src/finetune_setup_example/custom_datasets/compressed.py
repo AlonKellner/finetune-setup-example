@@ -14,7 +14,9 @@ from collections.abc import Sized
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import polars as pl
+import tifffile
 import torch
 import torchaudio as ta
 import torchvision as tv
@@ -161,8 +163,8 @@ class FileDataset(ABC, TorchDataset):
 
         index = index % len(self)
 
-        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
-        full_path = self.cache_path / self.get_full_name(padded_index)
+        full_path = self.get_full_name(index)
+
         if not full_path.exists():
             if item is None:
                 item = self._inner_dataset[index]  # type: ignore
@@ -199,9 +201,14 @@ class FileDataset(ABC, TorchDataset):
         }
         return item
 
+    def get_full_name(self, index: int) -> Path:
+        """Convert index to full file name."""
+        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
+        return self.cache_path / self.get_base_name(padded_index)
+
     @abstractmethod
-    def get_full_name(self, padded_index: str) -> str:
-        """Convert padded index to full file name."""
+    def get_base_name(self, padded_index: str) -> str:
+        """Convert padded index to base file name."""
         pass
 
     def save_file(
@@ -281,8 +288,8 @@ class FlacDataset(FileDataset):
             metadata=self.metadata,
         )
 
-    def get_full_name(self, padded_index: str) -> str:
-        """Convert padded index to full file name."""
+    def get_base_name(self, padded_index: str) -> str:
+        """Convert padded index to base file name."""
         return f"{padded_index}.flac"
 
     def raw_save_file(
@@ -360,8 +367,8 @@ class PngDataset(FileDataset):
             metadata=self.metadata,
         )
 
-    def get_full_name(self, padded_index: str) -> str:
-        """Convert padded index to full file name."""
+    def get_base_name(self, padded_index: str) -> str:
+        """Convert padded index to base file name."""
         return f"{padded_index}.png"
 
     def raw_save_file(
@@ -379,4 +386,62 @@ class PngDataset(FileDataset):
         """Load a PNG."""
         _image = tv.io.read_image(str(path.absolute()))
         _image = _image.flip(-2)
+        return _image[0, :, :].T.tolist()
+
+
+class TifDataset(FileDataset):
+    """A wrapping dataset for caching 2d data as local tif files."""
+
+    def __init__(
+        self,
+        inner_dataset: HFDataset | TorchDataset,
+        inner_meta_dataset: HFDataset | TorchDataset,
+        cache_path: str | Path,
+        features_name: str,
+        tokenizer: BpeWav2Vec2CTCTokenizer | None,
+        metadata: dict[int, dict[str, Any]] | None = None,
+    ) -> None:
+        super().__init__(
+            inner_dataset=inner_dataset,
+            inner_meta_dataset=inner_meta_dataset,
+            cache_path=cache_path,
+            features_name=features_name,
+            tokenizer=tokenizer,
+            metadata=metadata,
+        )
+
+    def re_init(
+        self,
+        inner_dataset: TorchDataset | HFDataset,
+        inner_meta_dataset: TorchDataset | HFDataset,
+    ) -> FileDataset:
+        """Recreate the dataset with the new inner ones."""
+        return TifDataset(
+            inner_dataset=inner_dataset,
+            inner_meta_dataset=inner_meta_dataset,
+            cache_path=self.cache_path,
+            features_name=self.features_name,
+            tokenizer=self.tokenizer,
+            metadata=self.metadata,
+        )
+
+    def get_base_name(self, padded_index: str) -> str:
+        """Convert padded index to base file name."""
+        return f"{padded_index}.tif"
+
+    def raw_save_file(
+        self, path: Path, features: list[int | float] | list[list[int | float]]
+    ) -> None:
+        """Save a TIFF."""
+        assert len(features) > 0
+        assert isinstance(features[0], Sized)
+        assert len(features[0]) > 0
+        _image = np.array(features).T[None, :, :]
+        _image = np.flip(_image, -2)
+        tifffile.imwrite(str(path.absolute()), _image)
+
+    def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:
+        """Load a TIFF."""
+        _image = tifffile.imread(str(path.absolute()))
+        _image = np.flip(_image, -2)
         return _image[0, :, :].T.tolist()

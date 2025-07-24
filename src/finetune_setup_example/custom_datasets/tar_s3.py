@@ -78,7 +78,9 @@ class TarS3Dataset(TorchDataset):
         self._indices_groups = {
             v: i for i, vals in enumerate(self.grouped_indices) for v in vals
         }
-        self._indices_flac_paths = {i: self._get_flac_path(i) for i in indices_order}
+        self._indices_flac_paths = {
+            i: self._inner_dataset.get_full_name(i) for i in indices_order
+        }
 
         self.sync_indices = [
             group[0] for group in self.grouped_indices[::sync_interval]
@@ -125,12 +127,6 @@ class TarS3Dataset(TorchDataset):
     def __getitems__(self, keys: list) -> list:
         """Can be used to get a batch using a list of integers indices."""
         return [self[k] for k in keys]
-
-    def _get_flac_path(self, index: int) -> Path:
-        """Get the flac path of an index."""
-        padded_index = str(index).zfill(len(str(len(self._inner_dataset))))  # type: ignore
-        flac_path = self.cache_path / f"{padded_index}.flac"
-        return flac_path
 
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""

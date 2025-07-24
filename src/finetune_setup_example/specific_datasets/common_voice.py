@@ -165,7 +165,7 @@ def create_cached_common_voice_split(
     split: str,
     sync_on_start: bool,
     features_name: str,
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
+    architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> ResizedDataset:
     """Create a common voice split with caching."""
     loader = LazyLoader(
@@ -201,6 +201,7 @@ def create_cached_common_voice_split(
         syncer,
         sync_on_start=sync_on_start,
         features_name=features_name,
+        architecture=architecture,
     )
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])

@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass, field
+from typing import Literal
 
 from transformers import TrainingArguments
 
@@ -143,6 +144,7 @@ def create_training_arguments(
     torch_compile: bool,
     sample_rate: int,
     eval_on_start: bool,
+    architecture: Literal["wav2vec2", "w2v-bert2"],
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
     hp_set: dict | None = None,
@@ -155,11 +157,18 @@ def create_training_arguments(
     global_batch_size = per_device_train_batch_size * num_devices
     accumulation_steps = effective_batch_size // global_batch_size
 
+    if architecture == "wav2vec2":
+        lengths_per_second = sample_rate
+    elif architecture == "w2v-bert2":
+        lengths_per_second = 50
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+
     per_device_train_batch_total_length = int(
-        per_device_train_batch_total_seconds * sample_rate
+        per_device_train_batch_total_seconds * lengths_per_second
     )
     per_device_eval_batch_total_length = int(
-        per_device_eval_batch_total_seconds * sample_rate
+        per_device_eval_batch_total_seconds * lengths_per_second
     )
 
     if (num_training_steps is None) and (num_train_epochs is not None):

@@ -7,7 +7,7 @@ from torch.utils.data import Dataset as TorchDataset
 
 from ..custom_wav2vec2.tokenizer import BpeWav2Vec2CTCTokenizer
 from ..tar_s3 import TarS3Syncer
-from .compressed import FlacDataset, PngDataset
+from .compressed import FlacDataset, TifDataset
 from .tar_s3 import TarS3Dataset
 
 GB = 1_000_000_000
@@ -22,11 +22,11 @@ def prepare_cached_dataset(
     cache_bucket: str,
     syncer: TarS3Syncer,
     features_name: str,
+    architecture: Literal["wav2vec2", "w2v-bert2"],
     tar_size_gb: float | int = 1,
     sync_interval: int = 2,
     groups_per_sync: int = 6,
     sync_on_start: bool = False,
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
 ) -> TarS3Dataset:
     """Wrap a dataset with S3 caching and prepare for the first training."""
     if architecture == "wav2vec2":
@@ -39,7 +39,7 @@ def prepare_cached_dataset(
             features_name=features_name,
         )
     elif architecture == "w2v-bert2":
-        dataset = PngDataset(  # Change to PngDataset
+        dataset = TifDataset(
             inner_dataset=dataset,
             inner_meta_dataset=meta_dataset,
             cache_path=cache_path,

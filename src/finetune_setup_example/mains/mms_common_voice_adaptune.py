@@ -24,7 +24,7 @@ def main(
     data_seed: int = 44,
     target_lang: str = "tur",
     sample_rate: int = 16_000,
-    base_hf_repo: str = "facebook/w2v-bert-2.0",
+    base_hf_repo: str = "facebook/mms-1b-all",
     tokenizer_hf_repo: str = "mms-meta/mms-zeroshot-300m",
     target_hf_repo: str = "finetune-setup-example",
     hf_user: str = "Kellner",
@@ -80,7 +80,7 @@ def main(
     should_freeze_feature_encoder: bool = True,
     sp_vocab_size: int = 64,
     sp_bpe_dropout: float = 0.1,
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
+    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
     job_path: str | None = None,
     hp_set: dict | None = None,
     **kwargs: str,
@@ -88,8 +88,11 @@ def main(
     """Training a model."""
     accelerator_available = torch.accelerator.is_available()
     if not accelerator_available:
-        print("WARNING: Accelerator not available! using SDPA (not flash-attn)")
-        attn_implementation = "sdpa"
+        if architecture == "wav2vec2":
+            print("WARNING: Accelerator not available! using SDPA (not flash-attn)")
+            attn_implementation = "sdpa"
+        else:
+            attn_implementation = "eager"
 
     if job_path is not None:
         print(f"Job path: {job_path}")
@@ -147,12 +150,14 @@ def main(
         sample_rate=sample_rate,
         eval_on_start=eval_on_start,
         hp_set=hp_set,
+        architecture=architecture,
     )
 
     train_processor, _ = create_processor(
         split="train",
         target_lang=target_lang,
         sample_rate=sample_rate,
+        feature_extractor_repo=base_hf_repo,
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
         max_batch_length=training_args.per_device_train_batch_total_length,
@@ -167,6 +172,7 @@ def main(
         split="test",
         target_lang=target_lang,
         sample_rate=sample_rate,
+        feature_extractor_repo=base_hf_repo,
         tokenizer_hf_repo=tokenizer_hf_repo,
         target_hf_repo=target_hf_repo,
         max_batch_length=training_args.per_device_eval_batch_total_length,
@@ -270,7 +276,7 @@ def main(
 
 
 def infer_features_name(
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
+    architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> str:
     """Infer features name."""
     if architecture == "wav2vec2":

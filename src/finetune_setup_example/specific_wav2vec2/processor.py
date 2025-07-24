@@ -33,14 +33,15 @@ def create_processor(
     split: str,
     target_lang: str,
     sample_rate: int,
+    feature_extractor_repo: str,
     tokenizer_hf_repo: str,
     target_hf_repo: str,
     sp_bpe_dropout: float,
     sp_vocab_size: int,
     syncer: TarS3Syncer,
+    architecture: Literal["wav2vec2", "w2v-bert2"],
     max_batch_length: int | None = None,
     padding_side: str = "random",
-    architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
 ) -> tuple[
     CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
     CustomWav2Vec2FeatureExtractor | CustomSeamlessM4TFeatureExtractor,
@@ -70,22 +71,22 @@ def create_processor(
 
     if architecture == "wav2vec2":
         processor_type = CustomWav2Vec2Processor
-        feature_extractor_type = CustomWav2Vec2FeatureExtractor
+        feature_extractor = CustomWav2Vec2FeatureExtractor(
+            feature_size=1,
+            sampling_rate=sample_rate,
+            padding_value=0.0,
+            do_normalize=True,
+            return_attention_mask=True,
+            max_batch_length=max_batch_length,
+            padding_side=padding_side,
+        )
     elif architecture == "w2v-bert2":
         processor_type = CustomWav2Vec2BertProcessor
-        feature_extractor_type = CustomSeamlessM4TFeatureExtractor
+        feature_extractor = CustomSeamlessM4TFeatureExtractor.from_pretrained(
+            feature_extractor_repo
+        )
     else:
         raise ValueError(f"Unknown architecture: {architecture}")
-
-    feature_extractor = feature_extractor_type(
-        feature_size=1,
-        sampling_rate=sample_rate,
-        padding_value=0.0,
-        do_normalize=True,
-        return_attention_mask=True,
-        max_batch_length=max_batch_length,
-        padding_side=padding_side,
-    )
 
     processor: CustomProcessorMixin = processor_type(
         sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",

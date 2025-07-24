@@ -9,9 +9,7 @@ import torch
 from torch import nn
 from transformers import (
     Wav2Vec2BertForCTC,
-    Wav2Vec2Config,
     Wav2Vec2ForCTC,
-    Wav2Vec2Model,
 )
 from transformers.models.wav2vec2.modeling_wav2vec2 import (
     _HIDDEN_STATES_START_POSITION,
@@ -22,35 +20,24 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import (
 class CustomModelMixin:
     """Custom faster wav2vec2 implementation."""
 
-    def __init__(self, config: Wav2Vec2Config, target_lang: str | None = None) -> None:
-        super().__init__(config)
+    def labels_for_ctc(
+        self, labels: torch.Tensor, flat_labels: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return labels formatting for CTC loss."""
+        labels_mask = labels >= 0
+        target_lengths = labels_mask.sum(-1)
+        return target_lengths, flat_labels
 
-        self.wav2vec2 = Wav2Vec2Model(config)
-        self.dropout = nn.Dropout(config.final_dropout)
 
-        self.target_lang = target_lang
+class CustomWav2Vec2ForCTC(CustomModelMixin, Wav2Vec2ForCTC):
+    """Wav2Vec2 model with custom mixin."""
 
-        if config.vocab_size is None:
-            raise ValueError(
-                f"You are trying to instantiate {self.__class__} with a configuration that "
-                "does not define the vocabulary size of the language model head. Please "
-                "instantiate the model as follows: `Wav2Vec2ForCTC.from_pretrained(..., vocab_size=vocab_size)`. "
-                "or define `vocab_size` of your model's configuration."
-            )
-        output_hidden_size = (
-            config.output_hidden_size
-            if hasattr(config, "add_adapter") and config.add_adapter
-            else config.hidden_size
-        )
-        self.lm_head = nn.Linear(output_hidden_size, config.vocab_size)
-
-        # Initialize weights and apply final processing
-        self.post_init()
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
 
     def forward(
         self,
         input_values: torch.Tensor | None,
-        input_features: torch.Tensor | None,
         attention_mask: torch.Tensor | None = None,
         output_attentions: bool | None = None,
         output_hidden_states: bool | None = None,
@@ -62,8 +49,6 @@ class CustomModelMixin:
         return_dict = (
             return_dict if return_dict is not None else self.config.use_return_dict
         )
-        if input_values is None:
-            input_values = input_features
 
         if labels is not None and labels.max() >= self.config.vocab_size:
             raise ValueError(
@@ -126,24 +111,101 @@ class CustomModelMixin:
             attentions=outputs.attentions,
         )
 
-    def labels_for_ctc(
-        self, labels: torch.Tensor, flat_labels: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return labels formatting for CTC loss."""
-        labels_mask = labels >= 0
-        target_lengths = labels_mask.sum(-1)
-        return target_lengths, flat_labels
-
-
-class CustomWav2Vec2ForCTC(CustomModelMixin, Wav2Vec2ForCTC):
-    """Wav2Vec2 model with custom mixin."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-
 
 class CustomWav2Vec2BertForCTC(CustomModelMixin, Wav2Vec2BertForCTC):
     """Wav2Vec2-BERT model with custom mixin."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+    def forward(
+        self,
+        input_features: torch.Tensor | None,
+        attention_mask: torch.Tensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        labels: torch.Tensor | None = None,
+        flat_labels: torch.Tensor | None = None,
+    ) -> tuple | CausalLMOutput:
+        r"""Forward.
+
+        input_features (`torch.FloatTensor` of shape `(batch_size, sequence_length)`):
+            Float values of input raw speech waveform. Values can be obtained by loading a `.flac` or `.wav` audio file
+            into an array of type `list[float]` or a `numpy.ndarray`, *e.g.* via the soundfile library (`pip install
+            soundfile`). To prepare the array into `input_features`, the [`AutoProcessor`] should be used for padding and
+            conversion into a tensor of type `torch.FloatTensor`. See [`Wav2Vec2BertProcessor.__call__`] for details.
+        labels (`torch.LongTensor` of shape `(batch_size, target_length)`, *optional*):
+            Labels for connectionist temporal classification. Note that `target_length` has to be smaller or equal to
+            the sequence length of the output logits. Indices are selected in `[-100, 0, ..., config.vocab_size - 1]`.
+            All labels set to `-100` are ignored (masked), the loss is only computed for labels in `[0, ...,
+            config.vocab_size - 1]`.
+        """
+        if labels is not None and labels.max() >= self.config.vocab_size:
+            raise ValueError(
+                f"Label values must be <= vocab_size: {self.config.vocab_size}"
+            )
+
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
+
+        outputs = self.wav2vec2_bert(
+            input_features,
+            attention_mask=attention_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        hidden_states = outputs[0]
+        hidden_states = self.dropout(hidden_states)
+
+        logits = self.lm_head(hidden_states)
+
+        loss = None
+        if labels is not None:
+            # retrieve loss input_lengths from attention_mask
+            attention_mask = (
+                attention_mask
+                if attention_mask is not None
+                else torch.ones(
+                    input_features.shape[:2],
+                    device=input_features.device,
+                    dtype=torch.long,
+                )
+            )
+            input_lengths = self._get_feat_extract_output_lengths(
+                attention_mask.sum([-1])
+            ).to(torch.long)
+
+            # assuming that padded tokens are filled with -100
+            # when not being attended to
+            target_lengths, flattened_targets = self.labels_for_ctc(labels, flat_labels)
+
+            # ctc_loss doesn't support fp16
+            log_probs = nn.functional.log_softmax(
+                logits, dim=-1, dtype=torch.float32
+            ).transpose(0, 1)
+
+            with torch.backends.cudnn.flags(enabled=False):
+                loss = nn.functional.ctc_loss(
+                    log_probs,
+                    flattened_targets,
+                    input_lengths,
+                    target_lengths,
+                    blank=self.config.pad_token_id,
+                    reduction=self.config.ctc_loss_reduction,
+                    zero_infinity=self.config.ctc_zero_infinity,
+                )
+
+        if not return_dict:
+            output = (logits, *outputs[_HIDDEN_STATES_START_POSITION:])
+            return ((loss, *output)) if loss is not None else output
+
+        return CausalLMOutput(
+            loss=loss,  # type: ignore
+            logits=logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
