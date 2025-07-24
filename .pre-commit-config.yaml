@@ -38,7 +38,7 @@ repos:
         name: rumdl-check-fix
         entry: uvx rumdl check --fix
         language: system
-        types: [toml]
+        types: [markdown]
       - id: uv-sync
         name: uv-sync
         entry: uv sync --extra cpu
