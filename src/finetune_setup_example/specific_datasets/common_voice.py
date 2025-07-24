@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Literal
 
+import dill
 import uroman
 from datasets import Audio, load_dataset
 from datasets import Dataset as HFDataset
@@ -17,6 +18,23 @@ from ..custom_wav2vec2.processor import CustomProcessorMixin
 from ..tar_s3 import TarS3Syncer
 
 Batch = dict[str, Any]
+
+
+class Uromanizer:
+    """A uromanizer class."""
+
+    def __init__(self, target_lang: str) -> None:
+        self.target_lang = target_lang
+        self.uroman = uroman.Uroman()
+        self.chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
+
+    def uromanize(self, batch: Batch) -> Batch:
+        """Uromanize text."""
+        clean_string = re.sub(self.chars_to_remove_regex, "", batch["sentence"]).lower()
+        batch["sentence"] = self.uroman.romanize_string(
+            clean_string, lcode=self.target_lang
+        )
+        return batch
 
 
 class LazyLoader:
@@ -39,16 +57,7 @@ class LazyLoader:
         self.features_name = features_name
         self.common_voice_split = None
         self.meta_common_voice_split = None
-        self.uroman = uroman.Uroman()
-        self.chars_to_remove_regex = r"[`,?\.!\-;:\"“%‘”�()…’]"  # noqa: RUF001
-
-    def uromanize(self, batch: Batch) -> Batch:
-        """Uromanize text."""
-        clean_string = re.sub(self.chars_to_remove_regex, "", batch["sentence"]).lower()
-        batch["sentence"] = self.uroman.romanize_string(
-            clean_string, lcode=self.target_lang
-        )
-        return batch
+        self.uromanizer = Uromanizer(target_lang)
 
     def load_common_voice_for_wav2vec2(self) -> HFDataset:
         """Load a split of common voice 17, adapted for wav2vec2."""
@@ -91,7 +100,8 @@ class LazyLoader:
             ]
         )
 
-        common_voice_split = common_voice_split.map(self.uromanize)
+        dill.dumps(self.uromanizer.uromanize)
+        common_voice_split = common_voice_split.map(self.uromanizer.uromanize)
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -102,6 +112,7 @@ class LazyLoader:
         sentence = common_voice_split[rand_int]["sentence"]
 
         print(common_voice_split.column_names)
+        dill.dumps(self.prepare_dataset)
         common_voice_split = common_voice_split.map(
             self.prepare_dataset,
             remove_columns=[

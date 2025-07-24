@@ -3,6 +3,7 @@
 import tarfile
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from botocore.exceptions import ClientError
 from types_boto3_s3.client import S3Client
@@ -18,6 +19,10 @@ class TarS3Syncer:
     ) -> None:
         self.s3_client = s3_client
         self.s3_client_v2 = s3_client_v2
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Get stateless state."""
+        return dict()
 
     def _bucket_exists(self, bucket: str) -> bool:
         try:

@@ -135,7 +135,11 @@ class FileDataset(ABC, TorchDataset):
         """A property supported by HF datasets."""
         if len(self.metadata) == 0:
             self[0]
-        return [*next(iter(self.metadata.values())).keys(), self.features_name]
+        return [
+            *next(iter(self.metadata.values())).keys(),
+            self.features_name,
+            "labels",
+        ]
 
     def __len__(self) -> int:
         """Propegates the length of the inner dataset."""
@@ -165,7 +169,15 @@ class FileDataset(ABC, TorchDataset):
             features = item[self.features_name]
             self.save_file(full_path, features)
 
-        features = self.load_file(full_path)
+        try:
+            features = self.load_file(full_path)
+        except Exception:
+            full_path.unlink()
+            if item is None:
+                item = self._inner_dataset[index]  # type: ignore
+            features = item[self.features_name]
+            self.save_file(full_path, features)
+            features = self.load_file(full_path)
 
         if index in self.metadata:
             item_metadata = self.metadata[index]
@@ -179,7 +191,8 @@ class FileDataset(ABC, TorchDataset):
             self.metadata[index] = item_metadata
 
         item_metadata = item_metadata.copy()
-        item_metadata["labels"] = self.tokenizer(item_metadata["sentence"])
+        if self.tokenizer is not None:
+            item_metadata["labels"] = self.tokenizer(item_metadata["sentence"])
         item = {
             self.features_name: features,
             **item_metadata,
@@ -358,10 +371,12 @@ class PngDataset(FileDataset):
         assert len(features) > 0
         assert isinstance(features[0], Sized)
         assert len(features[0]) > 0
-        _image = torch.tensor(features)[None, ::]
+        _image = torch.tensor(features).T[None, :, :]
+        _image = _image.flip(-2)
         tv.utils.save_image(_image, str(path.absolute()))
 
     def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:
         """Load a PNG."""
         _image = tv.io.read_image(str(path.absolute()))
-        return _image[0, :, :].tolist()
+        _image = _image.flip(-2)
+        return _image[0, :, :].T.tolist()

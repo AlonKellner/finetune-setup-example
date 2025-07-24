@@ -152,7 +152,7 @@ class BpeTokenizerMixin:
 
 
 class BpeWav2Vec2CTCTokenizer(BpeTokenizerMixin, Wav2Vec2CTCTokenizer):
-    """Wav2Vec2 tokenizer with BPE tokenzier."""
+    """Wav2Vec2 tokenizer with BPE tokenizer."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

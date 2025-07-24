@@ -11,6 +11,5 @@
 			"path": "zsh"
 		}
 	},
-	"github.copilot.chat.codesearch.enabled": true,
-	"docker.extension.experimental.release.april2025": "enabled"
+	"github.copilot.chat.codesearch.enabled": true
 }
