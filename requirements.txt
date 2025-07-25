@@ -41,11 +41,11 @@ bcrypt==4.3.0
     # via paramiko
 blessed==1.21.0
     # via inquirer
-boto3==1.39.13
+boto3==1.39.14
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   runpod
-botocore==1.39.13
+botocore==1.39.14
     # via
     #   boto3
     #   s3transfer
@@ -85,7 +85,7 @@ colorama==0.4.6
     # via
     #   runpod
     #   skypilot
-comet-ml==3.49.12
+comet-ml==3.50.0
     # via finetune-setup-example (pyproject.toml:dev)
 configobj==5.0.9
     # via everett
@@ -207,7 +207,7 @@ httpx==0.28.1
     #   fastapi
     #   fastapi-cloud-cli
     #   skypilot
-huggingface-hub==0.33.5
+huggingface-hub==0.34.1
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   accelerate
@@ -309,7 +309,7 @@ oauthlib==3.3.1
     # via
     #   kubernetes
     #   requests-oauthlib
-orjson==3.11.0
+orjson==3.11.1
     # via fastapi
 packaging==25.0
     # via
@@ -473,7 +473,7 @@ requests-oauthlib==2.0.0
     #   kubernetes
 requests-toolbelt==1.0.0
     # via comet-ml
-rich==14.0.0
+rich==14.1.0
     # via
     #   comet-ml
     #   rich-toolkit
@@ -586,7 +586,7 @@ tqdm==4.67.1
     #   transformers
 tqdm-loggable==0.2
     # via runpod
-transformers==4.53.3
+transformers==4.54.0
     # via finetune-setup-example (pyproject.toml:dev)
 typer==0.16.0
     # via
@@ -594,7 +594,7 @@ typer==0.16.0
     #   fastapi-cloud-cli
 types-awscrt==0.27.4
     # via botocore-stubs
-types-boto3-lite==1.39.13
+types-boto3-lite==1.39.14
     # via finetune-setup-example (pyproject.toml:dev)
 types-boto3-s3==1.39.5
     # via types-boto3-lite

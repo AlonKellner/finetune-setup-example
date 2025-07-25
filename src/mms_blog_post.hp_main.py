@@ -15,7 +15,8 @@ def hp_main() -> None:
     default_hp_set["job_path"] = f"{name}.job.yaml"
     hp_sets = [
         dict(
-            base_hf_repo="facebook/mms-1b-all",
+            base_hf_repo=base_hf_repo,
+            architecture=architecture,
             num_train_epochs=10,
             dataloader_num_workers=20,
             job_path=f"{name}.{job_type}.job.yaml",
@@ -34,10 +35,10 @@ def hp_main() -> None:
         for batch_total_seconds in [1200.0]
         for job_type in ["a100"]
         for dropout in [0.0]
-        for sp_vocab_size, sp_bpe_dropout in [
-            (128, 0.2),
-            (256, 0.2),
-            (256, 0.5),
+        for sp_vocab_size, sp_bpe_dropout in [(64, 0.0)]
+        for base_hf_repo, architecture in [
+            ("facebook/mms-1b-all", "wav2vec2"),
+            ("facebook/w2v-bert-2.0", "w2v-bert2"),
         ]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
