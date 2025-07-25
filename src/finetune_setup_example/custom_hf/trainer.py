@@ -513,12 +513,22 @@ class CustomTrainer(Trainer):  # type: ignore
 
 
 def train(trainer: Trainer) -> None:
-    """Train with cometml and wandb."""
-    comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
-    wandb.init(dir="./.wandb")
-
+    """Train."""
     trainer.train()  # type: ignore
     trainer.evaluate()  # type: ignore
 
-    comet_ml.end()
-    wandb.finish()
+
+def experiment_tracking(func: Callable) -> Callable:
+    """Activate cometml and wandb decorator."""
+
+    def _wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Activate cometml and wandb wrapper."""
+        comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
+        wandb.init(dir="./.wandb")
+        try:
+            return func(*args, **kwargs)
+        finally:
+            comet_ml.end()
+            wandb.finish()
+
+    return _wrapper

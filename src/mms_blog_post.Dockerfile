@@ -19,6 +19,8 @@ RUN --mount=type=cache,dst=/root/.cache/ \
         wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /root/.cache/${EXTRA_GROUP}/miniconda.sh; \
     fi && \
     echo conda-setup && /bin/bash /root/.cache/${EXTRA_GROUP}/miniconda.sh -b -p /opt/conda && \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r && \
     echo conda-tools && conda install -y -c conda-forge 'ffmpeg<7,>5' sox libstdcxx-ng libgcc ncurses && ffmpeg -version && sox --version && \
     echo apt-setup && apt update && apt upgrade -y && \
     echo apt-tools && apt install -y --no-install-recommends bash ca-certificates curl file git \

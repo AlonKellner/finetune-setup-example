@@ -3,9 +3,10 @@
 from typing import Literal
 
 import torch
+from torch.utils.data import Dataset as TorchDataset
 
 from ..custom_datasets.resized import ResizedDataset
-from ..custom_hf.trainer import train
+from ..custom_hf.trainer import CustomTrainer, experiment_tracking, train
 from ..custom_hf.training_args import create_training_arguments
 from ..init_utils import init_training
 from ..s3_utils import create_s3_client
@@ -19,6 +20,7 @@ from ..specific_wav2vec2.trainer import create_trainer
 from ..tar_s3 import TarS3Syncer
 
 
+@experiment_tracking
 def main(
     seed: int = 44,
     data_seed: int = 44,
@@ -83,6 +85,7 @@ def main(
     architecture: Literal["wav2vec2", "w2v-bert2"] = "wav2vec2",
     job_path: str | None = None,
     hp_set: dict | None = None,
+    job_full_id: str | None = None,
     **kwargs: str,
 ) -> None:
     """Training a model."""
@@ -96,6 +99,8 @@ def main(
 
     if job_path is not None:
         print(f"Job path: {job_path}")
+    if job_full_id is not None:
+        target_hf_repo = job_full_id
 
     kwargs = {k: v for k, v in kwargs.items() if "job" not in k}
     if len(kwargs) > 0:
@@ -249,6 +254,26 @@ def main(
         features_name=features_name,
     )
 
+    central_logic(trainer, should_train, accelerator_available, common_voice_eval)
+
+    if should_push:
+        hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
+
+    if should_demo:
+        demo_trained_model(
+            target_lang, sample_rate, target_hf_repo, hf_user, architecture=architecture
+        )
+
+    print("FINISHED!")
+
+
+def central_logic(
+    trainer: CustomTrainer,
+    should_train: bool,
+    accelerator_available: bool,
+    common_voice_eval: TorchDataset,
+) -> None:
+    """Run the central logic."""
     if not accelerator_available:
         print(
             "WARNING: Torch accelerator is not available. Training will not be performed."
@@ -260,19 +285,8 @@ def main(
 
         metrics = trainer.evaluate(ResizedDataset(common_voice_eval, size=10))
         print(metrics)
-
-    if should_train and accelerator_available:
+    elif should_train:
         train(trainer)
-
-    if should_push:
-        hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
-
-    if should_demo:
-        demo_trained_model(
-            target_lang, sample_rate, target_hf_repo, hf_user, architecture=architecture
-        )
-
-    print("FINISHED!")
 
 
 def infer_features_name(
