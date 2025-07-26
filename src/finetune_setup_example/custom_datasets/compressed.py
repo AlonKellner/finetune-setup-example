@@ -19,7 +19,6 @@ import polars as pl
 import tifffile
 import torch
 import torchaudio as ta
-import torchvision as tv
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 from tqdm.auto import tqdm
@@ -329,64 +328,6 @@ class FlacDataset(FileDataset):
         samples = samples - samples.mean()
         samples = samples / samples.std()
         return samples.tolist()
-
-
-class PngDataset(FileDataset):
-    """A wrapping dataset for caching 2d data as local png files."""
-
-    def __init__(
-        self,
-        inner_dataset: HFDataset | TorchDataset,
-        inner_meta_dataset: HFDataset | TorchDataset,
-        cache_path: str | Path,
-        features_name: str,
-        tokenizer: BpeWav2Vec2CTCTokenizer | None,
-        metadata: dict[int, dict[str, Any]] | None = None,
-    ) -> None:
-        super().__init__(
-            inner_dataset=inner_dataset,
-            inner_meta_dataset=inner_meta_dataset,
-            cache_path=cache_path,
-            features_name=features_name,
-            tokenizer=tokenizer,
-            metadata=metadata,
-        )
-
-    def re_init(
-        self,
-        inner_dataset: TorchDataset | HFDataset,
-        inner_meta_dataset: TorchDataset | HFDataset,
-    ) -> FileDataset:
-        """Recreate the dataset with the new inner ones."""
-        return PngDataset(
-            inner_dataset=inner_dataset,
-            inner_meta_dataset=inner_meta_dataset,
-            cache_path=self.cache_path,
-            features_name=self.features_name,
-            tokenizer=self.tokenizer,
-            metadata=self.metadata,
-        )
-
-    def get_base_name(self, padded_index: str) -> str:
-        """Convert padded index to base file name."""
-        return f"{padded_index}.png"
-
-    def raw_save_file(
-        self, path: Path, features: list[int | float] | list[list[int | float]]
-    ) -> None:
-        """Save a PNG."""
-        assert len(features) > 0
-        assert isinstance(features[0], Sized)
-        assert len(features[0]) > 0
-        _image = torch.tensor(features).T[None, :, :]
-        _image = _image.flip(-2)
-        tv.utils.save_image(_image, str(path.absolute()))
-
-    def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:
-        """Load a PNG."""
-        _image = tv.io.read_image(str(path.absolute()))
-        _image = _image.flip(-2)
-        return _image[0, :, :].T.tolist()
 
 
 class TifDataset(FileDataset):

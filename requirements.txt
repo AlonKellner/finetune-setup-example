@@ -303,7 +303,6 @@ numpy==2.2.6
     #   soundfile
     #   soxr
     #   tifffile
-    #   torchvision
     #   transformers
 oauthlib==3.3.1
     # via
@@ -333,8 +332,6 @@ paramiko==3.5.1
     # via runpod
 pfzy==0.3.4
     # via inquirerpy
-pillow==11.3.0
-    # via torchvision
 platformdirs==4.3.8
     # via
     #   pooch
@@ -572,10 +569,7 @@ torch==2.7.1+cpu
     #   finetune-setup-example (pyproject.toml)
     #   accelerate
     #   torchaudio
-    #   torchvision
 torchaudio==2.7.1
-    # via finetune-setup-example (pyproject.toml)
-torchvision==0.22.1
     # via finetune-setup-example (pyproject.toml)
 tqdm==4.67.1
     # via
