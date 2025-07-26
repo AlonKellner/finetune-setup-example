@@ -3,10 +3,8 @@
 from typing import Literal
 
 import torch
-from torch.utils.data import Dataset as TorchDataset
 
-from ..custom_datasets.resized import ResizedDataset
-from ..custom_hf.trainer import CustomTrainer, experiment_tracking, train
+from ..custom_hf.trainer import experiment_tracking, train
 from ..custom_hf.training_args import create_training_arguments
 from ..init_utils import init_training
 from ..s3_utils import create_s3_client
@@ -90,12 +88,9 @@ def main(
 ) -> None:
     """Training a model."""
     accelerator_available = torch.accelerator.is_available()
-    if not accelerator_available:
-        if architecture == "wav2vec2":
-            print("WARNING: Accelerator not available! using SDPA (not flash-attn)")
-            attn_implementation = "sdpa"
-        else:
-            attn_implementation = "eager"
+    attn_implementation = select_attention_implementation(
+        architecture, accelerator_available, attn_implementation
+    )
 
     if job_path is not None:
         print(f"Job path: {job_path}")
@@ -104,6 +99,15 @@ def main(
     kwargs = {k: v for k, v in kwargs.items() if "job" not in k}
     if len(kwargs) > 0:
         print("WARNING: Got unknown kwargs.\n", kwargs)
+
+    if not accelerator_available:
+        print(
+            "WARNING: Torch accelerator is not available. Training is shortened to a single batch."
+        )
+        train_limit = 5
+        eval_limit = 5
+        num_train_epochs = 1
+        num_training_steps = 1
 
     init_training(
         seed=seed,
@@ -251,7 +255,8 @@ def main(
         features_name=features_name,
     )
 
-    central_logic(trainer, should_train, accelerator_available, common_voice_eval)
+    if should_train:
+        train(trainer)
 
     if should_push:
         hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
@@ -262,28 +267,6 @@ def main(
         )
 
     print("FINISHED!")
-
-
-def central_logic(
-    trainer: CustomTrainer,
-    should_train: bool,
-    accelerator_available: bool,
-    common_voice_eval: TorchDataset,
-) -> None:
-    """Run the central logic."""
-    if not accelerator_available:
-        print(
-            "WARNING: Torch accelerator is not available. Training will not be performed."
-        )
-        train_dataloader = trainer.get_train_dataloader()
-        for item in train_dataloader:
-            print([k for k in item])
-            break
-
-        metrics = trainer.evaluate(ResizedDataset(common_voice_eval, size=10))
-        print(metrics)
-    elif should_train:
-        train(trainer)
 
 
 def infer_features_name(
@@ -297,3 +280,17 @@ def infer_features_name(
     else:
         raise ValueError(f"Unknown architecture: {architecture}")
     return features_name
+
+
+def select_attention_implementation(
+    architecture: str,
+    accelerator_available: bool,
+    attn_implementation: str,
+) -> str:
+    """Select the attention implementation based on architecture and accelerator availability."""
+    if architecture == "wav2vec2":
+        if not accelerator_available:
+            print("WARNING: Accelerator not available! using SDPA (not flash-attn)")
+            return "sdpa"
+        return attn_implementation
+    return "eager"
