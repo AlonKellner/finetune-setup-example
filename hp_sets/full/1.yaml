@@ -1,7 +1,7 @@
 activation_dropout: 0.0
 architecture: w2v-bert2
 attention_dropout: 0.0
-attn_implementation: flash_attention_2
+attn_implementation: eager
 base_hf_repo: facebook/w2v-bert-2.0
 dataloader_num_workers: 20
 eval_limit: 10000

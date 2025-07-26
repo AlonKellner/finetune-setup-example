@@ -118,6 +118,13 @@ class CustomWav2Vec2BertForCTC(CustomModelMixin, Wav2Vec2BertForCTC):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
+    def _get_adapters(self) -> dict[str, Any]:
+        """Get adapter weights."""
+        adapter_weights = dict()
+        for name, param in self.adapter.named_parameters():
+            adapter_weights[".".join(["adapter", name])] = param
+        return adapter_weights
+
     def forward(
         self,
         input_features: torch.Tensor | None,

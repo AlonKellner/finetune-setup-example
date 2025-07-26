@@ -22,7 +22,7 @@ def hp_main() -> None:
             eval_limit=10_000,
             dataloader_num_workers=20,
             fp16=True,
-            attn_implementation="flash_attention_2",
+            attn_implementation="eager",
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,
             job_type=job_type,
