@@ -176,10 +176,8 @@ def create_training_arguments(
     elif (num_train_epochs is None) and (num_training_steps is not None):
         num_train_epochs = 3.0
     else:
-        raise ValueError(
-            "Either `num_training_steps` or `num_train_epochs` must be provided, "
-            "but not both."
-        )
+        num_train_epochs = 3.0
+        num_training_steps = 1
 
     training_args = CustomTrainingArguments(
         seed=seed,

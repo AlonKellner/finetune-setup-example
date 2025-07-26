@@ -3,6 +3,8 @@
 from typing import Literal
 
 import torch
+from transformers import utils
+from transformers.utils import is_flash_attn_2_available
 
 from ..custom_hf.trainer import experiment_tracking, train
 from ..custom_hf.training_args import create_training_arguments
@@ -24,7 +26,7 @@ def main(
     data_seed: int = 44,
     target_lang: str = "tur",
     sample_rate: int = 16_000,
-    base_hf_repo: str = "facebook/mms-1b-all",
+    base_hf_repo: str = "patrickvonplaten/tiny-wav2vec2-no-tokenizer",
     tokenizer_hf_repo: str = "mms-meta/mms-zeroshot-300m",
     general_name: str = "finetune-setup-example",
     hf_user: str = "Kellner",
@@ -32,9 +34,9 @@ def main(
     raw_eval_size: int = 11290,
     eval_size: int = 20_000,
     train_size: int = 100_000,
-    train_limit: int = 100_000,
-    eval_limit: int = 10_000,
-    num_train_epochs: int | float | None = 1,
+    train_limit: int = 1,
+    eval_limit: int = 5,
+    num_train_epochs: int | float | None = None,
     num_training_steps: int | None = None,
     effective_batch_size: int = 128,
     per_device_train_batch_size: int = 128,
@@ -56,13 +58,13 @@ def main(
     adapter_decay_ratio: float = 0.5,
     mega_batch_mult: int = 100,
     dataloader_num_workers: int = 0,
-    fp16: bool = True,
+    fp16: bool = False,
     save_steps: int = 100,
     eval_steps: int = 100,
     logging_steps: int = 10,
     weight_decay: float = 0.01,
     torch_compile: bool = False,
-    attn_implementation: str = "flash_attention_2",
+    attn_implementation: str = "eager",
     hidden_dropout: float = 0.0,
     activation_dropout: float = 0.0,
     attention_dropout: float = 0.0,
@@ -87,6 +89,7 @@ def main(
     **kwargs: str,
 ) -> None:
     """Training a model."""
+    utils.logging.set_verbosity_debug()  # type: ignore
     accelerator_available = torch.accelerator.is_available()
     attn_implementation = select_attention_implementation(
         architecture, accelerator_available, attn_implementation
@@ -99,15 +102,6 @@ def main(
     kwargs = {k: v for k, v in kwargs.items() if "job" not in k}
     if len(kwargs) > 0:
         print("WARNING: Got unknown kwargs.\n", kwargs)
-
-    if not accelerator_available:
-        print(
-            "WARNING: Torch accelerator is not available. Training is shortened to a single batch."
-        )
-        train_limit = 5
-        eval_limit = 5
-        num_train_epochs = 1
-        num_training_steps = 1
 
     init_training(
         seed=seed,
@@ -288,9 +282,16 @@ def select_attention_implementation(
     attn_implementation: str,
 ) -> str:
     """Select the attention implementation based on architecture and accelerator availability."""
+    if is_flash_attn_2_available():
+        print("Flash-attn 2 Available.")
+    else:
+        print("WARNING: Can't access flash-attn 2!")
+        if attn_implementation == "flash_attention_2":
+            attn_implementation = "eager"
     if architecture == "wav2vec2":
         if not accelerator_available:
             print("WARNING: Accelerator not available! using SDPA (not flash-attn)")
-            return "sdpa"
-        return attn_implementation
-    return "eager"
+            attn_implementation = "eager"
+    else:
+        attn_implementation = "eager"
+    return attn_implementation

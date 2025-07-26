@@ -101,6 +101,22 @@
 			"problemMatcher": "$python"
 		},
 		{
+			"label": "Profile Python (venv)",
+			"type": "shell",
+			"command": "uvx py-spy record -f raw -o ${fileDirname}/${fileBasenameNoExtension}.pyspy --subprocesses --full-filenames -r 10 -- ${workspaceFolder}/.venv/bin/python ${fileDirname}/${fileBasenameNoExtension}.py",
+			"hide": false,
+			"group": "none",
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": true,
+				"panel": "dedicated",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": "$python"
+		},
+		{
 			"label": "Profile Python (docker compose)  ",
 			"dependsOrder": "sequence",
 			"dependsOn": [
