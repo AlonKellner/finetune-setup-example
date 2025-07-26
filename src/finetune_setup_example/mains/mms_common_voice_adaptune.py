@@ -28,7 +28,7 @@ def main(
     sample_rate: int = 16_000,
     base_hf_repo: str = "facebook/mms-1b-all",
     tokenizer_hf_repo: str = "mms-meta/mms-zeroshot-300m",
-    target_hf_repo: str = "finetune-setup-example",
+    general_name: str = "finetune-setup-example",
     hf_user: str = "Kellner",
     raw_train_size: int = 35147,
     raw_eval_size: int = 11290,
@@ -99,8 +99,7 @@ def main(
 
     if job_path is not None:
         print(f"Job path: {job_path}")
-    if job_full_id is not None:
-        target_hf_repo = job_full_id
+    target_hf_repo = job_full_id if job_full_id is not None else general_name
 
     kwargs = {k: v for k, v in kwargs.items() if "job" not in k}
     if len(kwargs) > 0:
@@ -164,7 +163,6 @@ def main(
         sample_rate=sample_rate,
         feature_extractor_repo=base_hf_repo,
         tokenizer_hf_repo=tokenizer_hf_repo,
-        target_hf_repo=target_hf_repo,
         max_batch_length=training_args.per_device_train_batch_total_length,
         padding_side=padding_side,
         syncer=syncer,
@@ -179,7 +177,6 @@ def main(
         sample_rate=sample_rate,
         feature_extractor_repo=base_hf_repo,
         tokenizer_hf_repo=tokenizer_hf_repo,
-        target_hf_repo=target_hf_repo,
         max_batch_length=training_args.per_device_eval_batch_total_length,
         padding_side=padding_side,
         syncer=syncer,
@@ -197,7 +194,7 @@ def main(
         data_seed=data_seed,
         target_lang=target_lang,
         sample_rate=sample_rate,
-        target_hf_repo=target_hf_repo,
+        general_name=general_name,
         raw_split_size=raw_train_size,
         split_size=train_size,
         split_limit=train_limit,
@@ -216,7 +213,7 @@ def main(
         data_seed=data_seed,
         target_lang=target_lang,
         sample_rate=sample_rate,
-        target_hf_repo=target_hf_repo,
+        general_name=general_name,
         raw_split_size=raw_eval_size,
         split_size=eval_size,
         split_limit=eval_limit,

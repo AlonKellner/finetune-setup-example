@@ -35,7 +35,6 @@ def create_processor(
     sample_rate: int,
     feature_extractor_repo: str,
     tokenizer_hf_repo: str,
-    target_hf_repo: str,
     sp_bpe_dropout: float,
     sp_vocab_size: int,
     syncer: TarS3Syncer,
@@ -66,8 +65,6 @@ def create_processor(
         eos_token=tokenizer.eos_token,
         target_lang=target_lang,
     )
-
-    tokenizer.push_to_hub(target_hf_repo)  # type: ignore
 
     if architecture == "wav2vec2":
         processor_type = CustomWav2Vec2Processor

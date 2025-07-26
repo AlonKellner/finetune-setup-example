@@ -156,7 +156,7 @@ def create_cached_common_voice_split(
     data_seed: int,
     target_lang: str,
     sample_rate: int,
-    target_hf_repo: str,
+    general_name: str,
     raw_split_size: int,
     split_size: int,
     split_limit: int,
@@ -190,7 +190,7 @@ def create_cached_common_voice_split(
     meta_common_voice_split = ResizedDataset(meta_common_voice_split, split_size)
     cache_path = f"./.app_cache/{data_seed}/{architecture}/{split}_set/"
     Path(cache_path).mkdir(parents=True, exist_ok=True)
-    cache_bucket = f"{target_hf_repo}-cache-{data_seed}-{architecture}-{split}-set"
+    cache_bucket = f"{general_name}-cache-{data_seed}-{architecture}-{split}-set"
     common_voice_split = prepare_cached_dataset(
         None,
         common_voice_split,

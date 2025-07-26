@@ -185,7 +185,7 @@ def create_training_arguments(
         seed=seed,
         data_seed=data_seed,
         report_to=["comet_ml", "wandb"],
-        output_dir=f".output/{target_hf_repo}",
+        output_dir=f".output/{run_name}",
         resume_from_checkpoint="last-checkpoint",
         hub_strategy="checkpoint",
         save_total_limit=2,
