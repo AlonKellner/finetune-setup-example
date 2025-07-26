@@ -21,7 +21,7 @@ def hp_main() -> None:
             train_limit=100_000,
             eval_limit=10_000,
             dataloader_num_workers=20,
-            fp_16=True,
+            fp16=True,
             attn_implementation="flash_attention_2",
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,

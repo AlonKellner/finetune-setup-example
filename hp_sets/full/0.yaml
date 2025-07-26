@@ -6,7 +6,7 @@ base_hf_repo: facebook/mms-1b-all
 dataloader_num_workers: 20
 eval_limit: 10000
 final_dropout: 0.0
-fp_16: true
+fp16: true
 hidden_dropout: 0.0
 job_path: src/mms_blog_post.a100.job.yaml
 job_stem: src/mms_blog_post
