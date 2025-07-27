@@ -1,8 +1,8 @@
 activation_dropout: 0.0
-architecture: wav2vec2
+architecture: w2v-bert2
 attention_dropout: 0.0
 attn_implementation: eager
-base_hf_repo: facebook/mms-1b-all
+base_hf_repo: facebook/w2v-bert-2.0
 dataloader_num_workers: 20
 eval_limit: 10000
 final_dropout: 0.0
@@ -13,9 +13,9 @@ job_stem: src/mms_blog_post
 job_type: a100
 layerdrop: 0.0
 num_train_epochs: 3
-per_device_eval_batch_total_seconds: 900.0
-per_device_train_batch_total_seconds: 900.0
+per_device_eval_batch_total_seconds: 1200.0
+per_device_train_batch_total_seconds: 1200.0
 push_to_hub: true
 sp_bpe_dropout: 0.0
-sp_vocab_size: 64
+sp_vocab_size: 32
 train_limit: 100000
