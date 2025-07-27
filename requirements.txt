@@ -501,7 +501,7 @@ safetensors==0.5.3
     #   transformers
 scikit-learn==1.7.1
     # via librosa
-scipy==1.16.0
+scipy==1.16.1
     # via
     #   librosa
     #   scikit-learn

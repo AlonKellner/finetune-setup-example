@@ -82,6 +82,7 @@ def create_processor(
         feature_extractor = CustomSeamlessM4TFeatureExtractor.from_pretrained(
             feature_extractor_repo,
             max_batch_length=max_batch_length,
+            sampling_rate=sample_rate,
         )
     else:
         raise ValueError(f"Unknown architecture: {architecture}")

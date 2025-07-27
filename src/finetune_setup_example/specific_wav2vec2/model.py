@@ -25,6 +25,7 @@ def load_wav2vec2_for_adaptuning(
     layerdrop: float = 0.0,
     should_freeze_base_model: bool = True,
     should_freeze_feature_encoder: bool = True,
+    apply_spec_augment: bool = True,
 ) -> CustomWav2Vec2ForCTC | CustomWav2Vec2BertForCTC:
     """Load a wav2vec2 model, ready to train an adapter alone."""
     assert isinstance(processor, HasCustomFields)
@@ -47,6 +48,7 @@ def load_wav2vec2_for_adaptuning(
             adapter_attn_dim=768,
             ignore_mismatched_sizes=True,
             attn_implementation=attn_implementation,
+            apply_spec_augment=apply_spec_augment,
         )
         if should_freeze_feature_encoder:
             model.freeze_feature_encoder()
@@ -70,6 +72,7 @@ def load_wav2vec2_for_adaptuning(
             add_adapter=True,
             ignore_mismatched_sizes=True,
             attn_implementation=attn_implementation,
+            apply_spec_augment=apply_spec_augment,
         )
         adapter_weights = model._get_adapters()
         for param in adapter_weights.values():

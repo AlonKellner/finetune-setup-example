@@ -38,9 +38,11 @@ def hp_main() -> None:
             sp_vocab_size=sp_vocab_size,
             sp_bpe_dropout=sp_bpe_dropout,
         )
+        for pretrained_learning_rate in [2e-6, 5e-6, 1e-5, 2e-5, 5e-5]
+        for adapter_learning_rate in [1e-3]
         for batch_total_seconds in [1200.0]
         for job_type in ["a100"]
-        for dropout in [0.0, 0.005, 0.01, 0.02, 0.05]
+        for dropout in [0.02]
         for sp_vocab_size, sp_bpe_dropout in [(48, 0.0)]
         for base_hf_repo, architecture, attn_implementation in [
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),

@@ -85,6 +85,7 @@ def main(
     sp_bpe_dropout: float = 0.1,
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     logging_nan_inf_filter: bool = True,
+    apply_spec_augment: bool = True,
     job_path: str | None = None,
     hp_set: dict | None = None,
     job_full_id: str | None = None,
@@ -241,6 +242,7 @@ def main(
         should_freeze_base_model=should_freeze_base_model,
         should_freeze_feature_encoder=should_freeze_feature_encoder,
         architecture=architecture,
+        apply_spec_augment=apply_spec_augment,
     )
 
     trainer = create_trainer(
