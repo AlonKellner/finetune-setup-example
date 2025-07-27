@@ -17,13 +17,13 @@ def hp_main() -> None:
         dict(
             base_hf_repo=base_hf_repo,
             architecture=architecture,
-            num_train_epochs=10,
+            num_train_epochs=3,
             train_limit=100_000,
             eval_limit=10_000,
             dataloader_num_workers=20,
             fp16=True,
-            push_to_hub=False,
-            attn_implementation="eager",
+            push_to_hub=True,
+            attn_implementation=attn_implementation,
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,
             job_type=job_type,
@@ -37,13 +37,24 @@ def hp_main() -> None:
             sp_vocab_size=sp_vocab_size,
             sp_bpe_dropout=sp_bpe_dropout,
         )
-        for batch_total_seconds in [1200.0]
+        for batch_total_seconds in [900.0]
         for job_type in ["a100"]
         for dropout in [0.0]
         for sp_vocab_size, sp_bpe_dropout in [(64, 0.0)]
-        for base_hf_repo, architecture in [
-            ("facebook/mms-1b-all", "wav2vec2"),
-            ("facebook/w2v-bert-2.0", "w2v-bert2"),
+        for base_hf_repo, architecture, attn_implementation in [
+            [
+                ("facebook/mms-1b-all", "wav2vec2", attn_implementation)
+                for attn_implementation in [
+                    "eager",
+                    "flex_attention",
+                    "flash_attention_2",
+                    "sdpa",
+                    "paged_attention",
+                    "sdpa_paged",
+                    "eager_paged",
+                ]
+            ],
+            ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),
         ]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
