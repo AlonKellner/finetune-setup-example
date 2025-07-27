@@ -121,8 +121,13 @@ class CustomWav2Vec2BertForCTC(CustomModelMixin, Wav2Vec2BertForCTC):
     def _get_adapters(self) -> dict[str, Any]:
         """Get adapter weights."""
         adapter_weights = dict()
-        for name, param in self.adapter.named_parameters():
-            adapter_weights[".".join(["adapter", name])] = param
+
+        for param_name, param in self.wav2vec2_bert.adapter.named_parameters():
+            adapter_weights[".".join(["wav2vec2_bert.adapter", param_name])] = param
+
+        for name, param in self.lm_head.named_parameters():
+            adapter_weights[".".join(["lm_head", name])] = param
+
         return adapter_weights
 
     def forward(

@@ -144,6 +144,7 @@ def create_training_arguments(
     torch_compile: bool,
     sample_rate: int,
     eval_on_start: bool,
+    push_to_hub: bool,
     architecture: Literal["wav2vec2", "w2v-bert2"],
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
@@ -177,17 +178,23 @@ def create_training_arguments(
         num_train_epochs = 3.0
     else:
         num_train_epochs = 3.0
-        num_training_steps = 1
+        num_training_steps = 3
+
+    if push_to_hub:
+        hub_kwargs = dict(
+            resume_from_checkpoint="last-checkpoint",
+            hub_strategy="checkpoint",
+            save_total_limit=2,
+            push_to_hub=True,
+        )
+    else:
+        hub_kwargs = dict()
 
     training_args = CustomTrainingArguments(
         seed=seed,
         data_seed=data_seed,
         report_to=["comet_ml", "wandb"],
         output_dir=f".output/{run_name}",
-        resume_from_checkpoint="last-checkpoint",
-        hub_strategy="checkpoint",
-        save_total_limit=2,
-        push_to_hub=True,
         run_name=run_name,
         group_by_length=True,
         per_device_train_batch_size=per_device_train_batch_size,
@@ -228,6 +235,7 @@ def create_training_arguments(
         log_level="info",
         torch_compile=torch_compile,
         hp_set=hp_set,
+        **hub_kwargs,
     )
 
     return training_args

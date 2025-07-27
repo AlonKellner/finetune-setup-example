@@ -42,9 +42,9 @@ def load_wav2vec2_for_adaptuning(
             final_dropout=final_dropout,
             layerdrop=layerdrop,
             ctc_loss_reduction="sum",
+            ctc_zero_infinity=False,
             vocab_size=vocab_size,
             adapter_attn_dim=768,
-            add_adapter=True,
             ignore_mismatched_sizes=True,
             attn_implementation=attn_implementation,
         )
@@ -65,11 +65,15 @@ def load_wav2vec2_for_adaptuning(
             final_dropout=final_dropout,
             layerdrop=layerdrop,
             ctc_loss_reduction="sum",
+            ctc_zero_infinity=False,
             vocab_size=vocab_size,
             add_adapter=True,
             ignore_mismatched_sizes=True,
             attn_implementation=attn_implementation,
         )
+        adapter_weights = model._get_adapters()
+        for param in adapter_weights.values():
+            param.requires_grad = True
     else:
         raise ValueError(f"Unknown architecture: {architecture}")
 

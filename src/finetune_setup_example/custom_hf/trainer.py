@@ -525,10 +525,6 @@ def experiment_tracking(func: Callable) -> Callable:
         """Activate cometml and wandb wrapper."""
         comet_ml.login(project_name=os.getenv("WANDB_PROJECT"))
         wandb.init(dir="./.wandb")
-        try:
-            return func(*args, **kwargs)
-        finally:
-            comet_ml.end()
-            wandb.finish()
+        return func(*args, **kwargs)
 
     return _wrapper

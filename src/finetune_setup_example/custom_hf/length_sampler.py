@@ -187,6 +187,12 @@ def shuffle_batches_in_groups(
             previous_group_idx = group_idx
         grouped_batch_indices[-1].append(batch_i)
 
+    largest_first_group_batch_index = max(
+        grouped_batch_indices[0], key=lambda i: len(batches[i])
+    )
+    grouped_batch_indices[0].remove(largest_first_group_batch_index)
+    largest_first_group_batch = batches[largest_first_group_batch_index]
+
     shuffled_batch_indices = []
     for batch_indices in grouped_batch_indices:
         perm = torch.randperm(len(batch_indices), generator=generator).tolist()
@@ -198,7 +204,7 @@ def shuffle_batches_in_groups(
     ]
 
     batches = [batches[batch_i] for batch_i in batches_perm]
-    batches = [first_batch, *batches]
+    batches = [first_batch, largest_first_group_batch, *batches]
     return batches
 
 

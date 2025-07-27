@@ -22,6 +22,7 @@ def hp_main() -> None:
             eval_limit=10_000,
             dataloader_num_workers=20,
             fp16=True,
+            push_to_hub=False,
             attn_implementation="eager",
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,

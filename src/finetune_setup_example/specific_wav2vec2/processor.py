@@ -80,7 +80,8 @@ def create_processor(
     elif architecture == "w2v-bert2":
         processor_type = CustomWav2Vec2BertProcessor
         feature_extractor = CustomSeamlessM4TFeatureExtractor.from_pretrained(
-            feature_extractor_repo
+            feature_extractor_repo,
+            max_batch_length=max_batch_length,
         )
     else:
         raise ValueError(f"Unknown architecture: {architecture}")
