@@ -1,5 +1,5 @@
 activation_dropout: 0.05
-adapter_learning_rate: 0.005
+adapter_learning_rate: 0.002
 architecture: w2v-bert2
 attention_dropout: 0.05
 attn_implementation: eager
@@ -15,8 +15,8 @@ job_type: a100
 layerdrop: 0.05
 logging_nan_inf_filter: false
 num_train_epochs: 2
-per_device_eval_batch_total_seconds: 1200.0
-per_device_train_batch_total_seconds: 1200.0
+per_device_eval_batch_total_seconds: 1800.0
+per_device_train_batch_total_seconds: 1800.0
 pretrained_learning_rate: 0.0001
 push_to_hub: true
 sp_bpe_dropout: 0.0

@@ -17,7 +17,7 @@ def hp_main() -> None:
         dict(
             base_hf_repo=base_hf_repo,
             architecture=architecture,
-            num_train_epochs=2,
+            num_train_epochs=epochs,
             train_limit=100_000,
             eval_limit=10_000,
             dataloader_num_workers=20,
@@ -41,8 +41,9 @@ def hp_main() -> None:
             adapter_learning_rate=adapter_learning_rate,
         )
         for pretrained_learning_rate in [1e-4]
-        for adapter_learning_rate in [5e-04, 1e-3, 2e-3, 5e-3, 1e-2]
-        for batch_total_seconds in [1200.0]
+        for adapter_learning_rate in [2e-3]
+        for batch_total_seconds in [600.0, 900.0, 1200.0, 1800.0]
+        for epochs in [2]
         for job_type in ["a100"]
         for dropout in [0.05]
         for sp_vocab_size, sp_bpe_dropout in [(48, 0.0)]
