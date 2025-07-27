@@ -12,10 +12,10 @@ job_path: src/mms_blog_post.a100.job.yaml
 job_stem: src/mms_blog_post
 job_type: a100
 layerdrop: 0.0
-num_train_epochs: 10
-per_device_eval_batch_total_seconds: 1200.0
-per_device_train_batch_total_seconds: 1200.0
-push_to_hub: false
+num_train_epochs: 3
+per_device_eval_batch_total_seconds: 900.0
+per_device_train_batch_total_seconds: 900.0
+push_to_hub: true
 sp_bpe_dropout: 0.0
 sp_vocab_size: 64
 train_limit: 100000

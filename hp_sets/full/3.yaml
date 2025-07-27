@@ -1,7 +1,7 @@
 activation_dropout: 0.0
 architecture: wav2vec2
 attention_dropout: 0.0
-attn_implementation: eager
+attn_implementation: sdpa
 base_hf_repo: facebook/mms-1b-all
 dataloader_num_workers: 20
 eval_limit: 10000

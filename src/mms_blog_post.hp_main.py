@@ -42,7 +42,7 @@ def hp_main() -> None:
         for dropout in [0.0]
         for sp_vocab_size, sp_bpe_dropout in [(64, 0.0)]
         for base_hf_repo, architecture, attn_implementation in [
-            [
+            *[
                 ("facebook/mms-1b-all", "wav2vec2", attn_implementation)
                 for attn_implementation in [
                     "eager",
