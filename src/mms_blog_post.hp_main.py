@@ -23,6 +23,7 @@ def hp_main() -> None:
             dataloader_num_workers=20,
             fp16=True,
             push_to_hub=True,
+            logging_nan_inf_filter=False,
             attn_implementation=attn_implementation,
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,
@@ -37,15 +38,15 @@ def hp_main() -> None:
             sp_vocab_size=sp_vocab_size,
             sp_bpe_dropout=sp_bpe_dropout,
         )
-        for batch_total_seconds in [1200.0]
+        for batch_total_seconds in [2400.0]
         for job_type in ["a100"]
         for dropout in [0.0]
         for sp_vocab_size, sp_bpe_dropout in [
-            (32, 0.0),
-            (48, 0.0),
-            (64, 0.0),
-            (96, 0.0),
-            (128, 0.0),
+            (64, 0.2),
+            (128, 0.2),
+            (256, 0.2),
+            (512, 0.2),
+            (1024, 0.2),
         ]
         for base_hf_repo, architecture, attn_implementation in [
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),

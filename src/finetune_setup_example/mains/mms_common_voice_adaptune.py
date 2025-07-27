@@ -84,6 +84,7 @@ def main(
     sp_vocab_size: int = 64,
     sp_bpe_dropout: float = 0.1,
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
+    logging_nan_inf_filter: bool = True,
     job_path: str | None = None,
     hp_set: dict | None = None,
     job_full_id: str | None = None,
@@ -155,6 +156,7 @@ def main(
         push_to_hub=push_to_hub,
         hp_set=hp_set,
         architecture=architecture,
+        logging_nan_inf_filter=logging_nan_inf_filter,
     )
 
     train_processor, _ = create_processor(
