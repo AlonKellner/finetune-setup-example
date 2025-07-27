@@ -37,6 +37,8 @@ def hp_main() -> None:
             layerdrop=dropout,
             sp_vocab_size=sp_vocab_size,
             sp_bpe_dropout=sp_bpe_dropout,
+            pretrained_learning_rate=pretrained_learning_rate,
+            adapter_learning_rate=adapter_learning_rate,
         )
         for pretrained_learning_rate in [2e-6, 5e-6, 1e-5, 2e-5, 5e-5]
         for adapter_learning_rate in [1e-3]
