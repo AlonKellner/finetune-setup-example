@@ -15,6 +15,7 @@ def hp_main() -> None:
     default_hp_set["job_path"] = f"{name}.job.yaml"
     hp_sets = [
         dict(
+            seed=seed,
             base_hf_repo=base_hf_repo,
             architecture=architecture,
             num_train_epochs=epochs,
@@ -41,8 +42,8 @@ def hp_main() -> None:
             adapter_learning_rate=adapter_learning_rate,
         )
         for pretrained_learning_rate in [1e-4]
-        for adapter_learning_rate in [2e-3]
-        for batch_total_seconds in [600.0, 900.0, 1200.0, 1800.0]
+        for adapter_learning_rate in [1e-3]
+        for batch_total_seconds in [1200.0]
         for epochs in [2]
         for job_type in ["a100"]
         for dropout in [0.05]
@@ -50,6 +51,7 @@ def hp_main() -> None:
         for base_hf_repo, architecture, attn_implementation in [
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),
         ]
+        for seed in [42, 43, 44]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
