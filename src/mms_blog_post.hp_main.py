@@ -17,7 +17,7 @@ def hp_main() -> None:
         dict(
             base_hf_repo=base_hf_repo,
             architecture=architecture,
-            num_train_epochs=3,
+            num_train_epochs=2,
             train_limit=100_000,
             eval_limit=10_000,
             dataloader_num_workers=20,
@@ -40,11 +40,11 @@ def hp_main() -> None:
             pretrained_learning_rate=pretrained_learning_rate,
             adapter_learning_rate=adapter_learning_rate,
         )
-        for pretrained_learning_rate in [2e-6, 5e-6, 1e-5, 2e-5, 5e-5]
-        for adapter_learning_rate in [1e-3]
+        for pretrained_learning_rate in [1e-4]
+        for adapter_learning_rate in [5e-04, 1e-3, 2e-3, 5e-3, 1e-2]
         for batch_total_seconds in [1200.0]
         for job_type in ["a100"]
-        for dropout in [0.02]
+        for dropout in [0.05]
         for sp_vocab_size, sp_bpe_dropout in [(48, 0.0)]
         for base_hf_repo, architecture, attn_implementation in [
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),
