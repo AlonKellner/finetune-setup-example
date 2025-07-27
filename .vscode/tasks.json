@@ -117,6 +117,22 @@
 			"problemMatcher": "$python"
 		},
 		{
+			"label": "Download Profile (venv)",
+			"type": "shell",
+			"command": "PYSPY_PATH=${relativeFileDirname}/${fileBasenameNoExtension}.pyspy ${workspaceFolder}/.venv/bin/python ${workspaceFolder}/src/pyspy_download.py",
+			"hide": false,
+			"group": "none",
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": true,
+				"panel": "dedicated",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": "$python"
+		},
+		{
 			"label": "Profile Python (docker compose)  ",
 			"dependsOrder": "sequence",
 			"dependsOn": [

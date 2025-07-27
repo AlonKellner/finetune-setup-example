@@ -1,14 +1,26 @@
 """A script to upload a generated pyspy file."""
 
 import os
+from pathlib import Path
 
 import boto3
+import dotenv
 import inquirer
 from types_boto3_s3.client import S3Client
 
 from finetune_setup_example.remote_job_utils import get_job_ids
 
 if __name__ == "__main__":
+    pyspy_path = os.getenv("PYSPY_PATH")
+    if pyspy_path is None:
+        raise ValueError("Env var `PYSPY_PATH` not provided.")
+
+    pyspy_path = Path(pyspy_path)
+    env_file = pyspy_path.parent / f"{pyspy_path.stem}.env"
+    if env_file.exists():
+        print(f"Loading environment variables from {env_file}")
+        dotenv.load_dotenv(env_file)
+
     access_key = os.getenv("HETZNER_ACCESS_KEY")
     secret_key = os.getenv("HETZNER_SECRET_KEY")
     endpoint = os.getenv("HETZNER_ENDPOINT")
@@ -28,11 +40,7 @@ if __name__ == "__main__":
         ),
     )
 
-    pyspy_path = os.getenv("PYSPY_PATH")
-    if pyspy_path is None:
-        raise ValueError("Env var `PYSPY_PATH` not provided.")
-
-    job_id, ids = get_job_ids()
+    job_id, ids = get_job_ids(allow_dirty=True)
     exp = ids["exp"]
     commit = ids["commit"]
 
@@ -44,7 +52,7 @@ if __name__ == "__main__":
         raise RuntimeError("Invalid response from S3")
 
     keys = [v["Key"] for v in response["Contents"] if "Key" in v]
-    keys = [k for k in keys if pyspy_path in k]
+    keys = [k for k in keys if str(pyspy_path) in k]
     questions = [
         inquirer.List(
             "key",

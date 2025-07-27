@@ -37,23 +37,17 @@ def hp_main() -> None:
             sp_vocab_size=sp_vocab_size,
             sp_bpe_dropout=sp_bpe_dropout,
         )
-        for batch_total_seconds in [900.0]
+        for batch_total_seconds in [1200.0]
         for job_type in ["a100"]
         for dropout in [0.0]
-        for sp_vocab_size, sp_bpe_dropout in [(64, 0.0)]
+        for sp_vocab_size, sp_bpe_dropout in [
+            (32, 0.0),
+            (48, 0.0),
+            (64, 0.0),
+            (96, 0.0),
+            (128, 0.0),
+        ]
         for base_hf_repo, architecture, attn_implementation in [
-            *[
-                ("facebook/mms-1b-all", "wav2vec2", attn_implementation)
-                for attn_implementation in [
-                    "eager",
-                    "flex_attention",
-                    "flash_attention_2",
-                    "sdpa",
-                    "paged_attention",
-                    "sdpa_paged",
-                    "eager_paged",
-                ]
-            ],
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),
         ]
     ]

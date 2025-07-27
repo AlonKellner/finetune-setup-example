@@ -12,7 +12,7 @@ from dotenv import dotenv_values
 from .hp_set_handling import prepare_hp_sets
 
 
-def get_job_ids() -> tuple[str, dict[str, str]]:
+def get_job_ids(allow_dirty: bool = False) -> tuple[str, dict[str, str]]:
     """Validate and get ids for the current experiment."""
     job_id = os.getenv("JOB_FULL_ID")
     ids = {
@@ -32,7 +32,7 @@ def get_job_ids() -> tuple[str, dict[str, str]]:
             raise ValueError(
                 f"Current branch must start with `{exp_prefix}`, got `{branch}`"
             )
-        if repo.is_dirty(untracked_files=True):
+        if (not allow_dirty) and repo.is_dirty(untracked_files=True):
             raise ValueError("Commit all changes before running.")
         exp_id = branch.removeprefix(exp_prefix)
         commit_id = repo.git.rev_parse("HEAD", short=True)

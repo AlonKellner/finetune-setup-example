@@ -184,11 +184,13 @@ def create_training_arguments(
         hub_kwargs = dict(
             resume_from_checkpoint="last-checkpoint",
             hub_strategy="checkpoint",
-            save_total_limit=2,
             push_to_hub=True,
         )
     else:
-        hub_kwargs = dict()
+        hub_kwargs = dict(
+            resume_from_checkpoint=False,
+            push_to_hub=False,
+        )
 
     training_args = CustomTrainingArguments(
         seed=seed,
@@ -235,6 +237,7 @@ def create_training_arguments(
         log_level="info",
         torch_compile=torch_compile,
         hp_set=hp_set,
+        save_total_limit=2,
         **hub_kwargs,
     )
 
