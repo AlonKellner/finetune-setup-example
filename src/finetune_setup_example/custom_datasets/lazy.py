@@ -1,8 +1,10 @@
 """A torch dataset wrapper that defers inner dataset creation to when accessed."""
 
+import json
 import threading
 import traceback
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from datasets import Dataset as HFDataset
@@ -13,30 +15,33 @@ class LazyDataset(TorchDataset):
     """A lazy dataset wrapper."""
 
     def __init__(
-        self, inner_dataset_func: Callable[[], HFDataset | TorchDataset], size: int
+        self,
+        inner_dataset_func: Callable[[], HFDataset | TorchDataset],
+        dataset_metadata_path: Path,
     ) -> None:
         self._inner_dataset_func = inner_dataset_func
-        self._size = size
         self._inner_dataset: HFDataset | TorchDataset | None = None
         self._lock = threading.Lock()
+        if dataset_metadata_path.exists():
+            with open(dataset_metadata_path) as f:
+                metadata = json.load(f)
+            self._size = metadata["size"]
+        else:
+            print("WARNING: LazyDataset resolving inner dataset to cache length")
+            self._size = len(self._get_inner_dataset())
+            with open(dataset_metadata_path, "w") as f:
+                json.dump({"size": self._size}, f)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
         if self._inner_dataset is None:
             print("WARNING: LazyDataset __getattr__ called for", name)
-        _inner_dataset = self._get_inner_dataset()
 
-        return getattr(_inner_dataset, name)
+        return getattr(self._get_inner_dataset(), name)
 
     def __len__(self) -> int:
         """Return the size as specified."""
-        if self._inner_dataset is None:
-            return self._size
-        else:
-            real_size = len(self._inner_dataset)  # type: ignore
-            if real_size != self._size:
-                print("WARNING! Lazy dataset sizes mismatch!")
-            return real_size
+        return self._size
 
     @property
     def total_length(self) -> int:
@@ -51,9 +56,7 @@ class LazyDataset(TorchDataset):
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if self._inner_dataset is None:
             print("WARNING: LazyDataset __getitem__ called for", index)
-        _inner_dataset = self._get_inner_dataset()
-
-        return _inner_dataset[index]
+        return self._get_inner_dataset()[index]
 
     def _get_inner_dataset(self) -> HFDataset | TorchDataset:
         """Ensure the inner dataset is loaded."""

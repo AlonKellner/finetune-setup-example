@@ -13,7 +13,6 @@ from ..s3_utils import create_s3_client
 from ..specific_datasets.common_voice import (
     create_cached_common_voice_split,
 )
-from ..specific_wav2vec2.hf_utils import demo_trained_model, hf_push_adapter
 from ..specific_wav2vec2.model import load_wav2vec2_for_adaptuning
 from ..specific_wav2vec2.processor import create_processor
 from ..specific_wav2vec2.trainer import create_trainer
@@ -24,18 +23,14 @@ from ..tar_s3 import TarS3Syncer
 def main(
     seed: int = 44,
     data_seed: int = 44,
-    target_lang: str = "tur",
     sample_rate: int = 16_000,
     base_hf_repo: str = "facebook/w2v-bert-2.0",
     tokenizer_hf_repo: str = "mms-meta/mms-zeroshot-300m",
     general_name: str = "finetune-setup-example",
-    hf_user: str = "Kellner",
-    raw_train_size: int = 35147,
-    raw_eval_size: int = 11290,
-    eval_size: int = 20_000,
-    train_size: int = 100_000,
-    train_limit: int = 1_000,
-    eval_limit: int = 100,
+    eval_size: int | None = None,
+    train_size: int | None = None,
+    train_limit: int | None = None,
+    eval_limit: int | None = None,
     num_train_epochs: int | float | None = None,
     num_training_steps: int | None = None,
     effective_batch_size: int = 128,
@@ -74,8 +69,6 @@ def main(
     layerdrop: float = 0.0,
     padding_side: str = "random",
     should_train: bool = True,
-    should_push: bool = False,
-    should_demo: bool = False,
     eval_on_start: bool = False,
     sync_on_start: bool = False,
     push_to_hub: bool = False,
@@ -162,7 +155,6 @@ def main(
 
     train_processor, _ = create_processor(
         split="train",
-        target_lang=target_lang,
         sample_rate=sample_rate,
         feature_extractor_repo=base_hf_repo,
         tokenizer_hf_repo=tokenizer_hf_repo,
@@ -176,7 +168,6 @@ def main(
 
     eval_processor, _ = create_processor(
         split="test",
-        target_lang=target_lang,
         sample_rate=sample_rate,
         feature_extractor_repo=base_hf_repo,
         tokenizer_hf_repo=tokenizer_hf_repo,
@@ -193,12 +184,10 @@ def main(
 
     features_name = infer_features_name(architecture)
 
-    common_voice_train = create_cached_common_voice_split(
+    common_voice_train, train_grouped_indices = create_cached_common_voice_split(
         data_seed=data_seed,
-        target_lang=target_lang,
         sample_rate=sample_rate,
         general_name=general_name,
-        raw_split_size=raw_train_size,
         split_size=train_size,
         split_limit=train_limit,
         processor=train_processor,
@@ -212,12 +201,10 @@ def main(
     if train_processor.can_create_bpe_tokenizer():
         eval_processor.set_bpe_tokenizer(train_processor.convert_tokenizer_to_bpe())
 
-    common_voice_eval = create_cached_common_voice_split(
+    common_voice_eval, eval_grouped_indices = create_cached_common_voice_split(
         data_seed=data_seed,
-        target_lang=target_lang,
         sample_rate=sample_rate,
         general_name=general_name,
-        raw_split_size=raw_eval_size,
         split_size=eval_size,
         split_limit=eval_limit,
         processor=eval_processor,
@@ -249,7 +236,9 @@ def main(
         model=model,
         training_args=training_args,
         common_voice_eval=common_voice_eval,
+        eval_grouped_indices=eval_grouped_indices,
         common_voice_train=common_voice_train,
+        train_grouped_indices=train_grouped_indices,
         train_processor=train_processor,
         eval_processor=eval_processor,
         features_name=features_name,
@@ -257,14 +246,6 @@ def main(
 
     if should_train:
         train(trainer)
-
-    if should_push:
-        hf_push_adapter(target_lang, model, training_args.output_dir, trainer)
-
-    if should_demo:
-        demo_trained_model(
-            target_lang, sample_rate, target_hf_repo, hf_user, architecture=architecture
-        )
 
     print("FINISHED!")
 

@@ -1,7 +1,7 @@
 """Utilities for creating wav2vec2 trainers."""
 
-from ..custom_datasets.resized import ResizedDataset
-from ..custom_datasets.tar_s3 import TarS3Dataset
+from torch.utils.data import Dataset as TorchDataset
+
 from ..custom_hf.trainer import CustomTrainer
 from ..custom_hf.training_args import CustomTrainingArguments
 from ..custom_wav2vec2.ctc_collator import (
@@ -22,8 +22,10 @@ from ..specific_wav2vec2.processor import HasCustomFields
 def create_trainer(
     model: CustomWav2Vec2ForCTC | CustomWav2Vec2BertForCTC,
     training_args: CustomTrainingArguments,
-    common_voice_eval: TarS3Dataset | ResizedDataset,
-    common_voice_train: TarS3Dataset | ResizedDataset,
+    common_voice_eval: TorchDataset,
+    eval_grouped_indices: list[list[int]],
+    common_voice_train: TorchDataset,
+    train_grouped_indices: list[list[int]],
     train_processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
     eval_processor: CustomWav2Vec2Processor | CustomWav2Vec2BertProcessor,
     features_name: str,
@@ -48,7 +50,7 @@ def create_trainer(
         train_dataset=common_voice_train,
         processing_class=train_processor.feature_extractor,
         eval_processing_class=eval_processor.feature_extractor,
-        eval_grouped_indices=common_voice_eval.grouped_indices,
-        train_grouped_indices=common_voice_train.grouped_indices,
+        eval_grouped_indices=eval_grouped_indices,
+        train_grouped_indices=train_grouped_indices,
     )
     return trainer

@@ -207,7 +207,7 @@ httpx==0.28.1
     #   fastapi
     #   fastapi-cloud-cli
     #   skypilot
-huggingface-hub==0.34.1
+huggingface-hub==0.34.2
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   accelerate
@@ -418,6 +418,8 @@ python-dotenv==1.1.1
     #   pydantic-settings
     #   skypilot
     #   uvicorn
+python-iso639==2025.2.18
+    # via finetune-setup-example (pyproject.toml:dev)
 python-multipart==0.0.20
     # via
     #   fastapi

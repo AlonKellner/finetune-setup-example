@@ -31,7 +31,6 @@ class HasCustomFields(Protocol):
 
 def create_processor(
     split: str,
-    target_lang: str,
     sample_rate: int,
     feature_extractor_repo: str,
     tokenizer_hf_repo: str,
@@ -49,6 +48,7 @@ def create_processor(
     tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(tokenizer_hf_repo)
     vocab_dict = tokenizer.vocab
 
+    target_lang = "urmn"
     new_vocab_dict = {target_lang: vocab_dict}
 
     vocab_file = Path(".output/vocab.json")

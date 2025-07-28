@@ -82,23 +82,21 @@ class TarS3Syncer:
             with tarfile.open(fileobj=f, mode="r:gz") as tar:
                 tar.extractall(path=str(outpath.absolute()), filter="data")
 
-    def sync_multiple_files(
-        self, files: list[Path], title: str, bucket: str, outpath: Path
-    ) -> None:
+    def sync_multiple_files(self, files: list[Path], title: str, bucket: str) -> None:
         """Sync multiple files with s3 tar."""
         if all(p.exists() for p in files):
             self._upload(files, title, bucket)
         elif self._exists(title, bucket):
-            self._download(title, bucket, outpath)
+            self._download(title, bucket, files[0].parent)
         else:
             print("WARNING: Files do not exist and cannot be synced:", title)
 
-    def sync_file(self, file: Path, bucket: str, outpath: Path) -> Path:
+    def sync_file(self, file: Path, bucket: str) -> Path:
         """Sync a single file."""
         if file.exists():
             self._upload([file], file.stem, bucket)
         elif self._exists(file.stem, bucket):
-            self._download(file.stem, bucket, outpath)
+            self._download(file.stem, bucket, file.parent)
         else:
             print(f"WARNING: A file does not exist and cannot be synced: {file}")
         return file

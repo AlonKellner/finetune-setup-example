@@ -21,7 +21,7 @@ class TarS3Dataset(TorchDataset):
     def __init__(
         self,
         inner_dataset: FileDataset,
-        cache_path: str | Path,
+        cache_path: Path,
         syncer: TarS3Syncer,
         cache_bucket: str,
         indices_order: list[int],
@@ -33,7 +33,7 @@ class TarS3Dataset(TorchDataset):
         sync_on_start: bool = False,
     ) -> None:
         self._inner_dataset = inner_dataset
-        self.cache_path = Path(cache_path)
+        self.cache_path = cache_path
         self.syncer = syncer
         self.cache_bucket = cache_bucket
         self.max_tar_bytes = max_tar_bytes
@@ -66,7 +66,7 @@ class TarS3Dataset(TorchDataset):
         cum_sizes = np.array([file_sizes[i] for i in indices_order]).cumsum()
         i = 0
         prev_i = 0
-        self.grouped_indices = []
+        self.grouped_indices: list[list[int]] = []
         while (pos_sizes := ((cum_sizes - self.max_tar_bytes) > 0)).any().item():
             prev_i = i
             i = np.diff(pos_sizes).argmax().item() + 1
@@ -171,7 +171,7 @@ class TarS3Dataset(TorchDataset):
             self._indices_flac_paths[i] for i in self.grouped_indices[group]
         ]
         self.syncer.sync_multiple_files(
-            group_flac_paths, padded_group, self.cache_bucket, self.cache_path
+            group_flac_paths, padded_group, self.cache_bucket
         )
 
     def clean_group(self, group: int) -> None:
@@ -204,5 +204,5 @@ class TarS3Dataset(TorchDataset):
     def sync_metadata(self) -> Path:
         """Sync the metadata file with s3."""
         return self.syncer.sync_file(
-            self.cache_path / "metadata.parquet", self.cache_bucket, self.cache_path
+            self.cache_path / "metadata.parquet", self.cache_bucket
         )

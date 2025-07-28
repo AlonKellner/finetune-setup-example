@@ -1,5 +1,6 @@
 """Custom torch dataset wrappers."""
 
+from pathlib import Path
 from typing import Literal
 
 from datasets import Dataset as HFDataset
@@ -18,7 +19,7 @@ def prepare_cached_dataset(
     dataset: TorchDataset | HFDataset,
     meta_dataset: TorchDataset | HFDataset,
     sample_rate: int,
-    cache_path: str,
+    cache_path: Path,
     cache_bucket: str,
     syncer: TarS3Syncer,
     features_name: str,

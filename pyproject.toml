@@ -49,7 +49,7 @@ convention = "numpy"
 pythonpath = "./"
 
 [tool.typos.files]
-extend-exclude = ["**/*.env"]
+extend-exclude = ["**/*.env", "**/languages.py"]
 
 [project]
 dynamic = ["version"]
@@ -97,6 +97,7 @@ mms_blog_post = [
   "datasets[audio]<4",
   "evaluate",
   "huggingface_hub",
+  "python-iso639",
   "jiwer",
   "llvmlite>0.36",
   "numba>0.47",
