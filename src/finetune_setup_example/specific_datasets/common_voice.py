@@ -61,7 +61,7 @@ class LazyLoader:
         self.uromanizer = Uromanizer()
 
     def load_common_voice_for_wav2vec2(self) -> HFDataset:
-        """Load a split of common voice 17, adapted for wav2vec2."""
+        """Load a split of common voice, adapted for wav2vec2."""
         if self.common_voice_split is None:
             self.common_voice_split = self._load_common_voice_for_wav2vec2()
         return self.common_voice_split
@@ -79,15 +79,18 @@ class LazyLoader:
 
     def _load_common_voice_part(self, iso1_code: str) -> HFDataset:
         """Load a part of common voice."""
+        language_name = LANGUAGE_NAMES[iso1_code]
         try:
             iso3_code = iso639.Language.match(iso1_code).part3
         except LanguageNotFoundError:
             try:
-                iso3_code = iso639.Language.match(LANGUAGE_NAMES[iso1_code]).part3
+                iso3_code = iso639.Language.match(language_name).part3
             except LanguageNotFoundError:
-                print("WARNING: Language not found for", iso1_code)
+                print(f"WARNING: Language not found for {iso1_code} ({language_name})")
                 iso3_code = None
+        language_id = f"{iso1_code}:{iso3_code} ({language_name})"
 
+        print(f"Loading {language_id} common voice split...")
         dataset = load_dataset(
             "fsicoli/common_voice_22_0",
             iso1_code,
@@ -102,10 +105,12 @@ class LazyLoader:
             return batch
 
         dataset = dataset.map(add_iso3_code)
+        size = len(dataset)  # type: ignore
+        print(f"{language_id} common voice split loaded with {size} samples.")
         return dataset  # type: ignore
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
-        """Load a split of common voice 17, adapted for wav2vec2."""
+        """Load a split of common voice, adapted for wav2vec2."""
         common_voice_split_parts = [
             self._load_common_voice_part(language) for language in LANGUAGES
         ]
@@ -168,7 +173,7 @@ class LazyLoader:
         return common_voice_split
 
     def load_meta_common_voice_for_wav2vec2(self) -> HFDataset:
-        """Load a split of common voice 17 metadata, adapted for wav2vec2."""
+        """Load a split of common voice metadata, adapted for wav2vec2."""
         if self.meta_common_voice_split is None:
             common_voice_split = self.load_common_voice_for_wav2vec2()
             self.meta_common_voice_split = common_voice_split.select_columns(
