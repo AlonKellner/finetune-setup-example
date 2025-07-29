@@ -8,7 +8,7 @@ aiofiles==24.1.0
     # via skypilot
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.14
+aiohttp==3.12.15
     # via
     #   aiohttp-retry
     #   fsspec
@@ -41,11 +41,11 @@ bcrypt==4.3.0
     # via paramiko
 blessed==1.21.0
     # via inquirer
-boto3==1.39.14
+boto3==1.39.15
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   runpod
-botocore==1.39.14
+botocore==1.39.15
     # via
     #   boto3
     #   s3transfer
@@ -127,7 +127,7 @@ fastapi==0.116.1
     #   skypilot
 fastapi-cli==0.0.8
     # via fastapi
-fastapi-cloud-cli==0.1.4
+fastapi-cloud-cli==0.1.5
     # via fastapi-cli
 filelock==3.18.0
     # via
@@ -207,7 +207,7 @@ httpx==0.28.1
     #   fastapi
     #   fastapi-cloud-cli
     #   skypilot
-huggingface-hub==0.34.2
+huggingface-hub==0.34.3
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   accelerate
@@ -478,7 +478,7 @@ rich==14.1.0
     #   rich-toolkit
     #   skypilot
     #   typer
-rich-toolkit==0.14.8
+rich-toolkit==0.14.9
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
@@ -560,7 +560,7 @@ threadpoolctl==3.6.0
     # via scikit-learn
 tifffile==2025.6.11
     # via finetune-setup-example (pyproject.toml:dev)
-tokenizers==0.21.2
+tokenizers==0.21.4
     # via transformers
 tomli==2.2.1
     # via runpod
@@ -590,7 +590,7 @@ typer==0.16.0
     #   fastapi-cloud-cli
 types-awscrt==0.27.4
     # via botocore-stubs
-types-boto3-lite==1.39.14
+types-boto3-lite==1.39.15
     # via finetune-setup-example (pyproject.toml:dev)
 types-boto3-s3==1.39.5
     # via types-boto3-lite

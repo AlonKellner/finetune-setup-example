@@ -61,7 +61,7 @@ class FileDataset(ABC, TorchDataset):
             try:
                 self.validate_item(0)
                 with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+                    max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
                 ) as executor:
                     for _ in tqdm(
                         executor.map(lambda i: self.validate_item(i), range(len(self))),
@@ -379,7 +379,9 @@ class TifDataset(FileDataset):
         assert len(features[0]) > 0
         _image = np.array(features).T[None, :, :]
         _image = np.flip(_image, -2)
-        tifffile.imwrite(str(path.absolute()), _image)
+        tifffile.imwrite(
+            str(path.absolute()), _image, compression="zstd", predictor="floatpred"
+        )
 
     def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:
         """Load a TIFF."""

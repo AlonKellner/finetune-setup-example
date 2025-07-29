@@ -1,5 +1,6 @@
 """Common voice loading utilities."""
 
+import os
 import random
 import re
 from pathlib import Path
@@ -40,6 +41,34 @@ class Uromanizer:
         return batch
 
 
+def infer_iso3(iso1_code: str, language_name: str) -> str | None:
+    """Infer ISO3 code from ISO1 code."""
+    _iso1_code = iso1_code
+    _language_name = language_name
+    try:
+        return iso639.Language.match(_iso1_code).part3
+    except LanguageNotFoundError:
+        pass
+    try:
+        return iso639.Language.match(_language_name).part3
+    except LanguageNotFoundError:
+        pass
+    while "-" in _iso1_code:
+        _iso1_code = "-".join(_iso1_code.split("-")[:-1])
+        try:
+            return iso639.Language.match(_iso1_code).part3
+        except LanguageNotFoundError:
+            pass
+    while " " in _language_name:
+        _language_name = " ".join(_language_name.split(" ")[:-1])
+        try:
+            return iso639.Language.match(_language_name).part3
+        except LanguageNotFoundError:
+            pass
+    print(f"WARNING: Language not found for {iso1_code} ({language_name})")
+    return None
+
+
 class LazyLoader:
     """A lazy loader for datasets."""
 
@@ -75,29 +104,27 @@ class LazyLoader:
             padding=PaddingStrategy.DO_NOT_PAD,
         )[self.features_name][0]
         batch["length"] = len(batch[self.features_name])
+        batch["seconds"] = len(batch["audio"]["array"]) / self.sample_rate
         return batch
 
-    def _load_common_voice_part(self, iso1_code: str) -> HFDataset:
+    def _load_common_voice_part(self, iso1_code: str) -> HFDataset | None:
         """Load a part of common voice."""
         language_name = LANGUAGE_NAMES[iso1_code]
-        try:
-            iso3_code = iso639.Language.match(iso1_code).part3
-        except LanguageNotFoundError:
-            try:
-                iso3_code = iso639.Language.match(language_name).part3
-            except LanguageNotFoundError:
-                print(f"WARNING: Language not found for {iso1_code} ({language_name})")
-                iso3_code = None
+        iso3_code = infer_iso3(iso1_code, language_name)
         language_id = f"{iso1_code}:{iso3_code} ({language_name})"
 
         print(f"Loading {language_id} common voice split...")
-        dataset = load_dataset(
-            "fsicoli/common_voice_22_0",
-            iso1_code,
-            split=self.split,
-            token=True,
-            trust_remote_code=True,
-        )
+        try:
+            dataset = load_dataset(
+                "fsicoli/common_voice_22_0",
+                iso1_code,
+                split=self.split,
+                token=True,
+                trust_remote_code=True,
+            )
+        except ValueError:
+            print("WARNING: Dataset not found for", language_id)
+            return None
 
         def add_iso3_code(batch: Batch) -> Batch:
             """Add ISO3 code to the batch."""
@@ -113,6 +140,9 @@ class LazyLoader:
         """Load a split of common voice, adapted for wav2vec2."""
         common_voice_split_parts = [
             self._load_common_voice_part(language) for language in LANGUAGES
+        ]
+        common_voice_split_parts = [
+            p for p in common_voice_split_parts if p is not None
         ]
         common_voice_split = concatenate_datasets(common_voice_split_parts)
         assert isinstance(common_voice_split, HFDataset)
@@ -148,6 +178,7 @@ class LazyLoader:
             remove_columns=[
                 c for c in common_voice_split.column_names if c != "sentence"
             ],
+            num_proc=2 * min(32, (os.cpu_count() or 4) + 4),
         )
         print(common_voice_split.column_names)
 
@@ -196,9 +227,11 @@ def create_cached_common_voice_split(
     architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> tuple[TorchDataset, list[list[int]]]:
     """Create a common voice split with caching."""
-    cache_path = Path(f"./.app_cache/{data_seed}/{architecture}/{split}_set/")
+    cache_path = Path(
+        f"./.app_cache/{general_name}/{data_seed}/{architecture}/{split}/"
+    )
     cache_path.mkdir(parents=True, exist_ok=True)
-    cache_bucket = f"{general_name}-cache-{data_seed}-{architecture}-{split}-set"
+    cache_bucket = f"{general_name}-{data_seed}-{architecture}-{split}"
 
     dataset_metadata_path = cache_path / "dataset_metadata.json"
     syncer.sync_file(dataset_metadata_path, cache_bucket)
@@ -235,6 +268,15 @@ def create_cached_common_voice_split(
         features_name=features_name,
         architecture=architecture,
     )
+    total_seconds = sum(
+        common_voice_split._inner_dataset.metadata[i]["seconds"]
+        for i in range(len(common_voice_split))
+    )
+    total_minutes = total_seconds / 60
+    total_hours = total_minutes / 60
+    total_days = total_hours / 24
+    total_time_str = f"/{total_days:.2f} days / {total_hours:.2f} hours / {total_minutes:.2f} minutes / {total_seconds:.2f} seconds"
+    print(f"Total speech time in {split}: {total_time_str}")
     grouped_indices = common_voice_split.grouped_indices
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])

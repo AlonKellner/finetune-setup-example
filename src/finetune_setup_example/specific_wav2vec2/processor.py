@@ -88,7 +88,7 @@ def create_processor(
         raise ValueError(f"Unknown architecture: {architecture}")
 
     processor: CustomProcessorMixin = processor_type(
-        sp_dir=f"./.app_cache/sp/common_voice_{target_lang}/{split}_set/{sp_vocab_size}",
+        sp_dir=f"./.app_cache/sp/common_voice/{split}/{sp_vocab_size}",
         sp_bpe_dropout=sp_bpe_dropout,
         sp_vocab_size=sp_vocab_size,
         feature_extractor=feature_extractor,

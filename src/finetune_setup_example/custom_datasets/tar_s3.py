@@ -190,7 +190,7 @@ class TarS3Dataset(TorchDataset):
     def sync_multiple_groups(self, groups: list[int]) -> None:
         """Sync multiple groups."""
         with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, os.cpu_count() + 4)  # type: ignore
+            max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
         ) as executor:
             for _ in tqdm(
                 executor.map(
