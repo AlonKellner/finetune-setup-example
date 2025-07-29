@@ -365,7 +365,7 @@ psutil==7.0.0
     #   accelerate
     #   comet-ml
     #   skypilot
-pulp==3.2.1
+pulp==3.2.2
     # via skypilot
 py-cpuinfo==9.0.0
     # via runpod
@@ -511,7 +511,7 @@ semantic-version==2.10.0
     # via comet-ml
 sentencepiece==0.2.0
     # via finetune-setup-example (pyproject.toml:dev)
-sentry-sdk==2.33.2
+sentry-sdk==2.34.0
     # via
     #   comet-ml
     #   fastapi-cloud-cli

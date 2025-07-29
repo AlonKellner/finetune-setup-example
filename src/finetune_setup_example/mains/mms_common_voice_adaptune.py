@@ -79,6 +79,7 @@ def main(
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     logging_nan_inf_filter: bool = True,
     apply_spec_augment: bool = True,
+    total_languages: int | None = 1,
     job_path: str | None = None,
     hp_set: dict | None = None,
     job_full_id: str | None = None,
@@ -196,6 +197,7 @@ def main(
         split="train",
         features_name=features_name,
         architecture=architecture,
+        total_languages=total_languages,
     )
 
     if train_processor.can_create_bpe_tokenizer():
@@ -213,6 +215,7 @@ def main(
         split="test",
         features_name=features_name,
         architecture=architecture,
+        total_languages=total_languages,
     )
 
     model = load_wav2vec2_for_adaptuning(

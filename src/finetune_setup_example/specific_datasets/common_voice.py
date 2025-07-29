@@ -1,6 +1,5 @@
 """Common voice loading utilities."""
 
-import os
 import random
 import re
 from pathlib import Path
@@ -79,12 +78,14 @@ class LazyLoader:
         split: str,
         data_seed: int,
         features_name: str,
+        total_languages: int | None = None,
     ) -> None:
         self.processor = processor
         self.sample_rate = sample_rate
         self.split = split
         self.data_seed = data_seed
         self.features_name = features_name
+        self.total_languages = total_languages
         self.common_voice_split = None
         self.meta_common_voice_split = None
         self.uromanizer = Uromanizer()
@@ -138,8 +139,11 @@ class LazyLoader:
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
         """Load a split of common voice, adapted for wav2vec2."""
+        languages_to_load = LANGUAGES
+        if self.total_languages is not None:
+            languages_to_load = LANGUAGES[: self.total_languages]
         common_voice_split_parts = [
-            self._load_common_voice_part(language) for language in LANGUAGES
+            self._load_common_voice_part(language) for language in languages_to_load
         ]
         common_voice_split_parts = [
             p for p in common_voice_split_parts if p is not None
@@ -161,7 +165,9 @@ class LazyLoader:
         )
 
         dill.dumps(self.uromanizer.uromanize)
-        common_voice_split = common_voice_split.map(self.uromanizer.uromanize)
+        common_voice_split = common_voice_split.map(
+            self.uromanizer.uromanize, num_proc=4
+        )
 
         common_voice_split = common_voice_split.cast_column(
             "audio", Audio(sampling_rate=self.sample_rate)
@@ -178,7 +184,6 @@ class LazyLoader:
             remove_columns=[
                 c for c in common_voice_split.column_names if c != "sentence"
             ],
-            num_proc=2 * min(32, (os.cpu_count() or 4) + 4),
         )
         print(common_voice_split.column_names)
 
@@ -224,6 +229,7 @@ def create_cached_common_voice_split(
     split: str,
     sync_on_start: bool,
     features_name: str,
+    total_languages: int | None,
     architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> tuple[TorchDataset, list[list[int]]]:
     """Create a common voice split with caching."""
@@ -242,6 +248,7 @@ def create_cached_common_voice_split(
         split=split,
         data_seed=data_seed,
         features_name=features_name,
+        total_languages=total_languages,
     )
 
     common_voice_split = LazyDataset(
