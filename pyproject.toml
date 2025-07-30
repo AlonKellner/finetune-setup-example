@@ -106,7 +106,7 @@ mms_blog_post = [
   "polars",
   "safetensors",
   "sentencepiece>=0.2.0",
-  "tifffile",
+  "tifffile[all]",
   "transformers",
   "types-boto3-lite[s3]",
   "uroman",

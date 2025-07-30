@@ -165,6 +165,7 @@ def main(
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
         architecture=architecture,
+        total_languages=total_languages,
     )
 
     eval_processor, _ = create_processor(
@@ -178,6 +179,7 @@ def main(
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
         architecture=architecture,
+        total_languages=total_languages,
     )
 
     if train_processor.can_create_bpe_tokenizer():

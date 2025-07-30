@@ -64,7 +64,7 @@ class FileDataset(ABC, TorchDataset):
                     max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
                 ) as executor:
                     for _ in tqdm(
-                        executor.map(lambda i: self.validate_item(i), range(len(self))),
+                        executor.map(self.validate_item, range(len(self))),
                         total=len(self),
                     ):
                         pass
@@ -380,7 +380,7 @@ class TifDataset(FileDataset):
         _image = np.array(features).T[None, :, :]
         _image = np.flip(_image, -2)
         tifffile.imwrite(
-            str(path.absolute()), _image, compression="zstd", predictor="floatpred"
+            str(path.absolute()), _image, compression="zstd", predictor=True
         )
 
     def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:

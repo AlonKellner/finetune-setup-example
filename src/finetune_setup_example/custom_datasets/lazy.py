@@ -18,8 +18,10 @@ class LazyDataset(TorchDataset):
         self,
         inner_dataset_func: Callable[[], HFDataset | TorchDataset],
         dataset_metadata_path: Path,
+        missing_attributes: list[str] | None = None,
     ) -> None:
         self._inner_dataset_func = inner_dataset_func
+        self.missing_attributes = missing_attributes or ["set_epoch"]
         self._inner_dataset: HFDataset | TorchDataset | None = None
         self._lock = threading.Lock()
         if dataset_metadata_path.exists():
@@ -34,6 +36,8 @@ class LazyDataset(TorchDataset):
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
+        if name in self.missing_attributes:
+            raise AttributeError()
         if self._inner_dataset is None:
             print("WARNING: LazyDataset __getattr__ called for", name)
 
@@ -45,6 +49,11 @@ class LazyDataset(TorchDataset):
 
     @property
     def total_length(self) -> int:
+        """Return the size as specified."""
+        return self._size
+
+    @property
+    def total_dataset_length(self) -> int:
         """Return the size as specified."""
         return self._size
 

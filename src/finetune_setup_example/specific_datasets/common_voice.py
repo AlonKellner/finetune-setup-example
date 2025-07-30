@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 import dill
 import iso639
+import numpy as np
 import uroman
 from datasets import Audio, concatenate_datasets, load_dataset
 from datasets import Dataset as HFDataset
@@ -98,14 +99,24 @@ class LazyLoader:
 
     def prepare_dataset(self, batch: Batch) -> Batch:
         """Prepare dataset."""
-        audio = batch["audio"]
-        batch[self.features_name] = self.processor(
-            audio["array"],
-            sampling_rate=audio["sampling_rate"],
-            padding=PaddingStrategy.DO_NOT_PAD,
-        )[self.features_name][0]
-        batch["length"] = len(batch[self.features_name])
-        batch["seconds"] = len(batch["audio"]["array"]) / self.sample_rate
+        audio = [a["array"] for a in batch["audio"]]
+        sample_lengths = [len(a) for a in audio]
+        sorted_idx = np.argsort(sample_lengths)
+        reverse_idx = np.argsort(sorted_idx)
+        sorted_audio = [audio[i] for i in sorted_idx]
+        bulk_size = 32
+        sorted_features = []
+        for i in range(0, len(sorted_audio), bulk_size):
+            sorted_features_bulk = self.processor(
+                sorted_audio[i : i + bulk_size],
+                sampling_rate=self.sample_rate,
+                padding=PaddingStrategy.DO_NOT_PAD,
+            )
+            sorted_features.extend(sorted_features_bulk)
+        features = [sorted_features[i] for i in reverse_idx]
+        batch[self.features_name] = [f[self.features_name][0] for f in features]
+        batch["length"] = [len(item) for item in batch[self.features_name]]
+        batch["seconds"] = [s / self.sample_rate for s in sample_lengths]
         return batch
 
     def _load_common_voice_part(self, iso1_code: str) -> HFDataset | None:
@@ -114,7 +125,7 @@ class LazyLoader:
         iso3_code = infer_iso3(iso1_code, language_name)
         language_id = f"{iso1_code}:{iso3_code} ({language_name})"
 
-        print(f"Loading {language_id} common voice split...")
+        print(f"Loading {language_id} common voice {self.split}...")
         try:
             dataset = load_dataset(
                 "fsicoli/common_voice_22_0",
@@ -134,7 +145,7 @@ class LazyLoader:
 
         dataset = dataset.map(add_iso3_code)
         size = len(dataset)  # type: ignore
-        print(f"{language_id} common voice split loaded with {size} samples.")
+        print(f"{language_id} common voice {self.split} loaded with {size} samples.")
         return dataset  # type: ignore
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
@@ -184,26 +195,13 @@ class LazyLoader:
             remove_columns=[
                 c for c in common_voice_split.column_names if c != "sentence"
             ],
+            batched=True,
+            batch_size=64,
+            num_proc=4,
         )
         print(common_voice_split.column_names)
 
         print("Target text:", sentence)
-        norm_sentence = common_voice_split[rand_int]["sentence"]
-        print("Norm Target text:", norm_sentence)
-        ids = self.processor.tokenizer.sp_model.encode(
-            norm_sentence,
-            out_type=int,
-            enable_sampling=False,
-            nbest_size=-1,
-        )
-        labels = [self.processor.tokenizer.sp_model.id_to_piece(id) for id in ids]
-        print("Target pcs:\t", labels)
-        print("Target ids:\t", ids)
-        for i in range(10):
-            ids = self.processor(
-                text=common_voice_split[rand_int]["sentence"]
-            ).input_ids
-            print(f"Processed Target ids [{i}]:\t", ids)
 
         common_voice_split = common_voice_split.shuffle(seed=self.data_seed)
         return common_voice_split
@@ -234,12 +232,16 @@ def create_cached_common_voice_split(
 ) -> tuple[TorchDataset, list[list[int]]]:
     """Create a common voice split with caching."""
     cache_path = Path(
-        f"./.app_cache/{general_name}/{data_seed}/{architecture}/{split}/"
+        f"./.app_cache/{general_name}/{total_languages or 'all'}/{data_seed}/{architecture}/{split}/"
     )
     cache_path.mkdir(parents=True, exist_ok=True)
-    cache_bucket = f"{general_name}-{data_seed}-{architecture}-{split}"
+    cache_bucket = (
+        f"{general_name}-{total_languages or 'all'}-{data_seed}-{architecture}-{split}"
+    )
 
     dataset_metadata_path = cache_path / "dataset_metadata.json"
+    if not syncer._bucket_exists(cache_bucket):
+        syncer._create_bucket(cache_bucket)
     syncer.sync_file(dataset_metadata_path, cache_bucket)
 
     loader = LazyLoader(
@@ -257,7 +259,6 @@ def create_cached_common_voice_split(
     meta_common_voice_split = LazyDataset(
         loader.load_meta_common_voice_for_wav2vec2, dataset_metadata_path
     )
-
     syncer.sync_file(dataset_metadata_path, cache_bucket)
 
     if split_size is not None:
