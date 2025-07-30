@@ -6,6 +6,7 @@ The rest of the metadata is cached as an in memory dict and a parquet file.
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import os
 import time
 import traceback
@@ -59,17 +60,33 @@ class FileDataset(ABC, TorchDataset):
             )
             traceback.print_stack()
             try:
-                self.validate_item(0)
+                self.getitem_meta(0)
                 with concurrent.futures.ThreadPoolExecutor(
                     max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
                 ) as executor:
                     for _ in tqdm(
-                        executor.map(self.validate_item, range(len(self))),
+                        executor.map(self.getitem_meta, range(len(self))),
                         total=len(self),
                     ):
                         pass
             finally:
                 self.save_metadata()
+
+    def complete_files(self) -> None:
+        """Make sure that all files exist and are valid."""
+        self.complete_chosen_files(range(len(self)))
+
+    def complete_chosen_files(self, indices: list[int]) -> None:
+        """Make sure that the chosen files exist and are valid."""
+        self.validate_item(0)
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
+        ) as executor:
+            for _ in tqdm(
+                executor.map(self.validate_item, indices),
+                total=len(self),
+            ):
+                pass
 
     def validate_item(self, index: int) -> None:
         """Validate item."""
@@ -150,6 +167,27 @@ class FileDataset(ABC, TorchDataset):
         """Can be used to get a batch using a list of integers indices."""
         return [self[k] for k in keys]
 
+    def getitem_meta(self, index: int) -> dict[str, Any] | Any:
+        """Get metadata for a specific index."""
+        item = None
+
+        index = index % len(self)
+
+        full_path = self.get_full_name(index)
+
+        if index in self.metadata:
+            item_metadata = self.metadata[index]
+        else:
+            if item is None:
+                item = self._inner_meta_dataset[index]
+            item_metadata = {k: v for k, v in item.items() if k != self.features_name}
+            item_metadata["indices"] = index
+            item_metadata["file_paths"] = str(full_path)
+            item_metadata["file_sizes"] = full_path.stat().st_size
+            self.metadata[index] = item_metadata
+
+        return item_metadata
+
     def __getitem__(self, index: int | str) -> dict[str, Any] | Any:
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if isinstance(index, str):
@@ -173,7 +211,8 @@ class FileDataset(ABC, TorchDataset):
         try:
             features = self.load_file(full_path)
         except Exception:
-            full_path.unlink()
+            with contextlib.suppress(FileNotFoundError):
+                full_path.unlink()
             if item is None:
                 item = self._inner_dataset[index]  # type: ignore
             features = item[self.features_name]

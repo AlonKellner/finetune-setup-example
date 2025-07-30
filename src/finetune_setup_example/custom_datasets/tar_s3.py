@@ -30,7 +30,6 @@ class TarS3Dataset(TorchDataset):
         groups_per_sync: int = 6,
         should_clean_groups: bool = False,
         should_sync_previous: bool = False,
-        sync_on_start: bool = False,
     ) -> None:
         self._inner_dataset = inner_dataset
         self.cache_path = cache_path
@@ -41,7 +40,6 @@ class TarS3Dataset(TorchDataset):
         self.groups_per_sync = groups_per_sync
         self.should_clean_groups = should_clean_groups
         self.should_sync_previous = should_sync_previous
-        self.sync_on_start = sync_on_start
 
         if not self.syncer._bucket_exists(self.cache_bucket):
             self.syncer._create_bucket(self.cache_bucket)
@@ -86,12 +84,11 @@ class TarS3Dataset(TorchDataset):
             group[0] for group in self.grouped_indices[::sync_interval]
         ]
 
-        if sync_on_start:
-            self.sync_all_groups()
-        else:
-            self.sync_multiple_groups(
-                list(range(min(groups_per_sync, len(self.grouped_indices))))
-            )
+    def sync_initial_groups(self) -> None:
+        """Sync the initial groups."""
+        self.sync_multiple_groups(
+            list(range(min(self.groups_per_sync, len(self.grouped_indices))))
+        )
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
@@ -157,11 +154,20 @@ class TarS3Dataset(TorchDataset):
             for i in range(current_group - self.groups_per_sync, 0):
                 self.sync_group(i)
         if self.should_clean_groups:
+            synced_groups = list(
+                range(
+                    current_group - self.groups_per_sync,
+                    current_group + self.groups_per_sync,
+                )
+            )
+            synced_groups = set([g % len(self.grouped_indices) for g in synced_groups])
             for i in range(
                 current_group - 2 * self.groups_per_sync,
                 current_group - self.groups_per_sync,
             ):
-                self.clean_group(i)
+                idx = i % len(self.grouped_indices)
+                if idx not in synced_groups:
+                    self.clean_group(idx)
 
     def sync_group(self, group: int) -> None:
         """Sync the group of local files with s3 tar."""

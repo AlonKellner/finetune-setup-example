@@ -3,6 +3,7 @@
 from typing import Literal
 
 import torch
+from tqdm import tqdm
 from transformers import utils
 from transformers.utils import is_flash_attn_2_available
 
@@ -33,6 +34,7 @@ def main(
     eval_limit: int | None = None,
     num_train_epochs: int | float | None = None,
     num_training_steps: int | None = None,
+    num_eval_steps: int | None = 5,
     effective_batch_size: int = 128,
     per_device_train_batch_size: int = 128,
     per_device_eval_batch_size: int = 128,
@@ -70,7 +72,10 @@ def main(
     padding_side: str = "random",
     should_train: bool = True,
     eval_on_start: bool = False,
-    sync_on_start: bool = True,
+    sync_all_on_start: bool = True,
+    should_sync_previous: bool = True,
+    should_clean_groups: bool = True,
+    dry_epoch: bool = True,
     push_to_hub: bool = False,
     should_freeze_base_model: bool = False,
     should_freeze_feature_encoder: bool = True,
@@ -120,6 +125,7 @@ def main(
         target_hf_repo=target_hf_repo,
         num_train_epochs=num_train_epochs,
         num_training_steps=num_training_steps,
+        num_eval_steps=num_eval_steps,
         effective_batch_size=effective_batch_size,
         per_device_train_batch_size=per_device_train_batch_size,
         per_device_eval_batch_size=per_device_eval_batch_size,
@@ -195,7 +201,9 @@ def main(
         split_limit=train_limit,
         processor=train_processor,
         syncer=syncer,
-        sync_on_start=sync_on_start,
+        sync_all_on_start=sync_all_on_start,
+        should_sync_previous=should_sync_previous,
+        should_clean_groups=should_clean_groups,
         split="train",
         features_name=features_name,
         architecture=architecture,
@@ -213,7 +221,9 @@ def main(
         split_limit=eval_limit,
         processor=eval_processor,
         syncer=syncer,
-        sync_on_start=sync_on_start,
+        sync_all_on_start=sync_all_on_start,
+        should_sync_previous=should_sync_previous,
+        should_clean_groups=should_clean_groups,
         split="test",
         features_name=features_name,
         architecture=architecture,
@@ -248,6 +258,15 @@ def main(
         eval_processor=eval_processor,
         features_name=features_name,
     )
+
+    if dry_epoch:
+        print("WARNING: Dry epoch, not training!")
+        print("Train dataloader dry epoch:")
+        for _ in tqdm(trainer.get_train_dataloader()):
+            pass
+        print("Eval dataloader dry epoch:")
+        for _ in tqdm(trainer.get_eval_dataloader()):
+            pass
 
     if should_train:
         train(trainer)

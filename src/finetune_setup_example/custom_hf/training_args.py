@@ -14,6 +14,12 @@ class CustomTrainingArguments(TrainingArguments):
     mega_batch_mult: int = field(
         default=50, metadata={"help": "The mega batch multiple."}
     )
+    max_steps_per_eval: int | None = field(
+        default=None,
+        metadata={
+            "help": "The maximum number of steps per evaluation. If None, no limit is set."
+        },
+    )
 
     has_length_column: bool = field(
         default=True,
@@ -149,6 +155,7 @@ def create_training_arguments(
     architecture: Literal["wav2vec2", "w2v-bert2"],
     num_train_epochs: int | float | None = 3.0,
     num_training_steps: int | None = None,
+    num_eval_steps: int | None = None,
     hp_set: dict | None = None,
 ) -> CustomTrainingArguments:
     """Create training arguments."""
@@ -208,6 +215,7 @@ def create_training_arguments(
         eval_strategy="steps",
         num_train_epochs=num_train_epochs,
         max_steps=num_training_steps,
+        max_steps_per_eval=num_eval_steps,
         mega_batch_mult=mega_batch_mult,
         dataloader_num_workers=dataloader_num_workers,
         dataloader_drop_last=True,

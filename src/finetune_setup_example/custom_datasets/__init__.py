@@ -24,10 +24,12 @@ def prepare_cached_dataset(
     syncer: TarS3Syncer,
     features_name: str,
     architecture: Literal["wav2vec2", "w2v-bert2"],
+    sync_all_on_start: bool,
+    should_sync_previous: bool,
+    should_clean_groups: bool,
     tar_size_gb: float | int = 1,
     sync_interval: int = 2,
     groups_per_sync: int = 6,
-    sync_on_start: bool = False,
 ) -> TarS3Dataset:
     """Wrap a dataset with S3 caching and prepare for the first training."""
     if architecture == "wav2vec2":
@@ -59,6 +61,19 @@ def prepare_cached_dataset(
         max_tar_bytes=int(tar_size_gb * GB),
         sync_interval=sync_interval,
         groups_per_sync=groups_per_sync,
-        sync_on_start=sync_on_start,
+        should_sync_previous=should_sync_previous,
+        should_clean_groups=should_clean_groups,
     )
+
+    if sync_all_on_start:
+        dataset.sync_all_groups()
+    else:
+        dataset.sync_initial_groups()
+
+        indices_to_ensure = [
+            i for g in dataset.grouped_indices[: dataset.groups_per_sync] for i in g
+        ]
+        dataset._inner_dataset.complete_chosen_files(indices_to_ensure)
+
+        dataset.sync_initial_groups()
     return dataset
