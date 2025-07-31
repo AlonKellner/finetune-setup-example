@@ -1,5 +1,6 @@
 """Common voice loading utilities."""
 
+import contextlib
 import random
 import re
 from pathlib import Path
@@ -98,6 +99,14 @@ class LazyLoader:
         return self.common_voice_split
 
     def prepare_dataset(self, batch: Batch) -> Batch:
+        """Prepare dataset."""
+        for _ in range(3):
+            with contextlib.suppress(Exception):
+                return self._prepare_dataset(batch)
+
+        return self._prepare_dataset(batch)
+
+    def _prepare_dataset(self, batch: Batch) -> Batch:
         """Prepare dataset."""
         audio = [a["array"] for a in batch["audio"]]
         sample_lengths = [len(a) for a in audio]
