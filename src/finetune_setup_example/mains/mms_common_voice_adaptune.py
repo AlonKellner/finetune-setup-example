@@ -54,7 +54,7 @@ def main(
     adapter_stable_ratio: float = 0.05,
     adapter_decay_ratio: float = 0.85,
     mega_batch_mult: int = 100,
-    dataloader_num_workers: int = 0,
+    dataloader_num_workers: int = 8,
     fp16: bool = False,
     save_steps: int = 100,
     eval_steps: int = 100,
@@ -84,7 +84,7 @@ def main(
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     logging_nan_inf_filter: bool = True,
     apply_spec_augment: bool = True,
-    total_languages: int | None = 1,
+    total_languages: int | None = 5,
     job_path: str | None = None,
     hp_set: dict | None = None,
     job_full_id: str | None = None,
@@ -172,6 +172,7 @@ def main(
         sp_bpe_dropout=sp_bpe_dropout,
         architecture=architecture,
         total_languages=total_languages,
+        general_name=general_name,
     )
 
     eval_processor, _ = create_processor(
@@ -186,6 +187,7 @@ def main(
         sp_bpe_dropout=sp_bpe_dropout,
         architecture=architecture,
         total_languages=total_languages,
+        general_name=general_name,
     )
 
     if train_processor.can_create_bpe_tokenizer():

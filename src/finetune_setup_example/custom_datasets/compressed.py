@@ -6,7 +6,6 @@ The rest of the metadata is cached as an in memory dict and a parquet file.
 from __future__ import annotations
 
 import concurrent.futures
-import contextlib
 import os
 import time
 import traceback
@@ -60,12 +59,12 @@ class FileDataset(ABC, TorchDataset):
             )
             traceback.print_stack()
             try:
-                self.getitem_meta(0)
+                self.validate_item_clean(0)
                 with concurrent.futures.ThreadPoolExecutor(
                     max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
                 ) as executor:
                     for _ in tqdm(
-                        executor.map(self.getitem_meta, range(len(self))),
+                        executor.map(self.validate_item_clean, range(len(self))),
                         total=len(self),
                     ):
                         pass
@@ -88,18 +87,28 @@ class FileDataset(ABC, TorchDataset):
             ):
                 pass
 
-    def validate_item(self, index: int) -> None:
+    def validate_item_clean(self, index: int) -> None:
+        """Validate item and clean the file after."""
+        file_name = self.get_full_name(index)
+        existed = file_name.exists()
+        item = self.validate_item(index)
+        if not existed:
+            file_name.unlink(missing_ok=True)
+        return item
+
+    def validate_item(self, index: int) -> dict[str, Any]:
         """Validate item."""
         item = self[index]
         for _ in range(3):
             if len(item[self.features_name]) == item["length"]:
-                return
+                break
 
             Path(item["file_path"]).unlink(missing_ok=True)
             item = self[index]
         assert len(item[self.features_name]) == item["length"], (
             f"Length mismatch with index [{index}]"
         )
+        return item
 
     def save_metadata(self) -> None:
         """Save the metadata as a parquet."""
@@ -183,7 +192,6 @@ class FileDataset(ABC, TorchDataset):
             item_metadata = {k: v for k, v in item.items() if k != self.features_name}
             item_metadata["indices"] = index
             item_metadata["file_paths"] = str(full_path)
-            item_metadata["file_sizes"] = full_path.stat().st_size
             self.metadata[index] = item_metadata
 
         return item_metadata
@@ -211,8 +219,7 @@ class FileDataset(ABC, TorchDataset):
         try:
             features = self.load_file(full_path)
         except Exception:
-            with contextlib.suppress(FileNotFoundError):
-                full_path.unlink()
+            full_path.unlink(missing_ok=True)
             if item is None:
                 item = self._inner_dataset[index]  # type: ignore
             features = item[self.features_name]

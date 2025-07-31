@@ -40,6 +40,7 @@ class TarS3Dataset(TorchDataset):
         self.groups_per_sync = groups_per_sync
         self.should_clean_groups = should_clean_groups
         self.should_sync_previous = should_sync_previous
+        self.threads: list[threading.Thread] = []
 
         if not self.syncer._bucket_exists(self.cache_bucket):
             self.syncer._create_bucket(self.cache_bucket)
@@ -83,6 +84,12 @@ class TarS3Dataset(TorchDataset):
         self.sync_indices = [
             group[0] for group in self.grouped_indices[::sync_interval]
         ]
+
+    def __del__(self) -> None:
+        """Clean up threads on deletion."""
+        for thread in self.threads:
+            if thread.is_alive():
+                thread.join()
 
     def sync_initial_groups(self) -> None:
         """Sync the initial groups."""
@@ -145,6 +152,7 @@ class TarS3Dataset(TorchDataset):
             target=self.sync_adjacent_groups, args=(current_group,)
         )
         thread.start()
+        self.threads.append(thread)
 
     def sync_adjacent_groups(self, current_group: int) -> None:
         """Sync adjacent groups."""

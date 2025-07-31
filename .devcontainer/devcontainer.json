@@ -69,6 +69,7 @@
 		"--name=${containerWorkspaceFolderBasename}_vsc",
 		"--hostname=${containerWorkspaceFolderBasename}_vsc",
 		"--network=${containerWorkspaceFolderBasename}",
-		"--env-file=.devcontainer/devcontainer.env"
+		"--env-file=.devcontainer/devcontainer.env",
+		"--shm-size=2g"
 	]
 }

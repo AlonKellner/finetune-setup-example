@@ -172,12 +172,13 @@ class LazyLoader:
                 "locale",
                 "segment",
                 "up_votes",
+                "variant",
             ]
         )
 
         dill.dumps(self.uromanizer.uromanize)
         common_voice_split = common_voice_split.map(
-            self.uromanizer.uromanize, num_proc=4
+            self.uromanizer.uromanize, num_proc=8
         )
 
         common_voice_split = common_voice_split.cast_column(
@@ -193,7 +194,9 @@ class LazyLoader:
         common_voice_split = common_voice_split.map(
             self.prepare_dataset,
             remove_columns=[
-                c for c in common_voice_split.column_names if c != "sentence"
+                c
+                for c in common_voice_split.column_names
+                if c not in ["sentence", "iso3_code"]
             ],
             batched=True,
             batch_size=64,
@@ -234,7 +237,7 @@ def create_cached_common_voice_split(
 ) -> tuple[TorchDataset, list[list[int]]]:
     """Create a common voice split with caching."""
     cache_path = Path(
-        f"./.app_cache/{general_name}/{total_languages or 'all'}/{data_seed}/{architecture}/{split}/"
+        f"./.app_cache/{general_name}/{total_languages or 'all'}/data/{architecture}/{data_seed}/{split}/"
     )
     cache_path.mkdir(parents=True, exist_ok=True)
     cache_bucket = (
