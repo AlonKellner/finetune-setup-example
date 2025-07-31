@@ -241,7 +241,7 @@ def create_cached_common_voice_split(
     )
     cache_path.mkdir(parents=True, exist_ok=True)
     cache_bucket = (
-        f"{general_name}-{total_languages or 'all'}-{data_seed}-{architecture}-{split}"
+        f"{general_name}-{total_languages or 'all'}-{architecture}-{data_seed}-{split}"
     )
 
     dataset_metadata_path = cache_path / "dataset_metadata.json"

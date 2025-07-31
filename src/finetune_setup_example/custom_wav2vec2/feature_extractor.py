@@ -557,11 +557,9 @@ class CustomSeamlessM4TFeatureExtractor(
             features = feat
             if do_normalize_per_mel_bins:
                 # torch defaults to ddof=1, and numpy defaults to ddof=0
-                features = [
-                    (x - np.expand_dims(x.mean(0), 0))
-                    / np.sqrt(np.expand_dims(x.var(0, ddof=1), 0) + 1e-7)
-                    for x in features
-                ]
+                features = (features - features.mean(0, keepdims=True)) / (
+                    features.std(0, ddof=1, keepdims=True) + 1e-7
+                )
 
             # convert into correct format for padding
             encoded_inputs = BatchFeature({"input_features": features})
