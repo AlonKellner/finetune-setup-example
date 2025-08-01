@@ -5,7 +5,7 @@ resources:
   accelerators: { MI300X:1 }
   use_spot: false
   disk_size: 128
-  image_id: docker:4alonkellner/finetune-setup-example-rocm:20250726-081017
+  image_id: docker:4alonkellner/finetune-setup-example-rocm:20250731-144316
 
 envs:
   JOB_ID_EXP: null

@@ -3,7 +3,22 @@ variable "datetime_tag" {
 }
 
 group "default" {
-  targets = ["cuda", "rocm"]
+  targets = ["cuda", "rocm", "cpu"]
+}
+
+target "cpu" {
+  context = "."
+  dockerfile = "src/mms_blog_post.Dockerfile"
+  target = "bare"
+  tags = ["4alonkellner/finetune-setup-example-cpu:${datetime_tag}", "4alonkellner/finetune-setup-example-cpu:latest"]
+  output = [{ type = "registry" }]
+  platforms = ["linux/amd64"]
+  args = {
+    BASE_IMAGE = "mcr.microsoft.com/devcontainers/base:debian"
+    IS_ROCM = "FALSE"
+    EXTRA_GROUP = "cpu"
+    EXTRA_AFTER_GROUP = "cpu"
+  }
 }
 
 target "cuda" {
@@ -17,6 +32,7 @@ target "cuda" {
     BASE_IMAGE = "nvcr.io/nvidia/cuda-dl-base:25.06-cuda12.9-runtime-ubuntu24.04"
     IS_ROCM = "FALSE"
     EXTRA_GROUP = "cuda"
+    EXTRA_AFTER_GROUP = "flash-attn"
   }
 }
 
@@ -31,5 +47,6 @@ target "rocm" {
     BASE_IMAGE = "rocm/miopen:ci_faa726"
     IS_ROCM = "TRUE"
     EXTRA_GROUP = "rocm"
+    EXTRA_AFTER_GROUP = "flash-attn"
   }
 }

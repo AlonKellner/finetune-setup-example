@@ -33,11 +33,12 @@ RUN --mount=type=cache,dst=/root/.cache/ \
 
 ARG IS_ROCM
 ENV FLASH_ATTENTION_TRITON_AMD_ENABLE=${IS_ROCM}
+ARG EXTRA_AFTER_GROUP
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,dst=/root/.cache/ \
     uv pip compile pyproject.toml --group mms_blog_post --extra ${EXTRA_GROUP} --extra flash-attn -o requirements.txt && \
     uv sync --no-default-groups --group mms_blog_post --extra ${EXTRA_GROUP} && \
-    MAX_JOBS=4 uv sync --no-default-groups --group mms_blog_post --extra ${EXTRA_GROUP} --extra flash-attn
+    MAX_JOBS=4 uv sync --no-default-groups --group mms_blog_post --extra ${EXTRA_GROUP} --extra ${EXTRA_AFTER_GROUP}
 
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}

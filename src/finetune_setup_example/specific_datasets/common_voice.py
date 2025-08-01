@@ -240,6 +240,7 @@ def create_cached_common_voice_split(
     sync_all_on_start: bool,
     should_sync_previous: bool,
     should_clean_groups: bool,
+    should_clean_validate: bool,
     features_name: str,
     total_languages: int | None,
     architecture: Literal["wav2vec2", "w2v-bert2"],
@@ -289,6 +290,7 @@ def create_cached_common_voice_split(
         sync_all_on_start=sync_all_on_start,
         should_sync_previous=should_sync_previous,
         should_clean_groups=should_clean_groups,
+        should_clean_validate=should_clean_validate,
         features_name=features_name,
         architecture=architecture,
     )

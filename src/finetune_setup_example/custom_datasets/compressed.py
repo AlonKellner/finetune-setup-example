@@ -37,6 +37,7 @@ class FileDataset(ABC, TorchDataset):
         cache_path: Path,
         features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
+        should_clean_validate: bool,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self._inner_dataset = inner_dataset
@@ -48,6 +49,7 @@ class FileDataset(ABC, TorchDataset):
         self.metadata = metadata
         self.tokenizer = tokenizer
         self.features_name = features_name
+        self.should_clean_validate = should_clean_validate
 
     def complete_metadata(self) -> None:
         """Make sure that the metadata is complete."""
@@ -89,11 +91,14 @@ class FileDataset(ABC, TorchDataset):
 
     def validate_item_clean(self, index: int) -> None:
         """Validate item and clean the file after."""
-        file_name = self.get_full_name(index)
-        existed = file_name.exists()
-        item = self.validate_item(index)
-        if not existed:
-            file_name.unlink(missing_ok=True)
+        if self.should_clean_validate:
+            file_name = self.get_full_name(index)
+            existed = file_name.exists()
+            item = self.validate_item(index)
+            if not existed:
+                file_name.unlink(missing_ok=True)
+        else:
+            item = self.validate_item(index)
         return item
 
     def validate_item(self, index: int) -> dict[str, Any]:
@@ -305,6 +310,7 @@ class FlacDataset(FileDataset):
         cache_path: Path,
         features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
+        should_clean_validate: bool,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self.sample_rate = sample_rate
@@ -314,6 +320,7 @@ class FlacDataset(FileDataset):
             cache_path=cache_path,
             features_name=features_name,
             tokenizer=tokenizer,
+            should_clean_validate=should_clean_validate,
             metadata=metadata,
         )
 
@@ -330,6 +337,7 @@ class FlacDataset(FileDataset):
             cache_path=self.cache_path,
             features_name=self.features_name,
             tokenizer=self.tokenizer,
+            should_clean_validate=self.should_clean_validate,
             metadata=self.metadata,
         )
 
@@ -386,6 +394,7 @@ class TifDataset(FileDataset):
         cache_path: Path,
         features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
+        should_clean_validate: bool,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         super().__init__(
@@ -394,6 +403,7 @@ class TifDataset(FileDataset):
             cache_path=cache_path,
             features_name=features_name,
             tokenizer=tokenizer,
+            should_clean_validate=should_clean_validate,
             metadata=metadata,
         )
 
@@ -409,6 +419,7 @@ class TifDataset(FileDataset):
             cache_path=self.cache_path,
             features_name=self.features_name,
             tokenizer=self.tokenizer,
+            should_clean_validate=self.should_clean_validate,
             metadata=self.metadata,
         )
 
