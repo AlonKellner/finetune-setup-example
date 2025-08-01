@@ -1,6 +1,7 @@
 """Common voice loading utilities."""
 
 import contextlib
+import os
 import random
 import re
 from pathlib import Path
@@ -142,6 +143,7 @@ class LazyLoader:
                 split=self.split,
                 token=True,
                 trust_remote_code=True,
+                num_proc=2 * min(32, (os.cpu_count() or 4) + 4),
             )
         except ValueError:
             print("WARNING: Dataset not found for", language_id)
@@ -187,7 +189,7 @@ class LazyLoader:
 
         dill.dumps(self.uromanizer.uromanize)
         common_voice_split = common_voice_split.map(
-            self.uromanizer.uromanize, num_proc=8
+            self.uromanizer.uromanize, num_proc=(os.cpu_count() or 4)
         )
 
         common_voice_split = common_voice_split.cast_column(
@@ -209,7 +211,7 @@ class LazyLoader:
             ],
             batched=True,
             batch_size=64,
-            num_proc=4,
+            num_proc=((os.cpu_count() or 12) // 4),
         )
         print(common_voice_split.column_names)
 

@@ -117,7 +117,7 @@ dnspython==2.7.0
     # via email-validator
 donfig==0.8.1.post1
     # via zarr
-dulwich==0.24.0
+dulwich==0.24.1
     # via comet-ml
 durationpy==0.10
     # via kubernetes
