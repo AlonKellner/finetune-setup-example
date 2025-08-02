@@ -85,7 +85,7 @@ def main(
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     logging_nan_inf_filter: bool = True,
     apply_spec_augment: bool = True,
-    total_languages: int | None = 1,
+    total_languages: int | None = None,
     cpu_count: int = 12,
     job_path: str | None = None,
     hp_set: dict | None = None,
