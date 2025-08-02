@@ -6,7 +6,6 @@ The rest of the metadata is cached as an in memory dict and a parquet file.
 from __future__ import annotations
 
 import concurrent.futures
-import os
 import time
 import traceback
 from abc import ABC, abstractmethod
@@ -38,6 +37,7 @@ class FileDataset(ABC, TorchDataset):
         features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
         should_clean_validate: bool,
+        cpu_count: int,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self._inner_dataset = inner_dataset
@@ -50,6 +50,7 @@ class FileDataset(ABC, TorchDataset):
         self.tokenizer = tokenizer
         self.features_name = features_name
         self.should_clean_validate = should_clean_validate
+        self.cpu_count = cpu_count
 
     def complete_metadata(self) -> None:
         """Make sure that the metadata is complete."""
@@ -63,7 +64,7 @@ class FileDataset(ABC, TorchDataset):
             try:
                 self.validate_item_clean(0)
                 with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
+                    max_workers=2 * min(32, self.cpu_count + 4)
                 ) as executor:
                     for _ in tqdm(
                         executor.map(self.validate_item_clean, range(len(self))),
@@ -81,7 +82,7 @@ class FileDataset(ABC, TorchDataset):
         """Make sure that the chosen files exist and are valid."""
         self.validate_item(0)
         with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
+            max_workers=2 * min(32, self.cpu_count + 4)
         ) as executor:
             for _ in tqdm(
                 executor.map(self.validate_item, indices),
@@ -311,6 +312,7 @@ class FlacDataset(FileDataset):
         features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
         should_clean_validate: bool,
+        cpu_count: int,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         self.sample_rate = sample_rate
@@ -321,6 +323,7 @@ class FlacDataset(FileDataset):
             features_name=features_name,
             tokenizer=tokenizer,
             should_clean_validate=should_clean_validate,
+            cpu_count=cpu_count,
             metadata=metadata,
         )
 
@@ -338,6 +341,7 @@ class FlacDataset(FileDataset):
             features_name=self.features_name,
             tokenizer=self.tokenizer,
             should_clean_validate=self.should_clean_validate,
+            cpu_count=self.cpu_count,
             metadata=self.metadata,
         )
 
@@ -395,6 +399,7 @@ class TifDataset(FileDataset):
         features_name: str,
         tokenizer: BpeWav2Vec2CTCTokenizer | None,
         should_clean_validate: bool,
+        cpu_count: int,
         metadata: dict[int, dict[str, Any]] | None = None,
     ) -> None:
         super().__init__(
@@ -404,6 +409,7 @@ class TifDataset(FileDataset):
             features_name=features_name,
             tokenizer=tokenizer,
             should_clean_validate=should_clean_validate,
+            cpu_count=cpu_count,
             metadata=metadata,
         )
 
@@ -420,6 +426,7 @@ class TifDataset(FileDataset):
             features_name=self.features_name,
             tokenizer=self.tokenizer,
             should_clean_validate=self.should_clean_validate,
+            cpu_count=self.cpu_count,
             metadata=self.metadata,
         )
 

@@ -1,7 +1,6 @@
 """A torch dataset that saves groups of items as tars in S3."""
 
 import concurrent.futures
-import os
 import threading
 from pathlib import Path
 from typing import Any
@@ -26,6 +25,7 @@ class TarS3Dataset(TorchDataset):
         cache_bucket: str,
         indices_order: list[int],
         max_tar_bytes: int,
+        cpu_count: int,
         sync_interval: int = 2,
         groups_per_sync: int = 6,
         should_clean_groups: bool = False,
@@ -36,6 +36,7 @@ class TarS3Dataset(TorchDataset):
         self.syncer = syncer
         self.cache_bucket = cache_bucket
         self.max_tar_bytes = max_tar_bytes
+        self.cpu_count = cpu_count
         self.sync_interval = sync_interval
         self.groups_per_sync = groups_per_sync
         self.should_clean_groups = should_clean_groups
@@ -104,16 +105,17 @@ class TarS3Dataset(TorchDataset):
             type(result), TorchDataset
         ):
             result = TarS3Dataset(
-                result,
-                self.cache_path,
-                self.syncer,
-                self.cache_bucket,
-                self._indices_order,
-                self.max_tar_bytes,
-                self.sync_interval,
-                self.groups_per_sync,
-                self.should_clean_groups,
-                self.should_sync_previous,
+                inner_dataset=result,
+                cache_path=self.cache_path,
+                syncer=self.syncer,
+                cache_bucket=self.cache_bucket,
+                indices_order=self._indices_order,
+                max_tar_bytes=self.max_tar_bytes,
+                cpu_count=self.cpu_count,
+                sync_interval=self.sync_interval,
+                groups_per_sync=self.groups_per_sync,
+                should_clean_groups=self.should_clean_groups,
+                should_sync_previous=self.should_sync_previous,
             )
         return result
 
@@ -204,7 +206,7 @@ class TarS3Dataset(TorchDataset):
     def sync_multiple_groups(self, groups: list[int]) -> None:
         """Sync multiple groups."""
         with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, (os.cpu_count() or 4) + 4)
+            max_workers=2 * min(32, self.cpu_count + 4)
         ) as executor:
             for _ in tqdm(
                 executor.map(

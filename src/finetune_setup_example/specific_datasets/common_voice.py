@@ -1,7 +1,6 @@
 """Common voice loading utilities."""
 
 import contextlib
-import os
 import random
 import re
 from pathlib import Path
@@ -81,6 +80,7 @@ class LazyLoader:
         split: str,
         data_seed: int,
         features_name: str,
+        cpu_count: int,
         total_languages: int | None = None,
     ) -> None:
         self.processor = processor
@@ -89,6 +89,7 @@ class LazyLoader:
         self.data_seed = data_seed
         self.features_name = features_name
         self.total_languages = total_languages
+        self.cpu_count = cpu_count
         self.common_voice_split = None
         self.meta_common_voice_split = None
         self.uromanizer = Uromanizer()
@@ -143,7 +144,7 @@ class LazyLoader:
                 split=self.split,
                 token=True,
                 trust_remote_code=True,
-                num_proc=2 * min(32, (os.cpu_count() or 4) + 4),
+                num_proc=2 * min(32, self.cpu_count + 4),
             )
         except ValueError:
             print("WARNING: Dataset not found for", language_id)
@@ -189,7 +190,7 @@ class LazyLoader:
 
         dill.dumps(self.uromanizer.uromanize)
         common_voice_split = common_voice_split.map(
-            self.uromanizer.uromanize, num_proc=(os.cpu_count() or 4)
+            self.uromanizer.uromanize, num_proc=2 * min(32, self.cpu_count + 4)
         )
 
         common_voice_split = common_voice_split.cast_column(
@@ -211,7 +212,7 @@ class LazyLoader:
             ],
             batched=True,
             batch_size=64,
-            num_proc=((os.cpu_count() or 12) // 4),
+            num_proc=self.cpu_count // 3,
         )
         print(common_voice_split.column_names)
 
@@ -245,6 +246,7 @@ def create_cached_common_voice_split(
     should_clean_validate: bool,
     features_name: str,
     total_languages: int | None,
+    cpu_count: int,
     architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> tuple[TorchDataset, list[list[int]]]:
     """Create a common voice split with caching."""
@@ -268,6 +270,7 @@ def create_cached_common_voice_split(
         data_seed=data_seed,
         features_name=features_name,
         total_languages=total_languages,
+        cpu_count=cpu_count,
     )
 
     common_voice_split = LazyDataset(
@@ -293,6 +296,7 @@ def create_cached_common_voice_split(
         should_sync_previous=should_sync_previous,
         should_clean_groups=should_clean_groups,
         should_clean_validate=should_clean_validate,
+        cpu_count=cpu_count,
         features_name=features_name,
         architecture=architecture,
     )

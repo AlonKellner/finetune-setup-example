@@ -28,6 +28,7 @@ def prepare_cached_dataset(
     should_sync_previous: bool,
     should_clean_groups: bool,
     should_clean_validate: bool,
+    cpu_count: int,
     tar_size_gb: float | int = 1,
     sync_interval: int = 2,
     groups_per_sync: int = 6,
@@ -41,6 +42,7 @@ def prepare_cached_dataset(
             cache_path=cache_path,
             tokenizer=tokenizer,
             should_clean_validate=should_clean_validate,
+            cpu_count=cpu_count,
             features_name=features_name,
         )
     elif architecture == "w2v-bert2":
@@ -50,6 +52,7 @@ def prepare_cached_dataset(
             cache_path=cache_path,
             tokenizer=tokenizer,
             should_clean_validate=should_clean_validate,
+            cpu_count=cpu_count,
             features_name=features_name,
         )
     else:
@@ -62,6 +65,7 @@ def prepare_cached_dataset(
         cache_bucket,
         indices_order,
         max_tar_bytes=int(tar_size_gb * GB),
+        cpu_count=cpu_count,
         sync_interval=sync_interval,
         groups_per_sync=groups_per_sync,
         should_sync_previous=should_sync_previous,
