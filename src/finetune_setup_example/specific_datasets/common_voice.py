@@ -146,6 +146,11 @@ class LazyLoader:
                 trust_remote_code=True,
                 num_proc=2 * min(32, self.cpu_count + 4),
             )
+            blobs_path = Path(
+                "~/.cache/huggingface/hub/datasets--fsicoli--common_voice_22_0/blobs"
+            ).expanduser()
+            for blob in blobs_path.iterdir():
+                blob.unlink()
         except ValueError:
             print("WARNING: Dataset not found for", language_id)
             return None

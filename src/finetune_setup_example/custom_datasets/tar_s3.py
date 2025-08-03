@@ -205,9 +205,9 @@ class TarS3Dataset(TorchDataset):
 
     def sync_multiple_groups(self, groups: list[int]) -> None:
         """Sync multiple groups."""
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, self.cpu_count + 4)
-        ) as executor:
+        parallelism = 2 * min(32, self.cpu_count + 4)
+        print(f"Syncing groups in parallel ({parallelism})...")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
             for _ in tqdm(
                 executor.map(
                     self.sync_group,

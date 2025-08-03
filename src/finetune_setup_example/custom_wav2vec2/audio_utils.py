@@ -37,14 +37,12 @@ from transformers.utils import (
 
 if TYPE_CHECKING:
     import numpy as np
-    import numpy as orig_np
     import torch
 elif is_cuda_platform():
     import cupy as np
-    import numpy as orig_np
 else:
     import numpy as np
-    import numpy as orig_np
+import numpy as orig_np
 
 if is_soundfile_available():
     import soundfile as sf
@@ -630,6 +628,481 @@ def window_function(
 
 
 # TODO This method does not support batching yet as we are mainly focused on inference.
+def fast_spectrogram(  # noqa: PLR0912, PLR0915
+    waveform: np.ndarray,
+    window: np.ndarray,
+    frame_length: int,
+    hop_length: int,
+    fft_length: int | None = None,
+    power: float | None = 1.0,
+    center: bool = True,
+    pad_mode: str = "reflect",
+    onesided: bool = True,
+    dither: float = 0.0,
+    preemphasis: float | None = None,
+    mel_filters: np.ndarray | None = None,
+    mel_floor: float = 1e-10,
+    log_mel: str | None = None,
+    reference: float = 1.0,
+    min_value: float = 1e-10,
+    db_range: float | None = None,
+    remove_dc_offset: bool | None = None,
+    dtype: np.dtype = np.float32,
+) -> np.ndarray:
+    """
+    Calculate a spectrogram over one waveform using the Short-Time Fourier Transform.
+
+    This function can create the following kinds of spectrograms:
+
+      - amplitude spectrogram (`power = 1.0`)
+      - power spectrogram (`power = 2.0`)
+      - complex-valued spectrogram (`power = None`)
+      - log spectrogram (use `log_mel` argument)
+      - mel spectrogram (provide `mel_filters`)
+      - log-mel spectrogram (provide `mel_filters` and `log_mel`)
+
+    How this works:
+
+      1. The input waveform is split into frames of size `frame_length` that are partially overlapping by `frame_length
+         - hop_length` samples.
+      2. Each frame is multiplied by the window and placed into a buffer of size `fft_length`.
+      3. The DFT is taken of each windowed frame.
+      4. The results are stacked into a spectrogram.
+
+    We make a distinction between the following "blocks" of sample data, each of which may have a different lengths:
+
+      - The analysis frame. This is the size of the time slices that the input waveform is split into.
+      - The window. Each analysis frame is multiplied by the window to avoid spectral leakage.
+      - The FFT input buffer. The length of this determines how many frequency bins are in the spectrogram.
+
+    In this implementation, the window is assumed to be zero-padded to have the same size as the analysis frame. A
+    padded window can be obtained from `window_function()`. The FFT input buffer may be larger than the analysis frame,
+    typically the next power of two.
+
+    Note: This function is not optimized for speed yet. It should be mostly compatible with `librosa.stft` and
+    `torchaudio.functional.transforms.Spectrogram`, although it is more flexible due to the different ways spectrograms
+    can be constructed.
+
+    Args:
+        waveform (`np.ndarray` of shape `(length,)`):
+            The input waveform. This must be a single real-valued, mono waveform.
+        window (`np.ndarray` of shape `(frame_length,)`):
+            The windowing function to apply, including zero-padding if necessary. The actual window length may be
+            shorter than `frame_length`, but we're assuming the array has already been zero-padded.
+        frame_length (`int`):
+            The length of the analysis frames in samples. With librosa this is always equal to `fft_length` but we also
+            allow smaller sizes.
+        hop_length (`int`):
+            The stride between successive analysis frames in samples.
+        fft_length (`int`, *optional*):
+            The size of the FFT buffer in samples. This determines how many frequency bins the spectrogram will have.
+            For optimal speed, this should be a power of two. If `None`, uses `frame_length`.
+        power (`float`, *optional*, defaults to 1.0):
+            If 1.0, returns the amplitude spectrogram. If 2.0, returns the power spectrogram. If `None`, returns
+            complex numbers.
+        center (`bool`, *optional*, defaults to `True`):
+            Whether to pad the waveform so that frame `t` is centered around time `t * hop_length`. If `False`, frame
+            `t` will start at time `t * hop_length`.
+        pad_mode (`str`, *optional*, defaults to `"reflect"`):
+            Padding mode used when `center` is `True`. Possible values are: `"constant"` (pad with zeros), `"edge"`
+            (pad with edge values), `"reflect"` (pads with mirrored values).
+        onesided (`bool`, *optional*, defaults to `True`):
+            If True, only computes the positive frequencies and returns a spectrogram containing `fft_length // 2 + 1`
+            frequency bins. If False, also computes the negative frequencies and returns `fft_length` frequency bins.
+        dither (`float`, *optional*, defaults to 0.0):
+            Adds dithering. In other words, adds a small Gaussian noise to each frame.
+            E.g. use 4.0 to add dithering with a normal distribution centered
+            around 0.0 with standard deviation 4.0, 0.0 means no dithering.
+            Dithering has similar effect as `mel_floor`. It reduces the high log_mel_fbank
+            values for signals with hard-zero sections, when VAD cutoff is present in the signal.
+        preemphasis (`float`, *optional*)
+            Coefficient for a low-pass filter that applies pre-emphasis before the DFT.
+        mel_filters (`np.ndarray` of shape `(num_freq_bins, num_mel_filters)`, *optional*):
+            The mel filter bank. If supplied, applies a this filter bank to create a mel spectrogram.
+        mel_floor (`float`, *optional*, defaults to 1e-10):
+            Minimum value of mel frequency banks.
+        log_mel (`str`, *optional*):
+            How to convert the spectrogram to log scale. Possible options are: `None` (don't convert), `"log"` (take
+            the natural logarithm) `"log10"` (take the base-10 logarithm), `"dB"` (convert to decibels). Can only be
+            used when `power` is not `None`.
+        reference (`float`, *optional*, defaults to 1.0):
+            Sets the input spectrogram value that corresponds to 0 dB. For example, use `np.max(spectrogram)` to set
+            the loudest part to 0 dB. Must be greater than zero.
+        min_value (`float`, *optional*, defaults to `1e-10`):
+            The spectrogram will be clipped to this minimum value before conversion to decibels, to avoid taking
+            `log(0)`. For a power spectrogram, the default of `1e-10` corresponds to a minimum of -100 dB. For an
+            amplitude spectrogram, the value `1e-5` corresponds to -100 dB. Must be greater than zero.
+        db_range (`float`, *optional*):
+            Sets the maximum dynamic range in decibels. For example, if `db_range = 80`, the difference between the
+            peak value and the smallest value will never be more than 80 dB. Must be greater than zero.
+        remove_dc_offset (`bool`, *optional*):
+            Subtract mean from waveform on each frame, applied before pre-emphasis. This should be set to `true` in
+            order to get the same results as `torchaudio.compliance.kaldi.fbank` when computing mel filters.
+        dtype (`np.dtype`, *optional*, defaults to `np.float32`):
+            Data type of the spectrogram tensor. If `power` is None, this argument is ignored and the dtype will be
+            `np.complex64`.
+
+    Returns
+    -------
+        `and.array` containing a spectrogram of shape `(num_frequency_bins, length)` for a regular spectrogram or shape
+        `(num_mel_filters, length)` for a mel spectrogram.
+    """
+    if not isinstance(waveform, np.ndarray):
+        waveform = np.asarray(waveform)
+    window_length = len(window)
+
+    if fft_length is None:
+        fft_length = frame_length
+
+    if frame_length > fft_length:
+        raise ValueError(
+            f"frame_length ({frame_length}) may not be larger than fft_length ({fft_length})"
+        )
+
+    if window_length != frame_length:
+        raise ValueError(
+            f"Length of the window ({window_length}) must equal frame_length ({frame_length})"
+        )
+
+    if hop_length <= 0:
+        raise ValueError("hop_length must be greater than zero")
+
+    if waveform.ndim != 1:
+        raise ValueError(
+            f"Input waveform must have only one dimension, shape is {waveform.shape}"
+        )
+
+    if np.iscomplexobj(waveform):
+        raise ValueError("Complex-valued input waveforms are not currently supported")
+
+    if power is None and mel_filters is not None:
+        raise ValueError(
+            "You have provided `mel_filters` but `power` is `None`. Mel spectrogram computation is not yet supported for complex-valued spectrogram."
+            "Specify `power` to fix this issue."
+        )
+
+    # center pad the waveform
+    if center:
+        padding = [(int(frame_length // 2), int(frame_length // 2))]
+        waveform = np.pad(waveform, padding, mode=pad_mode)
+
+    # promote to float64, since np.fft uses float64 internally
+    waveform = waveform.astype(np.float64)
+    window = window.astype(np.float64)
+
+    # 1. Create a view of the waveform in overlapping frames
+    # This is the modern and safe way to create sliding windows.
+    frames = np.lib.stride_tricks.sliding_window_view(
+        waveform, window_shape=frame_length
+    )[::hop_length]
+
+    # Make a copy to modify the data (since frames is a view)
+    frames = frames.copy()
+
+    # 2. Apply preprocessing to all frames at once (vectorized)
+    if dither != 0.0:
+        frames += dither * np.random.randn(*frames.shape)
+
+    if remove_dc_offset:
+        frames -= np.mean(frames, axis=1, keepdims=True)
+
+    if preemphasis is not None:
+        frames[:, 1:] -= preemphasis * frames[:, :-1]
+        frames[:, 0] *= 1 - preemphasis
+
+    # 3. Apply the window function to all frames
+    frames *= window
+
+    # 4. Perform the FFT on all frames
+    # We need to pad with zeros if fft_length > frame_length
+    if fft_length > frame_length:
+        pad_width = fft_length - frame_length
+        frames = np.pad(frames, ((0, 0), (0, pad_width)), mode="constant")
+
+    fft_func = np.fft.rfft if onesided else np.fft.fft
+    spectrogram = fft_func(frames, n=fft_length, axis=1)
+
+    # note: ** is much faster than np.power
+    if power is not None:
+        spectrogram = np.abs(spectrogram, dtype=np.float64) ** power
+
+    spectrogram = spectrogram.T
+
+    if mel_filters is not None:
+        spectrogram = np.maximum(mel_floor, np.dot(mel_filters.T, spectrogram))
+
+    if power is not None and log_mel is not None:
+        if log_mel == "log":
+            spectrogram = np.log(spectrogram)
+        elif log_mel == "log10":
+            spectrogram = np.log10(spectrogram)
+        elif log_mel == "dB":
+            if power == 1.0:
+                spectrogram = amplitude_to_db(
+                    spectrogram, reference, min_value, db_range
+                )
+            elif power == 2.0:
+                spectrogram = power_to_db(spectrogram, reference, min_value, db_range)
+            else:
+                raise ValueError(
+                    f"Cannot use log_mel option '{log_mel}' with power {power}"
+                )
+        else:
+            raise ValueError(f"Unknown log_mel option: {log_mel}")
+
+        spectrogram = orig_np.asarray(spectrogram, dtype)
+    return spectrogram
+
+
+def fast_spectrogram_batch(  # noqa: PLR0912, PLR0915
+    waveform_list: list[np.ndarray],
+    window: np.ndarray,
+    frame_length: int,
+    hop_length: int,
+    fft_length: int | None = None,
+    power: float | None = 1.0,
+    center: bool = True,
+    pad_mode: str = "reflect",
+    onesided: bool = True,
+    dither: float = 0.0,
+    preemphasis: float | None = None,
+    mel_filters: np.ndarray | None = None,
+    mel_floor: float = 1e-10,
+    log_mel: str | None = None,
+    reference: float = 1.0,
+    min_value: float = 1e-10,
+    db_range: float | None = None,
+    remove_dc_offset: bool | None = None,
+    dtype: np.dtype = np.float32,
+) -> list[np.ndarray]:
+    """
+    Calculate spectrograms for a list of waveforms using the Short-Time Fourier Transform, optimized for batch processing.
+
+    This function extends the capabilities of the `spectrogram` function to handle multiple waveforms efficiently by leveraging broadcasting.
+
+    It supports generating various types of spectrograms:
+
+        - amplitude spectrogram (`power = 1.0`)
+        - power spectrogram (`power = 2.0`)
+        - complex-valued spectrogram (`power = None`)
+        - log spectrogram (use `log_mel` argument)
+        - mel spectrogram (provide `mel_filters`)
+        - log-mel spectrogram (provide `mel_filters` and `log_mel`)
+
+    How this works:
+
+        1. The input waveform is split into frames of size `frame_length` that are partially overlapping by `frame_length
+            - hop_length` samples.
+        2. Each frame is multiplied by the window and placed into a buffer of size `fft_length`.
+        3. The DFT is taken of each windowed frame.
+        4. The results are stacked into a spectrogram.
+
+    We make a distinction between the following "blocks" of sample data, each of which may have a different lengths:
+
+      - The analysis frame. This is the size of the time slices that the input waveform is split into.
+      - The window. Each analysis frame is multiplied by the window to avoid spectral leakage.
+      - The FFT input buffer. The length of this determines how many frequency bins are in the spectrogram.
+
+    In this implementation, the window is assumed to be zero-padded to have the same size as the analysis frame. A
+    padded window can be obtained from `window_function()`. The FFT input buffer may be larger than the analysis frame,
+    typically the next power of two.
+
+    Note: This function is designed for efficient batch processing of multiple waveforms but retains compatibility with individual waveform processing methods like `librosa.stft`.
+
+    Args:
+        waveform_list (`list[np.ndarray]` with arrays of shape `(length,)`):
+            The list of input waveforms, each a single-channel (mono) signal.
+        window (`np.ndarray` of shape `(frame_length,)`):
+            The windowing function to apply, including zero-padding if necessary.
+        frame_length (`int`):
+            The length of each frame for analysis.
+        hop_length (`int`):
+            The step size between successive frames.
+        fft_length (`int`, *optional*):
+            The size of the FFT buffer, defining frequency bin resolution.
+        power (`float`, *optional*, defaults to 1.0):
+            Determines the type of spectrogram: 1.0 for amplitude, 2.0 for power, None for complex.
+        center (`bool`, *optional*, defaults to `True`):
+            Whether to center-pad the waveform frames.
+        pad_mode (`str`, *optional*, defaults to `"reflect"`):
+            The padding strategy when `center` is `True`.
+        onesided (`bool`, *optional*, defaults to `True`):
+            If True, returns a one-sided spectrogram for real input signals.
+        dither (`float`, *optional*, defaults to 0.0):
+            Adds dithering. In other words, adds a small Gaussian noise to each frame.
+            E.g. use 4.0 to add dithering with a normal distribution centered
+            around 0.0 with standard deviation 4.0, 0.0 means no dithering.
+        preemphasis (`float`, *optional*):
+            Applies a pre-emphasis filter to each frame.
+        mel_filters (`np.ndarray`, *optional*):
+            Mel filter bank for converting to mel spectrogram.
+        mel_floor (`float`, *optional*, defaults to 1e-10):
+            Floor value for mel spectrogram to avoid log(0).
+        log_mel (`str`, *optional*):
+            Specifies log scaling strategy; options are None, "log", "log10", "dB".
+        reference (`float`, *optional*, defaults to 1.0):
+            Reference value for dB conversion in log_mel.
+        min_value (`float`, *optional*, defaults to 1e-10):
+            Minimum floor value for log scale conversions.
+        db_range (`float`, *optional*):
+            Dynamic range for dB scale spectrograms.
+        remove_dc_offset (`bool`, *optional*):
+            Whether to remove the DC offset from each frame.
+        dtype (`np.dtype`, *optional*, defaults to `np.float32`):
+            Data type of the output spectrogram.
+
+    Returns
+    -------
+        list[`np.ndarray`]: A list of spectrogram arrays, one for each input waveform.
+    """
+    waveform_list = [
+        (w if isinstance(w, np.ndarray) else np.asarray(w)) for w in waveform_list
+    ]
+    window_length = len(window)
+
+    if fft_length is None:
+        fft_length = frame_length
+
+    if frame_length > fft_length:
+        raise ValueError(
+            f"frame_length ({frame_length}) may not be larger than fft_length ({fft_length})"
+        )
+
+    if window_length != frame_length:
+        raise ValueError(
+            f"Length of the window ({window_length}) must equal frame_length ({frame_length})"
+        )
+
+    if hop_length <= 0:
+        raise ValueError("hop_length must be greater than zero")
+
+    # Check the dimensions of the waveform , and if waveform is complex
+    for waveform in waveform_list:
+        if waveform.ndim != 1:
+            raise ValueError(
+                f"Input waveform must have only one dimension, shape is {waveform.shape}"
+            )
+        if np.iscomplexobj(waveform):
+            raise ValueError(
+                "Complex-valued input waveforms are not currently supported"
+            )
+    # Center pad the waveform
+    if center:
+        padding = [(int(frame_length // 2), int(frame_length // 2))]
+        waveform_list = [
+            np.pad(
+                waveform,
+                padding,
+                mode=pad_mode,
+            )
+            for waveform in waveform_list
+        ]
+    original_waveform_lengths = [
+        len(waveform) for waveform in waveform_list
+    ]  # these lengths will be used to remove padding later
+
+    # Batch pad the waveform
+    max_length = max(original_waveform_lengths)
+    padded_waveform_batch = np.array(
+        [
+            np.pad(
+                waveform,
+                (0, max_length - len(waveform)),
+                mode="constant",
+                constant_values=0,
+            )
+            for waveform in waveform_list
+        ],
+        dtype=dtype,
+    )
+
+    # Promote to float64, since np.fft uses float64 internally
+    padded_waveform_batch = padded_waveform_batch.astype(np.float64)
+    window = window.astype(np.float64)
+
+    # This calculation for the true number of frames is already efficient
+    # and can remain as is.
+    true_num_frames = [
+        int(1 + np.floor((length - frame_length) / hop_length))
+        for length in original_waveform_lengths
+    ]
+
+    # 1. Frame the entire batch of waveforms at once 🖼️
+    # Input shape: (batch_size, num_samples)
+    # sliding_window_view creates a view of shape: (batch_size, num_frames, frame_length)
+    # The [:, ::hop_length] slice selects the frames with the correct hop.
+    frames = np.lib.stride_tricks.sliding_window_view(
+        padded_waveform_batch, window_shape=(frame_length,), axis=-1
+    )[:, ::hop_length, :]
+
+    # Make a copy to enable in-place modifications
+    frames = frames.copy()
+
+    # 2. Apply preprocessing to the entire 3D frames array 🛠️
+    # Operations are applied along the last axis (the frame_length dimension).
+    # The ellipsis (...) selects all preceding dimensions (batch_size, num_frames).
+    if dither != 0.0:
+        frames += dither * np.random.randn(*frames.shape)
+
+    if remove_dc_offset:
+        frames -= np.mean(frames, axis=-1, keepdims=True)
+
+    if preemphasis is not None:
+        frames[..., 1:] -= preemphasis * frames[..., :-1]
+        frames[..., 0] *= 1 - preemphasis
+
+    # 3. Apply the window to all frames in the batch 🪟
+    # NumPy's broadcasting automatically applies the 1D window to the last axis
+    # of the 3D frames array.
+    frames *= window
+
+    # 4. Perform FFT on all frames in the batch ⚡
+    # The FFT is applied along the last axis of the frames array.
+    # The 'n' parameter in rfft handles padding or truncating to fft_length.
+    fft_func = np.fft.rfft if onesided else np.fft.fft
+    spectrogram = fft_func(frames, n=fft_length, axis=-1)
+
+    # Note: ** is much faster than np.power
+    if power is not None:
+        spectrogram = np.abs(spectrogram, dtype=np.float64) ** power
+
+    # Apply mel filters if provided
+    if mel_filters is not None:
+        result = np.tensordot(spectrogram, mel_filters.T, axes=([2], [1]))
+        spectrogram = np.maximum(mel_floor, result)
+
+    # Convert to log scale if specified
+    if power is not None and log_mel is not None:
+        if log_mel == "log":
+            spectrogram = np.log(spectrogram)
+        elif log_mel == "log10":
+            spectrogram = np.log10(spectrogram)
+        elif log_mel == "dB":
+            if power == 1.0:
+                spectrogram = amplitude_to_db_batch(
+                    spectrogram, reference, min_value, db_range
+                )
+            elif power == 2.0:
+                spectrogram = power_to_db_batch(
+                    spectrogram, reference, min_value, db_range
+                )
+            else:
+                raise ValueError(
+                    f"Cannot use log_mel option '{log_mel}' with power {power}"
+                )
+        else:
+            raise ValueError(f"Unknown log_mel option: {log_mel}")
+
+        spectrogram = orig_np.asarray(spectrogram, dtype)
+
+    spectrogram_list = [
+        spectrogram[i, : true_num_frames[i], :].T for i in range(len(true_num_frames))
+    ]
+
+    return spectrogram_list
+
+
+# TODO This method does not support batching yet as we are mainly focused on inference.
 def spectrogram(  # noqa: PLR0912, PLR0915
     waveform: np.ndarray,
     window: np.ndarray,
@@ -849,10 +1322,7 @@ def spectrogram(  # noqa: PLR0912, PLR0915
         else:
             raise ValueError(f"Unknown log_mel option: {log_mel}")
 
-        spectrogram = np.asarray(spectrogram, dtype)
-
-    if not isinstance(spectrogram, orig_np.ndarray):
-        spectrogram = orig_np.asarray(spectrogram)
+        spectrogram = orig_np.asarray(spectrogram, dtype)
     return spectrogram
 
 
@@ -1097,15 +1567,10 @@ def spectrogram_batch(  # noqa: PLR0912, PLR0915
         else:
             raise ValueError(f"Unknown log_mel option: {log_mel}")
 
-        spectrogram = np.asarray(spectrogram, dtype)
+        spectrogram = orig_np.asarray(spectrogram, dtype)
 
     spectrogram_list = [
         spectrogram[i, : true_num_frames[i], :].T for i in range(len(true_num_frames))
-    ]
-
-    spectrogram_list = [
-        (s if isinstance(s, orig_np.ndarray) else orig_np.asarray(s))
-        for s in spectrogram_list
     ]
 
     return spectrogram_list

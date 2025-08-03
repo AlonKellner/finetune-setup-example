@@ -20,8 +20,8 @@ from transformers.utils import (
 )
 
 from .audio_utils import (
-    spectrogram,
-    spectrogram_batch,
+    fast_spectrogram,
+    fast_spectrogram_batch,
 )
 
 logger = logging.get_logger(__name__)
@@ -623,7 +623,7 @@ class CustomSeamlessM4TFeatureExtractor(
             waveform = [
                 np.squeeze(w) * (2**15) for w in waveform
             ]  # Kaldi compliance: 16-bit signed integers
-            features = spectrogram_batch(
+            features = fast_spectrogram_batch(
                 waveform,
                 self.window,
                 frame_length=400,
@@ -647,7 +647,7 @@ class CustomSeamlessM4TFeatureExtractor(
             waveform = np.squeeze(waveform) * (
                 2**15
             )  # Kaldi compliance: 16-bit signed integers
-            features = spectrogram(
+            features = fast_spectrogram(
                 waveform,
                 self.window,
                 frame_length=400,

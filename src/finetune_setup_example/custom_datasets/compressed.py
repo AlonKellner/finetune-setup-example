@@ -65,9 +65,10 @@ class FileDataset(ABC, TorchDataset):
                 print("Validating first item...")
                 self.validate_item_clean(0)
                 print("First item validated.")
-                print("Validating items in parallel...")
+                parallelism = 2 * min(32, self.cpu_count + 4)
+                print(f"Validating items in parallel ({parallelism})...")
                 with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=min(32, self.cpu_count + 4)
+                    max_workers=parallelism
                 ) as executor:
                     for _ in tqdm(
                         executor.map(self.validate_item_clean, range(len(self))),
@@ -84,9 +85,9 @@ class FileDataset(ABC, TorchDataset):
     def complete_chosen_files(self, indices: list[int]) -> None:
         """Make sure that the chosen files exist and are valid."""
         self.validate_item(0)
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 * min(32, self.cpu_count + 4)
-        ) as executor:
+        parallelism = 2 * min(32, self.cpu_count + 4)
+        print(f"Validating items in parallel ({parallelism})...")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
             for _ in tqdm(
                 executor.map(self.validate_item, indices),
                 total=len(self),
@@ -98,14 +99,13 @@ class FileDataset(ABC, TorchDataset):
         if self.should_clean_validate:
             file_name = self.get_full_name(index)
             existed = file_name.exists()
-            item = self.validate_item(index)
+            self.validate_item(index)
             if not existed:
                 file_name.unlink(missing_ok=True)
         else:
-            item = self.validate_item(index)
-        return item
+            self.validate_item(index)
 
-    def validate_item(self, index: int) -> dict[str, Any]:
+    def validate_item(self, index: int) -> None:
         """Validate item."""
         item = self[index]
         for _ in range(3):
@@ -117,7 +117,6 @@ class FileDataset(ABC, TorchDataset):
         assert len(item[self.features_name]) == item["length"], (
             f"Length mismatch with index [{index}]"
         )
-        return item
 
     def save_metadata(self) -> None:
         """Save the metadata as a parquet."""
@@ -447,7 +446,11 @@ class TifDataset(FileDataset):
         _image = np.array(features).T[None, :, :]
         _image = np.flip(_image, -2)
         tifffile.imwrite(
-            str(path.absolute()), _image, compression="zstd", predictor=True
+            str(path.absolute()),
+            _image,
+            compression="zstd",
+            compressionargs={"level": 3},
+            predictor=True,
         )
 
     def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:
