@@ -77,7 +77,7 @@ dependencies = ["inquirer"]
 
 [project.optional-dependencies]
 cpu = ["torch", "torchaudio"]
-cuda = ["torch", "torchaudio"]
+cuda = ["torch", "torchaudio", "cupy"]
 rocm = [
   "torch",
   "torchaudio",

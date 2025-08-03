@@ -62,9 +62,12 @@ class FileDataset(ABC, TorchDataset):
             )
             traceback.print_stack()
             try:
+                print("Validating first item...")
                 self.validate_item_clean(0)
+                print("First item validated.")
+                print("Validating items in parallel...")
                 with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=2 * min(32, self.cpu_count + 4)
+                    max_workers=min(32, self.cpu_count + 4)
                 ) as executor:
                     for _ in tqdm(
                         executor.map(self.validate_item_clean, range(len(self))),

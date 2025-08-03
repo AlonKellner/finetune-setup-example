@@ -9,10 +9,6 @@ from transformers import (
     SeamlessM4TFeatureExtractor,
     Wav2Vec2FeatureExtractor,
 )
-from transformers.audio_utils import (
-    spectrogram,
-    spectrogram_batch,
-)
 from transformers.utils import (
     PaddingStrategy,
     TensorType,
@@ -21,6 +17,11 @@ from transformers.utils import (
     is_torch_tensor,
     logging,
     to_numpy,
+)
+
+from .audio_utils import (
+    spectrogram,
+    spectrogram_batch,
 )
 
 logger = logging.get_logger(__name__)
