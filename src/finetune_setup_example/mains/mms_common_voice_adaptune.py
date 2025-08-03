@@ -301,11 +301,11 @@ def select_attention_implementation(
     attn_implementation: str,
 ) -> str:
     """Select the attention implementation based on architecture and accelerator availability."""
-    if is_flash_attn_2_available():
-        print("Flash-attn 2 Available.")
-    else:
-        print("WARNING: Can't access flash-attn 2!")
-        if attn_implementation == "flash_attention_2":
+    if attn_implementation == "flash_attention_2":
+        if is_flash_attn_2_available():
+            print("Flash-attn 2 Available.")
+        else:
+            print("WARNING: Can't access flash-attn 2!")
             attn_implementation = "eager"
     if architecture == "wav2vec2":
         if not accelerator_available:

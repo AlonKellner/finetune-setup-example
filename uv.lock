@@ -417,30 +417,30 @@ wheels = [
 
 [[package]]
 name = "boto3"
-version = "1.40.0"
+version = "1.40.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore" },
     { name = "jmespath" },
     { name = "s3transfer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7b/34/298ef2023d7d88069776c9cc26b42ba6f05d143a1c9b44a0f65cd795c65b/boto3-1.40.0.tar.gz", hash = "sha256:fc1b3ca3baf3d8820c6faddf47cbba8ad3cd16f8e8d7e2f76d304bf995932eb7", size = 111847, upload-time = "2025-07-31T19:21:06.735Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/48/4d/70d209fdebf0377db233f80dfdf26ca2bc25d2b2e89d4882e0edccd2227f/boto3-1.40.1.tar.gz", hash = "sha256:985ed4bf64729807f870eadbc46ad98baf93096917f7194ec39d743ff75b3f1d", size = 111817, upload-time = "2025-08-01T19:24:18.017Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/44/158581021038c5fc886ffa27fa4731fb4939258da7a23e0bc70b2d5757c9/boto3-1.40.0-py3-none-any.whl", hash = "sha256:959443055d2af676c336cc6033b3f870a8a924384b70d0b2905081d649378179", size = 139882, upload-time = "2025-07-31T19:21:04.65Z" },
+    { url = "https://files.pythonhosted.org/packages/97/0e/f0cb4f71c40ba07e6ed5b47699a737a080d3c4f4b7b26657d5671de48621/boto3-1.40.1-py3-none-any.whl", hash = "sha256:7c007d5c8ee549e9fcad0927536502da199b27891006ef515330f429aca9671f", size = 139880, upload-time = "2025-08-01T19:24:16.581Z" },
 ]
 
 [[package]]
 name = "botocore"
-version = "1.40.0"
+version = "1.40.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jmespath" },
     { name = "python-dateutil" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/e7/770ce910457ac6c68ea79b83892ab7a7cb08528f5d1dd77e51bf02a8529e/botocore-1.40.0.tar.gz", hash = "sha256:850242560dc8e74d542045a81eb6cc15f1b730b4ba55ba5b30e6d686548dfcaf", size = 14262316, upload-time = "2025-07-31T19:20:56.662Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/d2/d914999f4a128f0f840f2a9cc8327cd98aa661d6b33b331a81a8111ab970/botocore-1.40.1.tar.gz", hash = "sha256:bdf30e2c0e8cdb939d81fc243182a6d1dd39c416694b406c5f2ea079b1c2f3f5", size = 14280398, upload-time = "2025-08-01T19:24:08.599Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/5a/bebc53f022514412613615b09aef20fbe804abb3ea26ec27e504a2d21c8f/botocore-1.40.0-py3-none-any.whl", hash = "sha256:2063e6d035a6a382b2ae37e40f5144044e55d4e091910d0c9f1be3121ad3e4e6", size = 13921768, upload-time = "2025-07-31T19:20:51.487Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/c1/aa7922c9bf74b6d6594d2430af6f854d234faff23187e269aaba89c326c8/botocore-1.40.1-py3-none-any.whl", hash = "sha256:e039774b55fbd6fe59f0f4fea51d156a2433bd4d8faa64fc1b87aee9a03f415d", size = 13940950, upload-time = "2025-08-01T19:24:03.889Z" },
 ]
 
 [[package]]
@@ -558,11 +558,11 @@ wheels = [
 
 [[package]]
 name = "certifi"
-version = "2025.7.14"
+version = "2025.8.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b3/76/52c535bcebe74590f296d6c77c86dabf761c41980e1347a2422e4aa2ae41/certifi-2025.7.14.tar.gz", hash = "sha256:8ea99dbdfaaf2ba2f9bac77b9249ef62ec5218e7c2b2e903378ed5fccf765995", size = 163981, upload-time = "2025-07-14T03:29:28.449Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/67/960ebe6bf230a96cda2e0abcf73af550ec4f090005363542f0765df162e0/certifi-2025.8.3.tar.gz", hash = "sha256:e564105f78ded564e3ae7c923924435e1daa7463faeab5bb932bc53ffae63407", size = 162386, upload-time = "2025-08-03T03:07:47.08Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/52/34c6cf5bb9285074dc3531c437b3919e825d976fde097a7a73f79e726d03/certifi-2025.7.14-py3-none-any.whl", hash = "sha256:6b31f564a415d79ee77df69d757bb49a5bb53bd9f756cbbe24394ffd6fc1f4b2", size = 162722, upload-time = "2025-07-14T03:29:26.863Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/48/1549795ba7742c948d2ad169c1c8cdbae65bc450d6cd753d124b17c8cd32/certifi-2025.8.3-py3-none-any.whl", hash = "sha256:f6c12493cfb1b06ba2ff328595af9350c65d6644968e5d3a2ffd78699af217a5", size = 161216, upload-time = "2025-08-03T03:07:45.777Z" },
 ]
 
 [[package]]
@@ -1052,14 +1052,27 @@ wheels = [
 ]
 
 [[package]]
-name = "cupy"
+name = "cupy-cuda12x"
 version = "13.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastrlock" },
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b1/2f/f07c3d5952c2abcc256d9a77f26f51a6e8f2e924cf52612f89b6e91de457/cupy-13.5.1.tar.gz", hash = "sha256:3dba2f30258463482d52deb420862fbbbaf2c446165a5e8d67377ac6cb5c0870", size = 3508817, upload-time = "2025-07-11T04:39:26.462Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/30/d2c0f3339dfdf2056346134097b6fb35ace8be4e0c876537a28bb44305af/cupy_cuda12x-13.5.1-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:a4a5e1a232edeed19efef1d1def3ab94bd31a2b849699ba764ea0d1ad07d63c4", size = 117635784, upload-time = "2025-07-11T04:38:00.929Z" },
+    { url = "https://files.pythonhosted.org/packages/92/3a/007cbfe3d8049132372ddb65734f7e297031de6f9cd04d5b7c26c3569779/cupy_cuda12x-13.5.1-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:9232662bcd6c412896da39dc542bce17f09890b0cee454660972122729231cbc", size = 112420756, upload-time = "2025-07-11T04:38:06.658Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/f0/7778b42567eeb610d05d0a37c67d857dc4adc1828820c320f54998e78472/cupy_cuda12x-13.5.1-cp310-cp310-win_amd64.whl", hash = "sha256:fe18f857d0fdc8275aec4c0e44ccbeecad496d161ccc44868c380ab1f670a468", size = 90070495, upload-time = "2025-07-11T04:38:11.61Z" },
+    { url = "https://files.pythonhosted.org/packages/42/52/95472c06adbb6d64c59c5caade65b0653195da1c78f39fbb0e7ac2ea6abe/cupy_cuda12x-13.5.1-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:80d862db8b350505668fff9f5f539db35eef508776e4141984470e2bfde00dfe", size = 119311612, upload-time = "2025-07-11T04:38:16.85Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/1d/84140cb50b6cf417716cd58cdab86fcec743401336ad655bbae283ba52fc/cupy_cuda12x-13.5.1-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:53ef54799fd72ea84ed152f0c862aa2b32383de1a989c0b4d047ff192b6b9a01", size = 113222422, upload-time = "2025-07-11T04:38:22.093Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/07/6a97107d2a2cf73001c5c67cf3149f0f9ada950840c3c7018c717d685e9f/cupy_cuda12x-13.5.1-cp311-cp311-win_amd64.whl", hash = "sha256:08a32dcd805c0ce119d6fe43b0d56cfa49ec3849fbe2f35b998b18344a6f3594", size = 90081981, upload-time = "2025-07-11T04:38:27.371Z" },
+    { url = "https://files.pythonhosted.org/packages/88/4a/1f5346f610c55e63c296fedea9cf3a7283ba057ac19f18b3b201038c2598/cupy_cuda12x-13.5.1-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:d841701470e7c3da63c751d1bdf5eca0cae3ff4f485923f419e21912fc8b25b1", size = 118630886, upload-time = "2025-07-11T04:38:32.735Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/01/f04662dccce0f40060b9fd2fe35eb8a42666312332c01cfe7fbae97f8e81/cupy_cuda12x-13.5.1-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:09cfccd917d9ce96c7c457b80172f939c92ad1dfc923b9135c86b519c77e81a6", size = 113069415, upload-time = "2025-07-11T04:38:38.212Z" },
+    { url = "https://files.pythonhosted.org/packages/82/1b/107b485a0d4caed85b2792fc8353b1708789216b6d22b15c0ee8d22142b1/cupy_cuda12x-13.5.1-cp312-cp312-win_amd64.whl", hash = "sha256:8e71d51782dc071118909872e069724479cdb0286e93a7b4ddf2acd21c892dd3", size = 89981695, upload-time = "2025-07-11T04:38:42.907Z" },
+    { url = "https://files.pythonhosted.org/packages/99/96/d3d2f5473f55ebba17ec4bdf2c6e4e41ca231688ef8a531a952e8a471b35/cupy_cuda12x-13.5.1-cp313-cp313-manylinux2014_aarch64.whl", hash = "sha256:717f6f0886db432fdc7a1f5784e79d7de53bb89c0832bccd4653cd8dac82b273", size = 118204570, upload-time = "2025-07-11T04:38:47.78Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/7e/1e8dac49804a4b79b04f0e6966b417d570abf745d14c3e5b7a4c1cc047da/cupy_cuda12x-13.5.1-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:a826d38cf2af66e182daaa8abf530f6c5523a297c7162d0fb6346a72005ed028", size = 112842113, upload-time = "2025-07-11T04:38:53.373Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/e6/0b2351cfb1ec731febceecb1196646951e0fca65a85bfd44fe2c1a4542f5/cupy_cuda12x-13.5.1-cp313-cp313-win_amd64.whl", hash = "sha256:c7ec943fc89450b2cca573990bf2f44d68476f44b2d20720aa0b421b245381a6", size = 89946916, upload-time = "2025-07-11T04:39:06.022Z" },
+]
 
 [[package]]
 name = "cycler"
@@ -1151,34 +1164,35 @@ wheels = [
 
 [[package]]
 name = "dulwich"
-version = "0.24.0"
+version = "0.24.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/79/1d/33240627e3516fb48ad32235bc3483afe6bf7312a56f2e3d053fdad105b8/dulwich-0.24.0.tar.gz", hash = "sha256:bf4b7d7549ca2533cc30fe57a4c08dd411d98e5ce2c8aca0785c0079fd3a41ce", size = 805867, upload-time = "2025-08-01T00:31:40.756Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2b/f3/13a3425ddf04bd31f1caf3f4fa8de2352700c454cb0536ce3f4dbdc57a81/dulwich-0.24.1.tar.gz", hash = "sha256:e19fd864f10f02bb834bb86167d92dcca1c228451b04458761fc13dabd447758", size = 806136, upload-time = "2025-08-01T10:26:46.887Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/87/963d9c37fdbcb9fe0a7b0802725c8e2454891fbaef936ed6eddba90c1077/dulwich-0.24.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:3c18530cf952df88edf4556e60faa7d993cc1e3dc52d183ac6ef11ba1f450fb4", size = 1091965, upload-time = "2025-08-01T00:31:00.092Z" },
-    { url = "https://files.pythonhosted.org/packages/1a/c0/d0ecdfd46992ae963d0b839a4e51a68e5009e032b5fae729befc083099b2/dulwich-0.24.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:ddeb10e0851b64f1cad405918ee971656e1c96addabe0b51329755d5792e31af", size = 1162941, upload-time = "2025-08-01T00:31:02.561Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/66/dabee1a6bf8d297f39b205ff1885e77e01fee81f683d06a9ff7335e54d1d/dulwich-0.24.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:65fce380dd0d8cb72bb883d0d65d807b9e9a120e23274904e2c6d2f086a0a86d", size = 1168422, upload-time = "2025-08-01T00:31:04.164Z" },
-    { url = "https://files.pythonhosted.org/packages/7e/49/ec3d5776d652810b2799bcc895baedfb840fa422e1d218c2e21d4ab37cae/dulwich-0.24.0-cp310-cp310-win32.whl", hash = "sha256:e0783d715537b06daf190bbbc8475cca9bbd11e1db2e88fad4bacc7a0023450c", size = 764061, upload-time = "2025-08-01T00:31:05.432Z" },
-    { url = "https://files.pythonhosted.org/packages/e0/34/31dbac7648c10ad6a4cc14607f77d1b071ae80a23b49fa536fbf8cba0906/dulwich-0.24.0-cp310-cp310-win_amd64.whl", hash = "sha256:f2da3123fba68b1a2136bb4ab4d17db3a7d675fd8520480953e8cc5d23be6122", size = 780339, upload-time = "2025-08-01T00:31:07.078Z" },
-    { url = "https://files.pythonhosted.org/packages/63/a2/5c85abb3f21d0cca1fadfb20dd4ef6e0ee1abcc49e7d7fbb1a31651b7ccd/dulwich-0.24.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ce8a298530845bbeb73e234e76c2ed20605231a78b12a837c956f5fbd52c3f83", size = 1091721, upload-time = "2025-08-01T00:31:08.383Z" },
-    { url = "https://files.pythonhosted.org/packages/88/26/39b7a927988a9398d82d1556ffe08b3c5ca65d62e963f216cfa9c8669306/dulwich-0.24.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:d7d073cefe090d78bf446c7da19882aa29b8e6c5a8b0fac950cd46f027304423", size = 1162388, upload-time = "2025-08-01T00:31:10.031Z" },
-    { url = "https://files.pythonhosted.org/packages/92/57/f00dde2e00769640f5d59d0251dc2bd6e42e63154575112d650d6b358f31/dulwich-0.24.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:493f17cd7bdf72479c2daca8dbc59a745c7642fdc7ddd6ce114e3af9a273437e", size = 1167562, upload-time = "2025-08-01T00:31:11.743Z" },
-    { url = "https://files.pythonhosted.org/packages/58/19/39c583e6b8eb0a93755458102e1bed2ef8391c977e9635248ef43d5c385b/dulwich-0.24.0-cp311-cp311-win32.whl", hash = "sha256:5fa3d4e9d44f583d2e747cc8b6b97a0dcb27e728846a0e0b88cc64e824e5d0c0", size = 763595, upload-time = "2025-08-01T00:31:13.64Z" },
-    { url = "https://files.pythonhosted.org/packages/f3/27/9ae1651664e6d7e8a73ab99483297b37dabc97680d0c38b7b9d5f6df9d07/dulwich-0.24.0-cp311-cp311-win_amd64.whl", hash = "sha256:faaf38e41cb8c073ee154faaa7b9f8b6efeb83b81553de51d31842f6ce78b5f1", size = 779893, upload-time = "2025-08-01T00:31:15.193Z" },
-    { url = "https://files.pythonhosted.org/packages/60/3f/e384ace37306f22aa7b4b2764eaf69ae0863cfc17a61db9a220d34b5cb1b/dulwich-0.24.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:91649062c046449640fa8b691425982613060eb0ed68719f0892742a53f0b1a3", size = 1080971, upload-time = "2025-08-01T00:31:16.678Z" },
-    { url = "https://files.pythonhosted.org/packages/29/19/367fd3273a9d529b4f2d4c2571cfc7b55d5985229cf0669f97b577c3991e/dulwich-0.24.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:9f654a457be5535fef05bfc8e28d882e2d9f3344b1be24265859f3de2b3dcffe", size = 1159911, upload-time = "2025-08-01T00:31:18.273Z" },
-    { url = "https://files.pythonhosted.org/packages/76/b2/338703e047a342829046575e2ec8fcd59c2d9601addad5e0473033f4c51b/dulwich-0.24.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:7592be2fc1b1053aa969bd12e4412c55b211275bc167878f343ec8d6e93fc683", size = 1164636, upload-time = "2025-08-01T00:31:19.542Z" },
-    { url = "https://files.pythonhosted.org/packages/47/7d/c7452d436d9042e80309cc0104cdf76cc505d37bb68c7965e9d0a4ba2ca3/dulwich-0.24.0-cp312-cp312-win32.whl", hash = "sha256:96f4f213b9d2248bd04ad7915d70947a858ad6479ca164d494dbd1480cb38ad0", size = 762756, upload-time = "2025-08-01T00:31:20.957Z" },
-    { url = "https://files.pythonhosted.org/packages/7c/60/360b56e321bcc8196949e0105e486ea869dd3c36c0073eeb52aa757b3fe9/dulwich-0.24.0-cp312-cp312-win_amd64.whl", hash = "sha256:70f75c27108bceca47c8ef78e5515589f94cbbb0a459f74b98012a74a3629b1d", size = 780013, upload-time = "2025-08-01T00:31:22.616Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/2f/b4370a7b794dfc274d671449dc26583b44bcc8aa33fc1b00164308619c7f/dulwich-0.24.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:36f8fc9571c63dbc5d8ec9e76973b65e10e89600385b1c071acaf2be619d7dc3", size = 1080934, upload-time = "2025-08-01T00:31:24.252Z" },
-    { url = "https://files.pythonhosted.org/packages/a5/83/358b98d1241c0769055eef965a22c7a98225c1c32578799cd27d40600073/dulwich-0.24.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:fe6766c5a7b232876919d13bee514354e224fc669871b85ad369ff170cbb9fd4", size = 1159200, upload-time = "2025-08-01T00:31:25.568Z" },
-    { url = "https://files.pythonhosted.org/packages/0c/6d/1447cf45e4161ef4d8cd575e27ef8114f7a86351a9dda4c6583227bac44a/dulwich-0.24.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:765e1a47b876344bfd5e097d8660f9a914f7f7243bab1260e5e3d45327319f96", size = 1163617, upload-time = "2025-08-01T00:31:27.325Z" },
-    { url = "https://files.pythonhosted.org/packages/ec/23/5b716ac7677f3fbeeb0fdef7e6a3ba28e4a5c78265fa5c1cb515b3a460d8/dulwich-0.24.0-cp313-cp313-win32.whl", hash = "sha256:a551c4ed77c10390019a6031d0b680051ac1deaf887ab299e919524f63556633", size = 762609, upload-time = "2025-08-01T00:31:28.604Z" },
-    { url = "https://files.pythonhosted.org/packages/c4/b3/6f9001534a93e6c291ecf1d31118e55f5d91e6f0e0aa498eafc952ed53f7/dulwich-0.24.0-cp313-cp313-win_amd64.whl", hash = "sha256:27e9ee2bc10fe96f01fd09dee5d479569e61c3e51698e4755548029eac20d3b5", size = 779119, upload-time = "2025-08-01T00:31:30.234Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/d9/e0af11604a8302b0cd4b7252ecd673a26bc3bcf39a5ef9358978228afb88/dulwich-0.24.0-py3-none-any.whl", hash = "sha256:8de985331f9f8eeeb41ec8365eb7768b22d1f2bede76224a1370f44d6b8ddd61", size = 440767, upload-time = "2025-08-01T00:31:39.512Z" },
+    { url = "https://files.pythonhosted.org/packages/30/90/6ab0a7667d3e588d6a2808e09fb273565458d53bed0f424ec2a4e238be0c/dulwich-0.24.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2169c36b7955b40e1ec9b0543301a3dd536718c3b7840959ca70e7ed17397c25", size = 1091946, upload-time = "2025-08-01T10:26:03.28Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/a6/c13168490a926f84447e9035fb5d10504d7c4d81a68162a900c59b1fc0fe/dulwich-0.24.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:d16507ca6d6c2d29d7d942da4cc50fa589d58ab066030992dfa3932de6695062", size = 1162928, upload-time = "2025-08-01T10:26:05.763Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/f9/c248185bf982f2efbc02f1de5783b0e4aae94975b07d293e2aae1901c4b1/dulwich-0.24.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:e893b800c72499e21d0160169bac574292626193532c336ffce7617fe02d97db", size = 1168496, upload-time = "2025-08-01T10:26:07.216Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/c0/1f1ab43fbe41a43ed918641d3111775c983dd0a442a7675c35121f8bd49b/dulwich-0.24.1-cp310-cp310-win32.whl", hash = "sha256:d7144febcad9e8510ed870a141073b07071390421691285a81cea5b9fa38d888", size = 764060, upload-time = "2025-08-01T10:26:08.725Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/0c/19c815b597e112ea41c67f28bef2715eef230c51d168bf290dcbbad81eaf/dulwich-0.24.1-cp310-cp310-win_amd64.whl", hash = "sha256:1d8226ca444c4347e5820b4a0a3a8f91753c0e39e335eee1eaf59d9672356a9c", size = 780474, upload-time = "2025-08-01T10:26:10.634Z" },
+    { url = "https://files.pythonhosted.org/packages/93/46/efc7dde236144384277a18f27f584370a796a1c547cc94ff4f208d381a18/dulwich-0.24.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:31ad6637322aaafeecc4c884f396ac2d963aadf201deb6422134fa0f8ac9a87a", size = 1091732, upload-time = "2025-08-01T10:26:12.021Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/ec/34c93eb4295adccf1395e363cdf7200ecd4ec0a96b6cea43ff19074980c9/dulwich-0.24.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:358e4b688f6c1fa5346a8394a2c1ab79ff7126be576b20ffd0f38085ead0df54", size = 1162365, upload-time = "2025-08-01T10:26:13.48Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/90/16f4a0281a35adc7678245d8f47aaf48358e936903af69d2f18aa98b9990/dulwich-0.24.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:50f981edd5307475f6f862ccdbe39e8dd01afc17f2ed8ee0e452c3878389b48c", size = 1167573, upload-time = "2025-08-01T10:26:14.972Z" },
+    { url = "https://files.pythonhosted.org/packages/01/fc/961308a475f6a26dc0e9360afd5cade20e164bb08bb3bbf7edabacddcdd7/dulwich-0.24.1-cp311-cp311-win32.whl", hash = "sha256:741417a6a029a3230c46ad4725a50440cac852f165706824303d9939cf83770c", size = 763597, upload-time = "2025-08-01T10:26:16.824Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/92/001fb17046c8d8dffed6b205950d6cb82f3e8b6cd8561a3f9395759d0fd3/dulwich-0.24.1-cp311-cp311-win_amd64.whl", hash = "sha256:816ec4abd152ebd11d05bf25b5d37a4a88c18af59857067ee85d32e43af12b5f", size = 779975, upload-time = "2025-08-01T10:26:18.191Z" },
+    { url = "https://files.pythonhosted.org/packages/90/83/ccefebfc92ab682364ca247ba0e364f2826085ce75a314822d117a1dda49/dulwich-0.24.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:6d227cebcb2082801ab429e196d973315dbe3818904b5c13a22d80a16f5692c9", size = 1080906, upload-time = "2025-08-01T10:26:19.664Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/18/6abaf1973fd71cee2e9cf1e611944936481d7fc63a63c2974f01cc4cd9ca/dulwich-0.24.1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:5e3c01b8109169aa361842af4987bca672087e3faf38d528ff9f631d1071f523", size = 1159961, upload-time = "2025-08-01T10:26:21.077Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/c7/09dc31cf769ca1e67445f530e58df4af9379842b8740b88efcf44448627b/dulwich-0.24.1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:ee80d8e9199124974b486d2c83a7e2d4db17ae59682909fa198111d8bb416f50", size = 1164723, upload-time = "2025-08-01T10:26:22.594Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/62/528e4be601948be340fbd61bed99ccd1dcade38254aae804412d8e016246/dulwich-0.24.1-cp312-cp312-win32.whl", hash = "sha256:bef4dccba44edd6d18015f67c9e0d6216f978840cdbe703930e1679e2872c595", size = 762743, upload-time = "2025-08-01T10:26:24.013Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/e8/c50cb473325d91435be9af61e14d240e67632ff24b83eb2c04e6cd76af33/dulwich-0.24.1-cp312-cp312-win_amd64.whl", hash = "sha256:83b2fb17bac190cfc6c91e7a94a1d806aa8ce8903aca0e3e54cecb2c3f547a55", size = 780044, upload-time = "2025-08-01T10:26:25.498Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/a5/3f4760169fea1b90df7aea88172699807af6f4f667c878de6a9ee554170f/dulwich-0.24.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:1a11ec69fc6604228804ddfc32c85b22bc627eca4cf4ff3f27dbe822e6f29477", size = 1080923, upload-time = "2025-08-01T10:26:28.011Z" },
+    { url = "https://files.pythonhosted.org/packages/71/d9/7aadd6318aed6f0e1242fa63bd61d80142716d13ea4e307c8b19fc61c9ae/dulwich-0.24.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:a9800df7238b586b4c38c00432776781bc889cf02d756dcfb8dc0ecb8fc47a33", size = 1159246, upload-time = "2025-08-01T10:26:29.487Z" },
+    { url = "https://files.pythonhosted.org/packages/90/5d/df4256fe009c714e0392817df4fdc1748a901523504f58796d675fce755f/dulwich-0.24.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:3baab4a01aff890e2e6551ccbd33eb2a44173c897f0f027ad3aeab0fb057ec44", size = 1163646, upload-time = "2025-08-01T10:26:31.279Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/fe/850115d6fa7ad03756e20466ad5b72be54d1b59c1ff7d2b3c13bc4de965f/dulwich-0.24.1-cp313-cp313-win32.whl", hash = "sha256:b39689aa4d143ba1fb0a687a4eb93d2e630d2c8f940aaa6c6911e9c8dca16e6a", size = 762612, upload-time = "2025-08-01T10:26:33.223Z" },
+    { url = "https://files.pythonhosted.org/packages/47/7f/f79940e0773efda2ed0e666a0ca0ae7c734fdce4f04b5b60bc5ed268b7cb/dulwich-0.24.1-cp313-cp313-win_amd64.whl", hash = "sha256:8fca9b863b939b52c5f759d292499f0d21a7bf7f8cbb9fdeb8cdd9511c5bc973", size = 779168, upload-time = "2025-08-01T10:26:35.303Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/bc/a2557d1b0afa5bf1e140f42f8cbca1783e43d7fa17665859c63060957952/dulwich-0.24.1-py3-none-any.whl", hash = "sha256:57cc0dc5a21059698ffa4ed9a7272f1040ec48535193df84b0ee6b16bf615676", size = 440765, upload-time = "2025-08-01T10:26:45.415Z" },
 ]
 
 [[package]]
@@ -1410,7 +1424,7 @@ cpu = [
     { name = "torchaudio", version = "2.7.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu') or (sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm') or (sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
 ]
 cuda = [
-    { name = "cupy" },
+    { name = "cupy-cuda12x" },
     { name = "torch", version = "2.7.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
     { name = "torchaudio", version = "2.7.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cuda') or (platform_machine != 'aarch64' and extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm') or (sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "torchaudio", version = "2.7.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-22-finetune-setup-example-cuda') or (sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
@@ -1419,7 +1433,7 @@ flash-attn = [
     { name = "flash-attn" },
 ]
 rocm = [
-    { name = "pytorch-triton-rocm", marker = "sys_platform == 'linux'" },
+    { name = "pytorch-triton-rocm" },
     { name = "torch", version = "2.7.1+rocm6.3", source = { registry = "https://download.pytorch.org/whl/rocm6.3" } },
     { name = "torchaudio", version = "2.7.1+rocm6.3", source = { registry = "https://download.pytorch.org/whl/rocm6.3" } },
 ]
@@ -1496,10 +1510,10 @@ sky = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cupy", marker = "extra == 'cuda'" },
+    { name = "cupy-cuda12x", marker = "extra == 'cuda'" },
     { name = "flash-attn", marker = "extra == 'flash-attn'", specifier = "==2.8.0.post2" },
     { name = "inquirer" },
-    { name = "pytorch-triton-rocm", marker = "sys_platform == 'linux' and extra == 'rocm'", specifier = ">=3.3.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "finetune-setup-example", extra = "rocm" } },
+    { name = "pytorch-triton-rocm", marker = "extra == 'rocm'", specifier = ">=3.3.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "finetune-setup-example", extra = "rocm" } },
     { name = "torch", marker = "extra == 'cpu'", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "finetune-setup-example", extra = "cpu" } },
     { name = "torch", marker = "extra == 'cuda'", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "finetune-setup-example", extra = "cuda" } },
     { name = "torch", marker = "extra == 'rocm'", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "finetune-setup-example", extra = "rocm" } },
@@ -2062,8 +2076,21 @@ wheels = [
 name = "imagecodecs"
 version = "2025.3.30"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+]
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/de/bf/81c848ffe2b42fc141b6db3e4e8e650183b7aab8c4535498ebff25740a3b/imagecodecs-2025.3.30.tar.gz", hash = "sha256:29256f44a7fcfb8f235a3e9b3bae72b06ea2112e63bcc892267a8c01b7097f90", size = 9506573, upload-time = "2025-03-30T04:44:50.368Z" }
 wheels = [
@@ -2098,6 +2125,87 @@ wheels = [
 ]
 
 [[package]]
+name = "imagecodecs"
+version = "2025.8.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra == 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-22-finetune-setup-example-cpu' and extra != 'extra-22-finetune-setup-example-cuda' and extra != 'extra-22-finetune-setup-example-rocm'",
+]
+dependencies = [
+    { name = "numpy", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6b/d1/bac78c9bdecbc12bcaa96363dd6d7b358de0b4af512d08c16f6792e7a6ea/imagecodecs-2025.8.2.tar.gz", hash = "sha256:2af272aac90c370326a7e2fffcbbbd32d42de07576959a2a98d60110267dfe6c", size = 9490135, upload-time = "2025-08-03T06:08:38.148Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/af/85a9fbfd3404d9e7050052907086a0d78004b953716e104c6c67afe01a7a/imagecodecs-2025.8.2-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:be6524a5aaaa22684390d7450b647e4c2ffcf284eb2433ca344518292eb484ba", size = 12518594, upload-time = "2025-08-03T06:06:37.981Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/b2/ad5c38b500a6bc12762c0a16529a8123abfa12b23fb937e74357ffad9bca/imagecodecs-2025.8.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d588e51fe0ff35d759c310e209c12c76f5db35893de3e95c8e7fa69d78244ca5", size = 10168537, upload-time = "2025-08-03T06:06:40.788Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/8e/58a58f851043325f955bfc30eef14a23bc15dd02c343f7bf4028c27fd005/imagecodecs-2025.8.2-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e13144b6af43bf75024a92f1522af6d8fd0ef61c6e0fcd01ae028961df93963a", size = 25522552, upload-time = "2025-08-03T06:06:44.527Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/7e/4eb0dc145b7abfbff4139251326946b44d375ae0ab29c775a58adee63a0f/imagecodecs-2025.8.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8e993b0b1601d19ee1aadb10fceb93524d88b874ee728f82d3f9b40bddccd223", size = 26369822, upload-time = "2025-08-03T06:06:48.308Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/1b/05baebc43671f7f6d1d169841438cd689a12e257a021eab6fa5ebc00b5e1/imagecodecs-2025.8.2-cp311-cp311-win32.whl", hash = "sha256:a1ec2006cbc25bf273616c90478338d44f37aafa50935dcbc18767775b416722", size = 18567263, upload-time = "2025-08-03T06:06:51.692Z" },
+    { url = "https://files.pythonhosted.org/packages/10/27/0254f64a1d759f22f2c3add691ef915bba016aa7b3630192bbaa9ce1d65d/imagecodecs-2025.8.2-cp311-cp311-win_amd64.whl", hash = "sha256:369a2e0784787ec2ea56676de5fdb0bdaff3202679f45b27e51261f0960923e1", size = 22686127, upload-time = "2025-08-03T06:06:55.182Z" },
+    { url = "https://files.pythonhosted.org/packages/72/89/3a43d23e27da6e145148b96886b9f1b32b864cc4dc5f5356e585e2eef863/imagecodecs-2025.8.2-cp311-cp311-win_arm64.whl", hash = "sha256:5fa688d3521edeb192179c9808182f00064fb123af11c989a5d509e36a178ebe", size = 18003465, upload-time = "2025-08-03T06:06:58.387Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/2e/b129b2bf95a4332b86452dd93829cb6ab1e203d86a488fc8639e9f08db7d/imagecodecs-2025.8.2-cp312-cp312-macosx_10_14_x86_64.whl", hash = "sha256:32ce9707c85cf90e5fb4d9e076ec78288f0f1c084954376f798397743bc4d4e5", size = 12480416, upload-time = "2025-08-03T06:07:02.511Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/36/b1d3117c34f5eebfd7a92314042338dce608654173c71b1fb707e416aef5/imagecodecs-2025.8.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:7b7cd0c41ea83f249db2f4ee04c7c3f23bd6fbef89a58bdaa7d2bf11421ffc15", size = 10127356, upload-time = "2025-08-03T06:07:04.771Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/41/9ee8f13c4e3425c1aed0b9c5bca5547b968da20cb60af094fafcb52be05f/imagecodecs-2025.8.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:10f421048206ffb6763b1eb28f2205535801794e9f2c612bbcc219d14b9e44bc", size = 25765528, upload-time = "2025-08-03T06:07:08.044Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/1a/f12736807a179a4bd5a26387f2edf00cc3f972139b61f2833f6fbe9b9685/imagecodecs-2025.8.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f14a5eb8151e32316028c09212eed1d14334460e8adbbef819c1d8ec6ab7e633", size = 26718026, upload-time = "2025-08-03T06:07:13.54Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/cd/b0367017443af901279952817900e7f496998fb11de24d91cccdb4fa3dc3/imagecodecs-2025.8.2-cp312-cp312-win32.whl", hash = "sha256:e5cb491fa698d055643d3519bab36a3da8d4144ac759430464e2f75f945f3325", size = 18546766, upload-time = "2025-08-03T06:07:16.836Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/97/5eb48564f5fdbe3ef83a07ba45d301d45bf85af382a051de34e0a3d6af85/imagecodecs-2025.8.2-cp312-cp312-win_amd64.whl", hash = "sha256:7371169cff1b98f07a983b28fffd2d334cf40a61fce3c876dda930149081bdeb", size = 22674367, upload-time = "2025-08-03T06:07:20.208Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/b9/a1a70b5d2250937cd747ceff94ddb9cb70d6f1b9fef9f4164d88c63dd3cb/imagecodecs-2025.8.2-cp312-cp312-win_arm64.whl", hash = "sha256:bf0a97cd58810d5d7ecd983332f1f85a0df991080a774f7caadb1add172165d0", size = 17981844, upload-time = "2025-08-03T06:07:23.219Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/69/77a5c020030dbba1a566264b9201f091534b4b10e9ac5725b7bd40895a8b/imagecodecs-2025.8.2-cp313-cp313-macosx_10_14_x86_64.whl", hash = "sha256:06a1b54847cbf595ed58879936eabdab990f1780b80d03a8d4edb57e61c768b0", size = 12454348, upload-time = "2025-08-03T06:07:26.135Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/5d/c5dd7f0706dc48d38deefe4cba05ac78236b662a8ef86f9c0cc569b9db96/imagecodecs-2025.8.2-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:dbf3abd281034e29034b773407c27eff35dd94832a9b6e3c97490db079e3c0a8", size = 10103114, upload-time = "2025-08-03T06:07:28.657Z" },
+    { url = "https://files.pythonhosted.org/packages/60/40/8b656577120f758ce4b177917b57c76f15e695ff0e63584f641db2063bbe/imagecodecs-2025.8.2-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:248bb2ea3e43690196acdb1dae5aa40213dbd00c47255295d57da80770ceeaa7", size = 25602557, upload-time = "2025-08-03T06:07:32.399Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/de/6c1cf78cc0ecc45d98a0eb0d8920df7b90719f8643c7ed9b1bb700f95890/imagecodecs-2025.8.2-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:52230fcd0c331b0167ccd14d7ce764bb780006b65bf69761d8bde6863419fdbf", size = 26544468, upload-time = "2025-08-03T06:07:36.096Z" },
+    { url = "https://files.pythonhosted.org/packages/51/14/bda4974256e31eca65e33446026c91d54d1124aa59ce042fc326836597ec/imagecodecs-2025.8.2-cp313-cp313-win32.whl", hash = "sha256:151f9e0879ed8a025b19fcffbf4785dacf29002d5fec94d318e84ba154ddd54c", size = 18534480, upload-time = "2025-08-03T06:07:39.901Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/bb/ada8851ee56ab835562fb96f764f055e16a5d43a81ebc95207f6b2f3c1d4/imagecodecs-2025.8.2-cp313-cp313-win_amd64.whl", hash = "sha256:d167c265caaf36f9f090e55b68a7c0ec4e5b436923cdc047358743f450534154", size = 22662134, upload-time = "2025-08-03T06:07:43.845Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/b6/687ad4e137fe637213540cf71bf6a3957cc48667ce6d96d6d9dcb8409305/imagecodecs-2025.8.2-cp313-cp313-win_arm64.whl", hash = "sha256:37199e19d61c7a6c0cf901859d7a81c4449d18047a15ca9d2ebe17176c8d1b69", size = 17968181, upload-time = "2025-08-03T06:07:47.254Z" },
+    { url = "https://files.pythonhosted.org/packages/63/5f/2be51d6ea6e6cae13d8d4ce77d5076ef72e492f670368bb193db35e146ce/imagecodecs-2025.8.2-cp314-cp314-macosx_10_14_x86_64.whl", hash = "sha256:7a3c89b5f5c946d5649892e15b5c89aeca357d048331c3a4ae89009320d2704a", size = 12447596, upload-time = "2025-08-03T06:07:49.804Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/75/d9cd579b1fd5fdef5742567236adb49df15beaf8f66219412f21fb86a64c/imagecodecs-2025.8.2-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:3a4d2249e4d25a57da7da336c68efc72a7e15f9271dc6c13c322947f30383b8e", size = 10107274, upload-time = "2025-08-03T06:07:52.787Z" },
+    { url = "https://files.pythonhosted.org/packages/57/46/011e41f99f2301091f902afd917a4a8079056510dfcb8b8529d96e4232c8/imagecodecs-2025.8.2-cp314-cp314-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:31ebfca1bd01c6e4db25c0a91301ddc9aeca1dc63642db689543a9700a5869e8", size = 25579702, upload-time = "2025-08-03T06:07:56.392Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/9b/b2d38a3902b2a61cfdbe1bca7aa939b77e32349d00aba7a4014d1dfd8cb9/imagecodecs-2025.8.2-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:be84bd8f3cf1552efc92f2465af5ab40a14a788d48482ef3a702e9dae5f4cd0b", size = 26372160, upload-time = "2025-08-03T06:08:00.079Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/96/a22ce5b43a93d12b21f2ec9e374cd4a7edf9347630c7ed90bef7c4ca9f5d/imagecodecs-2025.8.2-cp314-cp314-win32.whl", hash = "sha256:ce57af27547c42dfb888562a1a22dc51a6103c20b3fb69ac4c26121acc741ade", size = 18802212, upload-time = "2025-08-03T06:08:03.341Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/0c/d364bff2ffb8f2864e9f7fa6dd05b57c25a4c341ba1e2f08b3dea1dc8a6d/imagecodecs-2025.8.2-cp314-cp314-win_amd64.whl", hash = "sha256:b93d77293c0aa9e661d42f3203b13ea135d5bf9f0936fbbe90780ed1c67322d3", size = 23052776, upload-time = "2025-08-03T06:08:06.975Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/4b/54d1e3a2b9d11c8a875c98b543dc5527c259c174b05987b1e79ccfc107b9/imagecodecs-2025.8.2-cp314-cp314-win_arm64.whl", hash = "sha256:d7a53983d4df035761dc652e44c912092bddc5b115d6f5f612df301ce94fcd55", size = 18374009, upload-time = "2025-08-03T06:08:10.074Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/8f/c614d151d577c17f38bb8ba9388f56eaccc5c3708b3109ed103209350bc8/imagecodecs-2025.8.2-cp314-cp314t-macosx_10_14_x86_64.whl", hash = "sha256:9e2b138c2826cf58d4088513fe61bf2311d6206e0eb865a37cd27749812bcc2a", size = 12582934, upload-time = "2025-08-03T06:08:13.466Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/d2/9129c759a5d11c0c0f119fe08871823a623bb382c2996486db5442c3d61b/imagecodecs-2025.8.2-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:fa4750e23d69c95b99eff991ca3f28176b77b2e9ccf14eb326942afa4258d349", size = 10277782, upload-time = "2025-08-03T06:08:15.78Z" },
+    { url = "https://files.pythonhosted.org/packages/31/39/838c2fc76e9d775b385b6d11b7882d162c895bd1c62aaf57143c79956c7f/imagecodecs-2025.8.2-cp314-cp314t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:2ca3bb477946836af844dfe89d2bfb21c69e2e08904560f927dbb4298cfb76c9", size = 26631262, upload-time = "2025-08-03T06:08:19.518Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/38/c3f0ab9374b1b74c125ac3e77a8ee84b9a1e9eb7429dca0f026a792d02ed/imagecodecs-2025.8.2-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:dd14eb5626cf7b307f9442da130c2a5340cd088718b71d35ce7389409b2e5341", size = 27053693, upload-time = "2025-08-03T06:08:24.422Z" },
+    { url = "https://files.pythonhosted.org/packages/df/00/88399944e570369c39e626020200136ae20d9fcbb439e83ec0f25d301721/imagecodecs-2025.8.2-cp314-cp314t-win32.whl", hash = "sha256:4d8378e3068b12abc4cd9dbde8867ce80dad89b9f11a7bd24321c139eaea30aa", size = 19110281, upload-time = "2025-08-03T06:08:28.128Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/ec/bbeb61bb3b8c6853c74c501e787cc5be025454be8679fda385b3ee451c8b/imagecodecs-2025.8.2-cp314-cp314t-win_amd64.whl", hash = "sha256:4d1002282afc6b89616915e9741fa8bbd283e214a268f03b14a74acb43aad451", size = 23430830, upload-time = "2025-08-03T06:08:31.963Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/c0/93445b41eb2063414ebb443aa93bccaff2868252a8c55c8c0ea72a7be96a/imagecodecs-2025.8.2-cp314-cp314t-win_arm64.whl", hash = "sha256:f8bb58c7da65f93fee53d4b279d4030db2804b97a42c5135abc82f02ebfb4c3a", size = 18497460, upload-time = "2025-08-03T06:08:35.487Z" },
+]
+
+[[package]]
 name = "iniconfig"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2108,16 +2216,16 @@ wheels = [
 
 [[package]]
 name = "inquirer"
-version = "3.4.0"
+version = "3.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "blessed" },
     { name = "editor" },
     { name = "readchar" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/06/ef91eb8f3feafb736aa33dcb278fc9555d17861aa571b684715d095db24d/inquirer-3.4.0.tar.gz", hash = "sha256:8edc99c076386ee2d2204e5e3653c2488244e82cb197b2d498b3c1b5ffb25d0b", size = 14472, upload-time = "2024-08-12T12:03:43.83Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c1/79/165579fdcd3c2439503732ae76394bf77f5542f3dd18135b60e808e4813c/inquirer-3.4.1.tar.gz", hash = "sha256:60d169fddffe297e2f8ad54ab33698249ccfc3fc377dafb1e5cf01a0efb9cbe5", size = 14069, upload-time = "2025-08-02T18:36:27.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/b2/be907c8c0f8303bc4b10089f5470014c3bf3521e9b8d3decf3037fd94725/inquirer-3.4.0-py3-none-any.whl", hash = "sha256:bb0ec93c833e4ce7b51b98b1644b0a4d2bb39755c39787f6a504e4fee7a11b60", size = 18077, upload-time = "2024-08-12T12:03:41.589Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/fd/7c404169a3e04a908df0644893a331f253a7f221961f2b6c0cf44430ae5a/inquirer-3.4.1-py3-none-any.whl", hash = "sha256:717bf146d547b595d2495e7285fd55545cff85e5ce01decc7487d2ec6a605412", size = 18152, upload-time = "2025-08-02T18:36:26.753Z" },
 ]
 
 [[package]]
@@ -4118,7 +4226,7 @@ name = "pytorch-triton-rocm"
 version = "3.3.1"
 source = { registry = "https://download.pytorch.org/whl/rocm6.3" }
 dependencies = [
-    { name = "setuptools", marker = "(sys_platform == 'linux' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm')" },
+    { name = "setuptools", marker = "(extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra != 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm') or (extra != 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.3.1-cp310-cp310-linux_x86_64.whl", hash = "sha256:d54db030d74dcd0df1d166f4d6a63c0a59310297af4a57cbe867dea6e82fb07b" },
@@ -5382,7 +5490,7 @@ wheels = [
 all = [
     { name = "defusedxml", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "fsspec", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
-    { name = "imagecodecs", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+    { name = "imagecodecs", version = "2025.3.30", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "lxml", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "matplotlib", marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "zarr", version = "2.18.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
@@ -5439,7 +5547,7 @@ wheels = [
 all = [
     { name = "defusedxml", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "fsspec", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
-    { name = "imagecodecs", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
+    { name = "imagecodecs", version = "2025.8.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "kerchunk", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "lxml", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
     { name = "matplotlib", marker = "python_full_version >= '3.11' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
@@ -5958,16 +6066,16 @@ wheels = [
 
 [[package]]
 name = "types-boto3-lite"
-version = "1.40.0"
+version = "1.40.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore-stubs" },
     { name = "types-s3transfer" },
     { name = "typing-extensions", marker = "python_full_version < '3.12' or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-cuda') or (extra == 'extra-22-finetune-setup-example-cpu' and extra == 'extra-22-finetune-setup-example-rocm') or (extra == 'extra-22-finetune-setup-example-cuda' and extra == 'extra-22-finetune-setup-example-rocm')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b7/c9/c58fd4558afbc94d923ce8484d0545ba11ef7832580f66acbf8dbc5f2c31/types_boto3_lite-1.40.0.tar.gz", hash = "sha256:d36f5052acdc9cb41508ee8a431baad700cae9ef254ed130a8c0e1719705b6f6", size = 72890, upload-time = "2025-07-31T19:58:10.332Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/59/7b1649f661b72ebf9ccecb83c7dffab175b362f3cc25f9a1313e20e3c8cf/types_boto3_lite-1.40.1.tar.gz", hash = "sha256:a9a7b6f9681870a9568663bddeb082e7d9a44d62da44c4b3f53f0aa5460ec7de", size = 73165, upload-time = "2025-08-01T19:34:20.677Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/c4/735179544f49fb343d7c948fdf8db5958ba0ed3610186c7dca9ef03ca622/types_boto3_lite-1.40.0-py3-none-any.whl", hash = "sha256:344e09329f80b6e1bb01dc6cbf69bc1cbb020fcca53c44dfcc29952966b80d53", size = 42564, upload-time = "2025-07-31T19:58:07.103Z" },
+    { url = "https://files.pythonhosted.org/packages/20/67/4a2d22286b7413dd8dc50f0579574078dc936d2923c3bf2a5932ad07eaee/types_boto3_lite-1.40.1-py3-none-any.whl", hash = "sha256:02a3af6d33989c934e23685f18d124c697b3af26dce311653399b6a4b05f94f1", size = 42620, upload-time = "2025-08-01T19:34:14.63Z" },
 ]
 
 [package.optional-dependencies]
