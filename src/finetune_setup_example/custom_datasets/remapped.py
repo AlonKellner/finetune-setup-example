@@ -6,16 +6,26 @@ from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset as TorchDataset
 
 
-class ResizedDataset(TorchDataset):
-    """A wrapping dataset for resizing by duplication or trimming."""
+class RemappedDataset(TorchDataset):
+    """A wrapping dataset for remapping and subsetting indices."""
 
-    def __init__(self, inner_dataset: HFDataset | TorchDataset, size: int) -> None:
+    def __init__(
+        self, inner_dataset: HFDataset | TorchDataset, remapping: list[int]
+    ) -> None:
         self._inner_dataset = inner_dataset
-        self._size = size
+        self._remapping = remapping
 
     def __getattr__(self, name: str) -> Any:
         """Delegate to the inner if it has the attribute."""
-        if name not in ["grouped_indices", "indices_order", "metadata", "column_names"]:
+        if name not in [
+            "grouped_indices",
+            "indices_order",
+            "metadata",
+            "column_names",
+            "total_length",
+            "total_dataset_length",
+            "set_tokenizer",
+        ]:
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
@@ -23,24 +33,14 @@ class ResizedDataset(TorchDataset):
         if issubclass(type(result), HFDataset) or issubclass(
             type(result), TorchDataset
         ):
-            result = ResizedDataset(result, self._size)
-        elif self._is_resizable(result):
-            result = self._resize(result)
+            result = RemappedDataset(result, self._remapping)
+        elif self._is_remappable(result):
+            result = self._remap(result)
         return result
 
     def __len__(self) -> int:
         """Return the size as specified."""
-        return self._size
-
-    @property
-    def total_length(self) -> int:
-        """Return the size as specified."""
-        return self._size
-
-    @property
-    def total_dataset_length(self) -> int:
-        """Return the size as specified."""
-        return self._size
+        return len(self._remapping)
 
     def __getitems__(self, keys: list) -> list:
         """Can be used to get a batch using a list of integers indices."""
@@ -50,18 +50,18 @@ class ResizedDataset(TorchDataset):
         """Return the item corresponding to the index while caching both metadata and audio to files."""
         if isinstance(index, str):
             result = self._inner_dataset[index]
-            if self._is_resizable(result):  # type: ignore
-                result = self._resize(result)
+            if self._is_remappable(result):  # type: ignore
+                result = self._remap(result)
             return result
 
-        if index > self._size:
+        if index > len(self):
             raise IndexError()
-        inner_index = index % len(self._inner_dataset)  # type: ignore
+        inner_index = self._remapping[index]
         return self._inner_dataset[inner_index]
 
-    def _is_resizable(self, x: Any) -> bool:
+    def _is_remappable(self, x: Any) -> bool:
         return isinstance(x, list) and (len(x) == len(self._inner_dataset))  # type: ignore
 
-    def _resize(self, values: list) -> list:
+    def _remap(self, values: list) -> list:
         """Resize a list to the custom size."""
-        return [values[i % len(values)] for i in range(self._size)]
+        return [values[i] for i in self._remapping]

@@ -80,7 +80,7 @@ def main(
     push_to_hub: bool = False,
     should_freeze_base_model: bool = False,
     should_freeze_feature_encoder: bool = True,
-    sp_vocab_size: int = 64,
+    sp_vocab_size: int = 128,
     sp_bpe_dropout: float = 0.1,
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     logging_nan_inf_filter: bool = True,

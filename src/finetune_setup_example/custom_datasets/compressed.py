@@ -86,7 +86,7 @@ class FileDataset(ABC, TorchDataset):
         """Make sure that the chosen files exist and are valid."""
         self.validate_item(0)
         parallelism = 2 * min(32, self.cpu_count + 4)
-        print(f"Validating items in parallel ({parallelism})...")
+        print(f"Validating files in parallel ({parallelism})...")
         with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
             for _ in tqdm(
                 executor.map(self.validate_item, indices),
@@ -300,6 +300,10 @@ class FileDataset(ABC, TorchDataset):
     def raw_load_file(self, path: Path) -> list[int | float] | list[list[int | float]]:
         """Load an actual file."""
         pass
+
+    def set_tokenizer(self, tokenizer: BpeWav2Vec2CTCTokenizer) -> None:
+        """Set the tokenizer."""
+        self.tokenizer = tokenizer
 
 
 class FlacDataset(FileDataset):
