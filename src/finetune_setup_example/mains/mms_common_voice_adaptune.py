@@ -72,11 +72,13 @@ def main(
     padding_side: str = "random",
     should_train: bool = True,
     eval_on_start: bool = False,
-    sync_all_on_start: bool = False,
-    should_sync_previous: bool = False,
+    train_sync_all_on_start: bool = False,
+    eval_sync_all_on_start: bool = True,
+    should_sync_previous: bool = True,
     should_clean_groups: bool = False,
     should_clean_validate: bool = False,
-    dry_epoch: bool = False,
+    train_dry_epoch: bool = False,
+    eval_dry_epoch: bool = False,
     push_to_hub: bool = False,
     should_freeze_base_model: bool = False,
     should_freeze_feature_encoder: bool = True,
@@ -205,7 +207,7 @@ def main(
         split_limit=train_limit,
         processor=train_processor,
         syncer=syncer,
-        sync_all_on_start=sync_all_on_start,
+        sync_all_on_start=train_sync_all_on_start,
         should_sync_previous=should_sync_previous,
         should_clean_groups=should_clean_groups,
         should_clean_validate=should_clean_validate,
@@ -227,7 +229,7 @@ def main(
         split_limit=eval_limit,
         processor=eval_processor,
         syncer=syncer,
-        sync_all_on_start=sync_all_on_start,
+        sync_all_on_start=eval_sync_all_on_start,
         should_sync_previous=should_sync_previous,
         should_clean_groups=should_clean_groups,
         should_clean_validate=should_clean_validate,
@@ -267,11 +269,13 @@ def main(
         features_name=features_name,
     )
 
-    if dry_epoch:
-        print("WARNING: Dry epoch, not training!")
+    if train_dry_epoch:
+        print("WARNING: Dry epoch, not training yet!")
         print("Train dataloader dry epoch:")
         for _ in tqdm(trainer.get_train_dataloader()):
             pass
+    if eval_dry_epoch:
+        print("WARNING: Dry epoch, not training yet!")
         print("Eval dataloader dry epoch:")
         for _ in tqdm(trainer.get_eval_dataloader()):
             pass
