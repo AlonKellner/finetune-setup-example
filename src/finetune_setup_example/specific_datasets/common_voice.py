@@ -115,7 +115,7 @@ class LazyLoader:
         sorted_idx = np.argsort(sample_lengths)
         reverse_idx = np.argsort(sorted_idx)
         sorted_audio = [audio[i] for i in sorted_idx]
-        bulk_size = 32
+        bulk_size = 16
         sorted_features = []
         for i in range(0, len(sorted_audio), bulk_size):
             sorted_features_bulk = self.processor(
@@ -216,8 +216,8 @@ class LazyLoader:
                 if c not in ["sentence", "iso3_code"]
             ],
             batched=True,
-            batch_size=64,
-            num_proc=self.cpu_count // 3,
+            batch_size=16,
+            num_proc=self.cpu_count,
         )
         print(common_voice_split.column_names)
 
@@ -312,9 +312,11 @@ def create_cached_common_voice_split(
     total_minutes = total_seconds / 60
     total_hours = total_minutes / 60
     total_days = total_hours / 24
-    total_time_str = f"/{total_days:.2f} days / {total_hours:.2f} hours / {total_minutes:.2f} minutes / {total_seconds:.2f} seconds"
+    total_time_str = f"{total_days:.2f} days / {total_hours:.2f} hours / {total_minutes:.2f} minutes / {total_seconds:.2f} seconds"
     print(f"Total speech time in {split}: {total_time_str}")
     grouped_indices = common_voice_split.grouped_indices
+    unique_chars = {c for s in common_voice_split["sentence"] for c in s}
+    print("Unique chars: ", unique_chars)
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in common_voice_split["sentence"]])
 
