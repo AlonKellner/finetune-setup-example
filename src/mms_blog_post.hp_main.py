@@ -43,7 +43,7 @@ def hp_main() -> None:
         )
         for pretrained_learning_rate in [1e-4]
         for adapter_learning_rate in [1e-3]
-        for batch_total_seconds in [1200.0]
+        for batch_total_seconds in [900.0]
         for epochs in [1]
         for job_type in ["a100"]
         for dropout in [0.05]
