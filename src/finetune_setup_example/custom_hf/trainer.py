@@ -390,9 +390,10 @@ class CustomTrainer(Trainer):  # type: ignore
         if self.args.group_by_length:
             if self.args.has_length_column:
                 if hasattr(train_dataset, "metadata"):
+                    metadata = train_dataset.metadata
                     lengths = [
                         v[self.args.length_column_name]
-                        for k, v in train_dataset.metadata.items()  # type: ignore
+                        for k, v in metadata.items()  # type: ignore
                     ]
                 else:
                     lengths = (

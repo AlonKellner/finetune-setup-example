@@ -60,8 +60,11 @@ class RemappedDataset(TorchDataset):
         return self._inner_dataset[inner_index]
 
     def _is_remappable(self, x: Any) -> bool:
-        return isinstance(x, list) and (len(x) == len(self._inner_dataset))  # type: ignore
+        return isinstance(x, list | dict) and (len(x) == len(self._inner_dataset))  # type: ignore
 
-    def _remap(self, values: list) -> list:
+    def _remap(self, values: list | dict) -> list | dict:
         """Resize a list to the custom size."""
-        return [values[i] for i in self._remapping]
+        if isinstance(values, list):
+            return [values[i] for i in self._remapping]
+        else:
+            return {i_new: values[i_old] for i_new, i_old in enumerate(self._remapping)}

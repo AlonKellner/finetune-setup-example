@@ -85,6 +85,7 @@ def create_processor(
             feature_extractor_repo,
             max_batch_length=max_batch_length,
             sampling_rate=sample_rate,
+            padding_side=padding_side,
         )
     else:
         raise ValueError(f"Unknown architecture: {architecture}")

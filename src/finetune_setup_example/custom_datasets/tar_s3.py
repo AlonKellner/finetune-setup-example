@@ -53,14 +53,15 @@ class TarS3Dataset(TorchDataset):
         for _ in tqdm(list(range(1))):
             self.sync_metadata()
 
-        lengths = {i: self._inner_dataset.metadata[i]["length"] for i in indices_order}  # type: ignore
+        inner_metadata = self._inner_dataset.metadata
+        lengths = {i: inner_metadata[i]["length"] for i in indices_order}  # type: ignore
         longest_index = max(indices_order, key=lambda i: lengths[i])
         indices_order.remove(longest_index)
         indices_order.insert(0, longest_index)
 
         self._indices_order = indices_order
 
-        file_sizes = {i: v["file_sizes"] for i, v in inner_dataset.metadata.items()}
+        file_sizes = {i: v["file_sizes"] for i, v in inner_metadata.items()}
         self._file_sizes = file_sizes
 
         cum_sizes = np.array([file_sizes[i] for i in indices_order]).cumsum()

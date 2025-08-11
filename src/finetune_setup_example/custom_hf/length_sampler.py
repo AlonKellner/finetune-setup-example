@@ -65,7 +65,6 @@ def get_length_grouped_batches(
     batches = shuffle_batches_in_groups(batches, grouped_indices, generator)
 
     indices = [i for batch in batches for i in batch]
-
     if indices_order is not None:
         assert len(indices) == len(indices_order)
         assert len(set(indices)) == len(indices_order)

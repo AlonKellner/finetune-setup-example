@@ -89,6 +89,10 @@ SAFE_TO_REMOVE = [
     "῝",
     "‑",  # noqa: RUF001
     "῎",
+    "゛",
+    "♡",
+    "□",
+    "∙",
 ]
 SPACERS = [
     "─",
@@ -109,11 +113,10 @@ SPACERS = [
     "|",
 ]
 CHARACTER_MAPPINGS = {
-    " & ": " and ",
-    "& ": " and ",
-    " &": " and ",
     "&": " and ",
     "ﷺ": " sallallahu alayhi wasallam ",
+    "   ": " ",
+    "  ": " ",
 }
 AVOID_SAMPLES_WITH = [
     "0",
@@ -189,6 +192,13 @@ AVOID_SAMPLES_WITH = [
     "⊨",
     "⋅",
     "⋯",
+    "ⅳ",
+    "ℵ",
+    "ゝ",
+    "⤴",
+    "䱽",
+    "⽣",
+    "ⅰ",  # noqa: RUF001
 ]
 
 
@@ -258,7 +268,6 @@ class LazyLoader:
         self.cpu_count = cpu_count
         self.common_voice_split = None
         self.meta_common_voice_split = None
-        self.uromanizer = Uromanizer()
 
     def load_common_voice_for_wav2vec2(self) -> HFDataset:
         """Load a split of common voice, adapted for wav2vec2."""
@@ -358,10 +367,11 @@ class LazyLoader:
                 "variant",
             ]
         )
+        uromanizer = Uromanizer()
 
-        dill.dumps(self.uromanizer.uromanize)
+        dill.dumps(uromanizer.uromanize)
         common_voice_split = common_voice_split.map(
-            self.uromanizer.uromanize, num_proc=2 * min(32, self.cpu_count + 4)
+            uromanizer.uromanize, num_proc=2 * min(32, self.cpu_count + 4)
         )
 
         common_voice_split = common_voice_split.cast_column(
@@ -405,6 +415,14 @@ class LazyLoader:
 def is_sentence_valid(sentence: str) -> bool:
     """Check if the sentence contain invalid characters."""
     return not any((c in sentence) for c in AVOID_SAMPLES_WITH)
+
+
+def make_sentence_valid(sentence: str) -> str:
+    """Make an invalid sentence valid."""
+    _sentence = sentence
+    for c in AVOID_SAMPLES_WITH:
+        _sentence = _sentence.replace(c, "")
+    return _sentence
 
 
 def postprocess_sentence(sentence: str) -> str:
@@ -522,20 +540,24 @@ def resolve_bpe_tokenizer(
 ) -> tuple[TorchDataset, list[list[int]], BpeWav2Vec2CTCTokenizer]:
     """Resolve and train the BPE tokenizer."""
     _common_voice_split = common_voice_split
-    print("Example sentence: ", _common_voice_split.metadata[0]["sentence"])
+    metadata = _common_voice_split.metadata
+    print("Example sentence: ", metadata[0]["sentence"])
     grouped_indices = _common_voice_split.grouped_indices
     print("Post processing sentences...")
-    for i in tqdm(range(len(_common_voice_split.metadata))):
-        sentence = _common_voice_split.metadata[i]["sentence"]
-        sentence = postprocess_sentence(sentence)
-        _common_voice_split.metadata[i]["sentence"] = sentence
+    for i in tqdm(range(len(metadata))):
+        sentence = metadata[i]["sentence"]
+        metadata[i]["sentence"] = postprocess_sentence(sentence)
+    longest_i = grouped_indices[0][0]
+    sentence = metadata[longest_i]["sentence"]
+    metadata[longest_i]["sentence"] = make_sentence_valid(sentence)
 
     print("Validating sentences...")
     valid_indices = [
         i
         for i in tqdm(range(len(_common_voice_split)))
-        if is_sentence_valid(_common_voice_split.metadata[i]["sentence"])
+        if is_sentence_valid(metadata[i]["sentence"])
     ]
+    inverse_valid_indices = {i_old: i_new for i_new, i_old in enumerate(valid_indices)}
 
     if len(valid_indices) < len(_common_voice_split):
         print(
@@ -543,20 +565,18 @@ def resolve_bpe_tokenizer(
         )
         valid_indices_set = set(valid_indices)
         grouped_indices = [
-            [i for i in group if (i in valid_indices_set)] for group in grouped_indices
+            [inverse_valid_indices[i] for i in group if (i in valid_indices_set)]
+            for group in grouped_indices
         ]
         _common_voice_split = RemappedDataset(_common_voice_split, valid_indices)
-
-    total_seconds = sum(
-        _common_voice_split.metadata[i]["seconds"]
-        for i in range(len(_common_voice_split))
-    )
+    metadata = _common_voice_split.metadata
+    total_seconds = sum(metadata[i]["seconds"] for i in range(len(_common_voice_split)))
     total_minutes = total_seconds / 60
     total_hours = total_minutes / 60
     total_days = total_hours / 24
     total_time_str = f"{total_days:.2f} days / {total_hours:.2f} hours / {total_minutes:.2f} minutes / {total_seconds:.2f} seconds"
     print(f"Total speech time in {split}: {total_time_str}")
-    unique_chars = {c for s in _common_voice_split["sentence"] for c in s}
+    unique_chars = sorted({c for s in _common_voice_split["sentence"] for c in s})
     print(f"Unique chars ({len(unique_chars)}): {unique_chars}")
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in _common_voice_split["sentence"]])

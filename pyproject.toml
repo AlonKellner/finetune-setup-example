@@ -134,6 +134,7 @@ requires-dist = ["torch", "einops"]
 
 [tool.uv.sources]
 skypilot = { git = "https://github.com/AlonKellner/skypilot-beta.git", rev = "custom-stable" }
+uroman = { git = "https://github.com/nmorel/uroman.git", rev = "edge-has-no-attribute-value" }
 # Configure PyTorch sources for different accelerators
 torch = [
   { index = "pytorch-cpu", extra = "cpu" },
