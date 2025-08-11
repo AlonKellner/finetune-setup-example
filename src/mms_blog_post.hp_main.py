@@ -19,7 +19,7 @@ def hp_main() -> None:
             base_hf_repo=base_hf_repo,
             architecture=architecture,
             num_train_epochs=epochs,
-            num_eval_steps=5,
+            num_eval_steps=None,
             dataloader_num_workers=20,
             fp16=True,
             push_to_hub=True,
@@ -43,14 +43,14 @@ def hp_main() -> None:
         for pretrained_learning_rate in [1e-4]
         for adapter_learning_rate in [1e-3]
         for batch_total_seconds in [1200.0]
-        for epochs in [2]
+        for epochs in [1]
         for job_type in ["a100"]
         for dropout in [0.05]
         for sp_vocab_size, sp_bpe_dropout in [(48, 0.0)]
         for base_hf_repo, architecture, attn_implementation in [
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),
         ]
-        for seed in [42, 43, 44]
+        for seed in [42]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")
