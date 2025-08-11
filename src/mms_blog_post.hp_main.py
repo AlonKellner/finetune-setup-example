@@ -24,6 +24,7 @@ def hp_main() -> None:
             fp16=True,
             push_to_hub=True,
             logging_nan_inf_filter=False,
+            should_clean_groups=True,
             attn_implementation=attn_implementation,
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,
