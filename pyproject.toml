@@ -77,9 +77,9 @@ dependencies = ["inquirer"]
 
 [project.optional-dependencies]
 cpu = ["torch", "torchaudio"]
-cuda = ["torch", "torchaudio", "cupy-cuda12x"]
+cuda = ["torch<2.8", "torchaudio", "cupy-cuda12x"]
 rocm = ["torch", "torchaudio", "pytorch-triton-rocm>=3.3.0"]
-flash-attn = ["flash-attn==2.8.0.post2"]
+flash-attn = ["flash-attn==2.8.1"]
 
 
 [dependency-groups]
