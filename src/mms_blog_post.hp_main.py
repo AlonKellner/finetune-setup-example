@@ -20,6 +20,7 @@ def hp_main() -> None:
             architecture=architecture,
             num_train_epochs=epochs,
             num_eval_steps=None,
+            eval_on_start=True,
             dataloader_num_workers=20,
             fp16=True,
             push_to_hub=True,

@@ -5,6 +5,7 @@ attention_dropout: 0.05
 attn_implementation: eager
 base_hf_repo: facebook/w2v-bert-2.0
 dataloader_num_workers: 20
+eval_on_start: true
 final_dropout: 0.05
 fp16: true
 hidden_dropout: 0.05

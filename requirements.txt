@@ -41,11 +41,11 @@ bcrypt==4.3.0
     # via paramiko
 blessed==1.21.0
     # via inquirer
-boto3==1.40.7
+boto3==1.40.10
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   runpod
-botocore==1.40.7
+botocore==1.40.10
     # via
     #   boto3
     #   s3transfer
@@ -139,7 +139,7 @@ fastapi-cli==0.0.8
     # via fastapi
 fastapi-cloud-cli==0.1.5
     # via fastapi-cli
-filelock==3.18.0
+filelock==3.19.1
     # via
     #   datasets
     #   huggingface-hub
@@ -147,7 +147,7 @@ filelock==3.18.0
     #   skypilot
     #   torch
     #   transformers
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 frozenlist==1.7.0
     # via
@@ -172,7 +172,7 @@ google-api-core==2.25.1
     #   google-api-python-client
     #   google-cloud-core
     #   google-cloud-storage
-google-api-python-client==2.178.0
+google-api-python-client==2.179.0
     # via skypilot
 google-auth==2.40.3
     # via
@@ -192,7 +192,7 @@ google-auth-oauthlib==1.2.2
     # via skypilot
 google-cloud-core==2.4.3
     # via google-cloud-storage
-google-cloud-storage==3.2.0
+google-cloud-storage==3.3.0
     # via skypilot
 google-crc32c==1.7.1
     # via
@@ -315,7 +315,7 @@ numba==0.61.2
     # via
     #   finetune-setup-example (pyproject.toml:dev)
     #   librosa
-numcodecs==0.16.1
+numcodecs==0.16.2
     # via
     #   kerchunk
     #   zarr
@@ -344,7 +344,7 @@ oauthlib==3.3.1
     # via
     #   kubernetes
     #   requests-oauthlib
-orjson==3.11.1
+orjson==3.11.2
     # via fastapi
 packaging==25.0
     # via
@@ -378,7 +378,7 @@ platformdirs==4.3.8
     #   wandb
 pluggy==1.6.0
     # via pytest
-polars==1.32.2
+polars==1.32.3
     # via finetune-setup-example (pyproject.toml:dev)
 pooch==1.8.2
     # via librosa
@@ -394,7 +394,7 @@ propcache==0.3.2
     #   yarl
 proto-plus==1.26.1
     # via google-api-core
-protobuf==6.31.1
+protobuf==6.32.0
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -553,9 +553,9 @@ scipy==1.16.1
     #   scikit-learn
 semantic-version==2.10.0
     # via comet-ml
-sentencepiece==0.2.0
+sentencepiece==0.2.1
     # via finetune-setup-example (pyproject.toml:dev)
-sentry-sdk==2.34.1
+sentry-sdk==2.35.0
     # via
     #   comet-ml
     #   fastapi-cloud-cli
@@ -626,15 +626,15 @@ tqdm==4.67.1
     #   transformers
 tqdm-loggable==0.2
     # via runpod
-transformers==4.55.0
+transformers==4.55.2
     # via finetune-setup-example (pyproject.toml:dev)
 typer==0.16.0
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-types-awscrt==0.27.5
+types-awscrt==0.27.6
     # via botocore-stubs
-types-boto3-lite==1.40.7
+types-boto3-lite==1.40.10
     # via finetune-setup-example (pyproject.toml:dev)
 types-boto3-s3==1.40.0
     # via types-boto3-lite
@@ -708,7 +708,7 @@ websockets==15.0.1
     #   uvicorn
 wheel==0.45.1
     # via skypilot
-wrapt==1.17.2
+wrapt==1.17.3
     # via comet-ml
 wurlitzer==3.1.1
     # via comet-ml
