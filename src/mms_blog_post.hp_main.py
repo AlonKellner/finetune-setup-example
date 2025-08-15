@@ -19,7 +19,7 @@ def hp_main() -> None:
             base_hf_repo=base_hf_repo,
             architecture=architecture,
             num_train_epochs=epochs,
-            num_eval_steps=None,
+            num_eval_steps=100,
             eval_on_start=True,
             dataloader_num_workers=20,
             fp16=True,
@@ -30,8 +30,8 @@ def hp_main() -> None:
             job_path=f"{name}.{job_type}.job.yaml",
             job_stem=name,
             job_type=job_type,
-            per_device_train_batch_total_seconds=batch_total_seconds,
-            per_device_eval_batch_total_seconds=batch_total_seconds,
+            per_device_train_batch_total_seconds=train_batch_total_seconds,
+            per_device_eval_batch_total_seconds=eval_batch_total_seconds,
             hidden_dropout=dropout,
             activation_dropout=dropout,
             attention_dropout=dropout,
@@ -44,7 +44,8 @@ def hp_main() -> None:
         )
         for pretrained_learning_rate in [1e-4]
         for adapter_learning_rate in [1e-3]
-        for batch_total_seconds in [900.0]
+        for train_batch_total_seconds in [1200.0]
+        for eval_batch_total_seconds in [300.0]
         for epochs in [1]
         for job_type in ["a100"]
         for dropout in [0.05]
