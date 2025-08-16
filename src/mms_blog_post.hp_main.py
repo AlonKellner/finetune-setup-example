@@ -24,7 +24,7 @@ def hp_main() -> None:
             dataloader_num_workers=20,
             fp16=True,
             push_to_hub=True,
-            logging_nan_inf_filter=False,
+            logging_nan_inf_filter=True,
             should_clean_groups=True,
             attn_implementation=attn_implementation,
             job_path=f"{name}.{job_type}.job.yaml",
@@ -45,15 +45,20 @@ def hp_main() -> None:
         for pretrained_learning_rate in [1e-4]
         for adapter_learning_rate in [1e-3]
         for train_batch_total_seconds in [1200.0]
-        for eval_batch_total_seconds in [300.0]
+        for eval_batch_total_seconds in [600.0]
         for epochs in [1]
         for job_type in ["a100"]
         for dropout in [0.05]
-        for sp_vocab_size, sp_bpe_dropout in [(48, 0.0)]
+        for sp_vocab_size, sp_bpe_dropout in [
+            (32, 0.0),
+            (64, 0.0),
+            (128, 0.0),
+            (256, 0.0),
+        ]
         for base_hf_repo, architecture, attn_implementation in [
             ("facebook/w2v-bert-2.0", "w2v-bert2", "eager"),
         ]
-        for seed in [42]
+        for seed in [42, 43]
     ]
     full_json = json.dumps(dict(enumerate(hp_sets)), indent=2)
     print(f"Created {len(hp_sets)} hyper-parameter sets:\n{full_json}")

@@ -23,4 +23,4 @@ push_to_hub: true
 seed: 42
 should_clean_groups: true
 sp_bpe_dropout: 0.0
-sp_vocab_size: 32
+sp_vocab_size: 256

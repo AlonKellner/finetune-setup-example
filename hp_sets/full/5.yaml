@@ -20,7 +20,7 @@ per_device_eval_batch_total_seconds: 600.0
 per_device_train_batch_total_seconds: 1200.0
 pretrained_learning_rate: 0.0001
 push_to_hub: true
-seed: 42
+seed: 43
 should_clean_groups: true
 sp_bpe_dropout: 0.0
-sp_vocab_size: 32
+sp_vocab_size: 128

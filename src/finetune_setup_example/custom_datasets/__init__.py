@@ -25,6 +25,7 @@ def prepare_cached_dataset(
     features_name: str,
     architecture: Literal["wav2vec2", "w2v-bert2"],
     sync_all_on_start: bool,
+    complete_initial_files: bool,
     should_sync_previous: bool,
     should_clean_groups: bool,
     should_clean_validate: bool,
@@ -77,6 +78,7 @@ def prepare_cached_dataset(
     else:
         dataset.sync_initial_groups()
 
+    if complete_initial_files:
         indices_to_ensure = [
             i for g in dataset.grouped_indices[: dataset.groups_per_sync] for i in g
         ]
