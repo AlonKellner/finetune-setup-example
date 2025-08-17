@@ -246,6 +246,22 @@ def infer_iso3(iso1_code: str, language_name: str) -> str | None:
     return None
 
 
+def to_full_lang_id(iso1_code: str) -> dict[str, str | None]:
+    """Map iso1 code to all language identifiers."""
+    language_name = LANGUAGE_NAMES[iso1_code]
+    iso3_code = infer_iso3(iso1_code, language_name)
+    language_id = f"{iso1_code}:{iso3_code} ({language_name})"
+    return dict(
+        iso1_code=iso1_code,
+        iso3_code=iso3_code,
+        language_name=language_name,
+        language_id=language_id,
+    )
+
+
+FULL_LANGUAGES = [to_full_lang_id(lang) for lang in LANGUAGES]
+
+
 class LazyLoader:
     """A lazy loader for datasets."""
 
@@ -257,7 +273,7 @@ class LazyLoader:
         data_seed: int,
         features_name: str,
         cpu_count: int,
-        total_languages: int | None = None,
+        total_languages: int | list[str] | None = None,
     ) -> None:
         self.processor = processor
         self.sample_rate = sample_rate
@@ -305,12 +321,11 @@ class LazyLoader:
         batch["seconds"] = [s / self.sample_rate for s in sample_lengths]
         return batch
 
-    def _load_common_voice_part(self, iso1_code: str) -> HFDataset | None:
+    def _load_common_voice_part(
+        self, iso1_code: str, iso3_code: str, language_name: str, language_id: str
+    ) -> HFDataset | None:
         """Load a part of common voice."""
-        language_name = LANGUAGE_NAMES[iso1_code]
-        iso3_code = infer_iso3(iso1_code, language_name)
-        language_id = f"{iso1_code}:{iso3_code} ({language_name})"
-
+        assert language_name is not None
         print(f"Loading {language_id} common voice {self.split}...")
         try:
             dataset = load_dataset(
@@ -342,11 +357,19 @@ class LazyLoader:
 
     def _load_common_voice_for_wav2vec2(self) -> HFDataset:
         """Load a split of common voice, adapted for wav2vec2."""
-        languages_to_load = LANGUAGES
+        languages_to_load = FULL_LANGUAGES
         if self.total_languages is not None:
-            languages_to_load = LANGUAGES[: self.total_languages]
+            if isinstance(self.total_languages, int):
+                languages_to_load = FULL_LANGUAGES[: self.total_languages]
+            elif isinstance(self.total_languages, list):
+                languages_set = set(self.total_languages)
+                languages_to_load = [
+                    lang
+                    for lang in FULL_LANGUAGES
+                    if (lang["iso3_code"] in languages_set)
+                ]
         common_voice_split_parts = [
-            self._load_common_voice_part(language) for language in languages_to_load
+            self._load_common_voice_part(**language) for language in languages_to_load
         ]
         common_voice_split_parts = [
             p for p in common_voice_split_parts if p is not None
@@ -452,17 +475,18 @@ def create_cached_common_voice_split(
     should_clean_groups: bool,
     should_clean_validate: bool,
     features_name: str,
-    total_languages: int | None,
+    total_languages: int | list[str] | None,
+    total_languages_id: str,
     cpu_count: int,
     architecture: Literal["wav2vec2", "w2v-bert2"],
 ) -> tuple[TorchDataset, list[list[int]]]:
     """Create a common voice split with caching."""
     cache_path = Path(
-        f"./.app_cache/{general_name}/{total_languages or 'all'}/data/{architecture}/{data_seed}/{split}/"
+        f"./.app_cache/{general_name}/{total_languages_id}/data/{architecture}/{data_seed}/{split}/"
     )
     cache_path.mkdir(parents=True, exist_ok=True)
     cache_bucket = (
-        f"{general_name}-{total_languages or 'all'}-{architecture}-{data_seed}-{split}"
+        f"{general_name}-{total_languages_id}-{architecture}-{data_seed}-{split}"
     )
 
     dataset_metadata_path = cache_path / "dataset_metadata.json"
@@ -579,6 +603,27 @@ def resolve_bpe_tokenizer(
     total_time_str = f"{total_days:.2f} days / {total_hours:.2f} hours / {total_minutes:.2f} minutes / {total_seconds:.2f} seconds"
     print(f"Total speech time in {split}: {total_time_str}")
     unique_chars = sorted({c for s in _common_voice_split["sentence"] for c in s})
+    total_seconds_by_language = dict()
+    for i in range(len(_common_voice_split)):
+        item = metadata[i]
+        language = item["iso3_code"]
+        if language not in total_seconds_by_language:
+            total_seconds_by_language[language] = 0.0
+        total_seconds_by_language[language] += item["seconds"]
+    languages = [
+        k
+        for k, v in sorted(
+            total_seconds_by_language.items(), key=lambda x: x[1], reverse=True
+        )
+    ]
+    for language in languages:
+        total_seconds = total_seconds_by_language[language]
+        total_minutes = total_seconds / 60
+        total_hours = total_minutes / 60
+        total_days = total_hours / 24
+        total_time_str = f"{total_days:.2f} days / {total_hours:.2f} hours / {total_minutes:.2f} minutes / {total_seconds:.2f} seconds"
+        print(f"{language} speech time in {split}: {total_time_str}")
+
     print(f"Unique chars ({len(unique_chars)}): {unique_chars}")
     if not processor.sp_model_path.exists():
         processor.train_bpe_tokenizer([s for s in _common_voice_split["sentence"]])

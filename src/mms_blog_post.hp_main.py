@@ -41,6 +41,20 @@ def hp_main() -> None:
             sp_bpe_dropout=sp_bpe_dropout,
             pretrained_learning_rate=pretrained_learning_rate,
             adapter_learning_rate=adapter_learning_rate,
+            total_languages=[
+                "cat",
+                "eng",
+                "kin",
+                "deu",
+                "fra",
+                "spa",
+                "bel",
+                "ita",
+                "mhr",
+                "epo",
+                "eus",
+                "uig",
+            ],
         )
         for pretrained_learning_rate in [1e-4]
         for adapter_learning_rate in [1e-3]

@@ -9,9 +9,11 @@ from transformers.utils import is_flash_attn_2_available
 
 from ..custom_hf.trainer import experiment_tracking, train
 from ..custom_hf.training_args import create_training_arguments
+from ..encoding_utils import booleans_to_base64
 from ..init_utils import init_training
 from ..s3_utils import create_s3_client
 from ..specific_datasets.common_voice import (
+    FULL_LANGUAGES,
     create_cached_common_voice_split,
 )
 from ..specific_wav2vec2.model import load_wav2vec2_for_adaptuning
@@ -88,7 +90,7 @@ def main(
     architecture: Literal["wav2vec2", "w2v-bert2"] = "w2v-bert2",
     logging_nan_inf_filter: bool = True,
     apply_spec_augment: bool = True,
-    total_languages: int | None = None,
+    total_languages: int | list[str] | None = None,
     cpu_count: int = 12,
     job_path: str | None = None,
     hp_set: dict | None = None,
@@ -96,11 +98,28 @@ def main(
     **kwargs: str,
 ) -> None:
     """Training a model."""
+    if total_languages is None:
+        total_languages = [
+            "cat",
+            "eng",
+            "kin",
+            "deu",
+            "fra",
+            "spa",
+            "bel",
+            "ita",
+            "mhr",
+            "epo",
+            "eus",
+            "uig",
+        ]
     utils.logging.set_verbosity_debug()  # type: ignore
     accelerator_available = torch.accelerator.is_available()
     attn_implementation = select_attention_implementation(
         architecture, accelerator_available, attn_implementation
     )
+
+    total_languages_id = _infer_languages_id(total_languages)
 
     if job_path is not None:
         print(f"Job path: {job_path}")
@@ -176,7 +195,7 @@ def main(
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
         architecture=architecture,
-        total_languages=total_languages,
+        total_languages_id=total_languages_id,
         general_name=general_name,
     )
 
@@ -191,7 +210,7 @@ def main(
         sp_vocab_size=sp_vocab_size,
         sp_bpe_dropout=sp_bpe_dropout,
         architecture=architecture,
-        total_languages=total_languages,
+        total_languages_id=total_languages_id,
         general_name=general_name,
     )
 
@@ -217,6 +236,7 @@ def main(
         features_name=features_name,
         architecture=architecture,
         total_languages=total_languages,
+        total_languages_id=total_languages_id,
         cpu_count=cpu_count,
     )
 
@@ -240,6 +260,7 @@ def main(
         features_name=features_name,
         architecture=architecture,
         total_languages=total_languages,
+        total_languages_id=total_languages_id,
         cpu_count=cpu_count,
     )
 
@@ -287,6 +308,20 @@ def main(
         train(trainer)
 
     print("FINISHED!")
+
+
+def _infer_languages_id(total_languages: int | list[str] | None) -> str:
+    total_languages_id = "all"
+    if total_languages is not None:
+        if isinstance(total_languages, int):
+            total_languages_id = f"{total_languages}"
+        elif isinstance(total_languages, list):
+            languages_mask = [
+                (lang["iso3_code"] in total_languages) for lang in FULL_LANGUAGES
+            ]
+            total_languages_id = booleans_to_base64(languages_mask)
+    print(f"Languages ID is: {total_languages_id}")
+    return total_languages_id
 
 
 def infer_features_name(

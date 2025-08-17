@@ -37,7 +37,7 @@ def create_processor(
     sp_bpe_dropout: float,
     sp_vocab_size: int,
     syncer: TarS3Syncer,
-    total_languages: int | None,
+    total_languages_id: str,
     general_name: str,
     architecture: Literal["wav2vec2", "w2v-bert2"],
     max_batch_length: int | None = None,
@@ -91,7 +91,7 @@ def create_processor(
         raise ValueError(f"Unknown architecture: {architecture}")
 
     processor: CustomProcessorMixin = processor_type(
-        sp_dir=f"./.app_cache/{general_name}/{total_languages or 'all'}/sp/{sp_vocab_size}/{split}",
+        sp_dir=f"./.app_cache/{general_name}/{total_languages_id}/sp/{sp_vocab_size}/{split}",
         sp_bpe_dropout=sp_bpe_dropout,
         sp_vocab_size=sp_vocab_size,
         feature_extractor=feature_extractor,
