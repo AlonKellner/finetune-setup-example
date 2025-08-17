@@ -9,7 +9,7 @@ from transformers.utils import is_flash_attn_2_available
 
 from ..custom_hf.trainer import experiment_tracking, train
 from ..custom_hf.training_args import create_training_arguments
-from ..encoding_utils import booleans_to_base64
+from ..encoding_utils import booleans_to_s3_suffix
 from ..init_utils import init_training
 from ..s3_utils import create_s3_client
 from ..specific_datasets.common_voice import (
@@ -319,7 +319,7 @@ def _infer_languages_id(total_languages: int | list[str] | None) -> str:
             languages_mask = [
                 (lang["iso3_code"] in total_languages) for lang in FULL_LANGUAGES
             ]
-            total_languages_id = booleans_to_base64(languages_mask)
+            total_languages_id = booleans_to_s3_suffix(languages_mask)
     print(f"Languages ID is: {total_languages_id}")
     return total_languages_id
 
