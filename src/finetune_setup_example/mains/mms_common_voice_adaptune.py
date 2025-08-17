@@ -91,6 +91,7 @@ def main(
     logging_nan_inf_filter: bool = True,
     apply_spec_augment: bool = True,
     total_languages: int | list[str] | None = None,
+    total_languages_name: str | None = "top12",
     cpu_count: int = 12,
     job_path: str | None = None,
     hp_set: dict | None = None,
@@ -119,7 +120,7 @@ def main(
         architecture, accelerator_available, attn_implementation
     )
 
-    total_languages_id = _infer_languages_id(total_languages)
+    total_languages_id = _infer_languages_id(total_languages, total_languages_name)
 
     if job_path is not None:
         print(f"Job path: {job_path}")
@@ -310,7 +311,11 @@ def main(
     print("FINISHED!")
 
 
-def _infer_languages_id(total_languages: int | list[str] | None) -> str:
+def _infer_languages_id(
+    total_languages: int | list[str] | None, total_languages_name: str | None
+) -> str:
+    if total_languages_name is not None:
+        return total_languages_name
     total_languages_id = "all"
     if total_languages is not None:
         if isinstance(total_languages, int):
